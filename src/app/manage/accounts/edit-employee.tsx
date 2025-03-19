@@ -67,7 +67,7 @@ export default function EditEmployee({
       password: undefined,
       confirmPassword: undefined,
       changePassword: false,
-      role: Role.Employee,
+      role: Role.Staff,
     },
   });
   const avatar = form.watch("avatar");

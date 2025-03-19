@@ -48,7 +48,7 @@ export function middleware(request: NextRequest) {
       guestPath.some((path) => pathname.startsWith(path));
     // Khong phai Owner nhung co tinh truy cap vao route owner
     const isNotOwnerGoToOwnerPath =
-      role !== Role.Owner &&
+      role !== Role.Admin &&
       onlyOwnerPaths.some((path) => pathname.startsWith(path));
 
     if (

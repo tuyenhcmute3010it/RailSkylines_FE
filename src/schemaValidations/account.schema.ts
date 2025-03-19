@@ -5,7 +5,7 @@ export const AccountSchema = z.object({
   id: z.number(),
   name: z.string(),
   email: z.string(),
-  role: z.enum([Role.Owner, Role.Employee]),
+  role: z.enum([Role.Admin, Role.Staff]),
   avatar: z.string().nullable(),
 });
 
@@ -58,7 +58,7 @@ export const UpdateEmployeeAccountBody = z
     changePassword: z.boolean().optional(),
     password: z.string().min(6).max(100).optional(),
     confirmPassword: z.string().min(6).max(100).optional(),
-    role: z.enum([Role.Owner, Role.Employee]).optional().default(Role.Employee),
+    role: z.enum([Role.Admin, Role.Staff]).optional().default(Role.Staff),
   })
   .strict()
   .superRefine(({ confirmPassword, password, changePassword }, ctx) => {

@@ -6,6 +6,7 @@ import DarkModeToggle from "@/components/dark-mode-toggle";
 import NavItems from "@/app/(public)/nav-items";
 import { SwitchLanguage } from "@/components/switch-language";
 import Image from "next/image";
+
 export default function Layout({
   children,
   modal,
@@ -16,8 +17,8 @@ export default function Layout({
   return (
     <div className="flex min-h-screen w-full flex-col relative ">
       <header className="sticky z-20 top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 bg-[var(--navbg)]">
-        <nav className="hidden h-[60px] flex-col gap-5 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-5 ">
-          <div className="flex items-center gap-5">
+        <nav className="hidden h-[60px] flex-col gap-5 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-5 w-full">
+          <div className="flex items-center gap-5 w-full justify-evenly ">
             <Link
               href="/"
               className="flex items-center gap-3 text-lg font-semibold md:text-base"
@@ -61,10 +62,10 @@ export default function Layout({
             </nav>
           </SheetContent>
         </Sheet>
-        <div className="ml-auto flex items-center gap-4">
+        {/* <div className="ml-auto flex items-center gap-4">
           <SwitchLanguage />
           <DarkModeToggle />
-        </div>
+        </div> */}
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         {children}

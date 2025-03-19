@@ -22,6 +22,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useTranslations } from "next-intl";
+import { SwitchLanguage } from "@/components/switch-language";
+import DarkModeToggle from "@/components/dark-mode-toggle";
+import DropdownAvatar from "../manage/dropdown-avatar";
 
 export default function NavItems({ className }: { className?: string }) {
   const t = useTranslations("NavItem");
@@ -41,21 +44,22 @@ export default function NavItems({ className }: { className?: string }) {
     { title: t("Term&Conditions"), href: "/terms" },
     { title: t("Contact"), href: "/contact" },
     { title: t("Blog"), href: "/blog" },
-    { title: "Đăng nhập", href: "/login", hideWhenLogin: true },
     {
       title: "Quản lý",
       href: "/manage/dashboard",
-      role: [Role.Owner, Role.Employee],
+      role: [Role.Admin, Role.Staff],
     },
   ];
 
   return (
     <>
       {menuItems.map((item) => {
+        // const canShow =
+        //   (item.role === undefined && !item.hideWhenLogin) ||
+        //   (!role && item.hideWhenLogin);
         // const isAuth = item.role && role && item.role.includes(role);
-        const canShow =
-          (item.role === undefined && !item.hideWhenLogin) ||
-          (!role && item.hideWhenLogin);
+        const canShow = item.role === undefined;
+
         if (isAuth || canShow) {
           return (
             <Link href={item.href} key={item.href} className={className}>
@@ -65,6 +69,15 @@ export default function NavItems({ className }: { className?: string }) {
         }
         return null;
       })}
+      <SwitchLanguage />
+      <DarkModeToggle />
+      {isAuth ? (
+        <DropdownAvatar />
+      ) : (
+        <Link href="/login" className={cn(className, "font-medium")}>
+          Đăng nhập
+        </Link>
+      )}
       {role && (
         <AlertDialog>
           <AlertDialogTrigger asChild>
