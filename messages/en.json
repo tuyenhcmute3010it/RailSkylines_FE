@@ -1,0 +1,62 @@
+{
+  "HomePage": {
+    "title": "RailSkyLines !",
+    "description": "Easy ticket booking, smooth journey!",
+    "defaultTitle": "RailSkyLines !",
+    "diversity": "Variety of ticket types"
+  },
+  "Login": {
+    "title": "Login",
+    "header": "Login | Savannah Restaurant"
+  },
+  "Footer": {
+    "title": "RailSkyLines !",
+    "address": "01 D. Vo Van Ngan, Linh Chieu, Thu Duc, Ho Chi Minh"
+  },
+  "About": {
+    "ourStory": {
+      "title": "Our Story",
+      "content": "RailSkyLines was founded with a mission to make booking train tickets fast, simple, and hassle-free. Since our inception, we have continuously improved our platform to offer a seamless, secure, and reliable ticket booking experience."
+    },
+    "ourValues": {
+      "title": "Our Values",
+      "content": "We are committed to providing a transparent, convenient, and secure online train ticket booking service. RailSkyLines partners with reputable railway operators to ensure the best ticket options, making your journey smoother than ever."
+    },
+    "ourCommitment": {
+      "title": "Our Commitment",
+      "content": "We believe that every journey is a memorable experience. RailSkyLines not only provides train tickets but also offers dedicated customer support to ensure a hassle-free travel experience from booking to boarding. Our team is always ready to assist so you can enjoy your trip with peace of mind."
+    }
+  },
+  "PrivacyPolicy": {
+    "title": "Privacy Policy",
+    "dataCollection": {
+      "title": "Data Collection",
+      "content": "We collect personal information you provide when creating an account, placing an order, or contacting us. This information may include your name. Additionally, we automatically collect some data when you visit our website, such as IP address and browser type."
+    },
+    "usagePurpose": {
+      "title": "Purpose of Use",
+      "content": "We use your personal information for the following purposes:"
+    },
+    "usageList": {
+      "orderProcessing": "To process your order: We use your contact and payment details to confirm and process your order, as well as to send invoices and shipping information.",
+      "customerService": "To provide customer service: We use your contact information to respond to inquiries, resolve issues, and provide technical support.",
+      "marketing": "To send marketing information: With your consent, we may use your email address to send information about new products, services, promotions, and special events.",
+      "serviceImprovement": "To improve our services: We use aggregated and anonymized data to analyze trends and enhance our services."
+    }
+  },
+  "SwitchLanguage": {
+    "title": "Switch Language",
+    "en": "English",
+    "vi": "Vietnamese"
+  },
+  "DishDetail": {
+    "title": "Savannah",
+    "description": "Savannah Detail",
+    "notFound": "Dish Not Found"
+  },
+  "ErrorMessage": {
+    "invalidEmail": "Invalid Email",
+    "required": "This field  is required",
+    "invalidPassword": "This Password must at lest 6 character"
+  }
+}

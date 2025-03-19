@@ -1,0 +1,63 @@
+{
+  "HomePage": {
+    "title": "RailSkyLines !",
+    "description": "Đặt vé dễ dàng, hành trình suôn sẻ!",
+    "defaultTitle": "RailSkyLines !",
+    "diversity": "Đa dạng các loại vé"
+  },
+  "Login": {
+    "title": "Đăng Nhập",
+    "header": "Đăng Nhập | Nhà hàng Savannah"
+  },
+  "Footer": {
+    "title": "RailSkyLines !",
+    "address": " 01 Đ. Võ Văn Ngân, Linh Chiểu, Thủ Đức, Hồ Chí Minh"
+  },
+  "About": {
+    "ourStory": {
+      "title": "Câu chuyện của chúng tôi",
+      "content": "RailSkyLines ra đời với sứ mệnh giúp hành khách dễ dàng đặt vé tàu một cách nhanh chóng và thuận tiện. Kể từ khi thành lập, chúng tôi đã không ngừng cải thiện nền tảng của mình để mang đến trải nghiệm đặt vé dễ dàng, an toàn và đáng tin cậy."
+    },
+    "ourValues": {
+      "title": "Giá trị của chúng tôi",
+      "content": "Chúng tôi cam kết cung cấp dịch vụ đặt vé tàu trực tuyến với sự minh bạch, tiện lợi và bảo mật. RailSkyLines hợp tác với các nhà vận hành tàu uy tín để mang đến lựa chọn vé tốt nhất cho bạn, giúp chuyến đi của bạn trở nên dễ dàng hơn bao giờ hết."
+    },
+    "ourCommitment": {
+      "title": "Cam kết của chúng tôi",
+      "content": "Chúng tôi tin rằng mỗi chuyến đi đều là một trải nghiệm đáng nhớ. RailSkyLines không chỉ cung cấp vé tàu mà còn mang đến sự hỗ trợ tận tình, đảm bảo bạn có một hành trình suôn sẻ từ khi đặt vé đến lúc lên tàu. Đội ngũ của chúng tôi luôn sẵn sàng hỗ trợ để bạn có thể yên tâm tận hưởng chuyến đi của mình."
+    }
+  },
+  "PrivacyPolicy": {
+    "title": "Chính sách bảo mật",
+    "dataCollection": {
+      "title": "Dữ liệu thu thập",
+      "content": "Chúng tôi thu thập thông tin cá nhân mà bạn cung cấp khi tạo tài khoản, đặt hàng hoặc liên hệ với chúng tôi. Thông tin này có thể bao gồm tên của bạn. Ngoài ra, chúng tôi cũng thu thập một số dữ liệu tự động khi bạn truy cập trang web của chúng tôi, như địa chỉ IP và loại trình duyệt."
+    },
+    "usagePurpose": {
+      "title": "Mục đích sử dụng",
+      "content": "Chúng tôi sử dụng thông tin cá nhân của bạn cho các mục đích sau:"
+    },
+    "usageList": {
+      "orderProcessing": "Để xử lý đơn hàng: Chúng tôi sử dụng thông tin liên hệ và thanh toán của bạn để xác nhận và xử lý đơn hàng, cũng như gửi hóa đơn và thông tin giao hàng.",
+      "customerService": "Để cung cấp dịch vụ khách hàng: Chúng tôi sử dụng thông tin liên hệ của bạn để trả lời các câu hỏi, giải quyết vấn đề và cung cấp hỗ trợ kỹ thuật.",
+      "marketing": "Để gửi thông tin tiếp thị: Với sự đồng ý của bạn, chúng tôi có thể sử dụng địa chỉ email của bạn để gửi thông tin về sản phẩm, dịch vụ mới, chương trình khuyến mãi và sự kiện đặc biệt.",
+      "serviceImprovement": "Để cải thiện dịch vụ: Chúng tôi sử dụng dữ liệu tổng hợp và ẩn danh để phân tích xu hướng và nâng cao chất lượng dịch vụ."
+    }
+  },
+
+  "SwitchLanguage": {
+    "title": "Chuyển ngôn ngữ",
+    "en": "Tiếng Anh",
+    "vi": "Tiếng Việt"
+  },
+  "DishDetail": {
+    "title": "Savannah",
+    "description": "Savannah Detail",
+    "notFound": "Dish Not Found"
+  },
+  "ErrorMessage": {
+    "invalidEmail": "Email Không Xác Định",
+    "required": "Trường này bắt buộc nhập",
+    "invalidPassword": "Mật khẩu bắt buộc phải có 6 kí tự"
+  }
+}
