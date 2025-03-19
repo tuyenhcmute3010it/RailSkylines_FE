@@ -7,11 +7,13 @@
   },
   "Login": {
     "title": "Đăng Nhập",
-    "header": "Đăng Nhập | Nhà hàng Savannah"
+    "header": "Đăng Nhập | RailSkyLines"
   },
   "Footer": {
     "title": "RailSkyLines !",
-    "address": " 01 Đ. Võ Văn Ngân, Linh Chiểu, Thủ Đức, Hồ Chí Minh"
+    "address": " 01 Đ. Võ Văn Ngân, Linh Chiểu, Thủ Đức, Hồ Chí Minh",
+    "ConditionService": "Điều khoản dịch vụ",
+    "AboutWe": "Về chúng tôi"
   },
   "About": {
     "ourStory": {
@@ -69,5 +71,28 @@
     "Term&Conditions": "Điều khoản & Điều kiện",
     "Contact": "Liên hệ",
     "Blog": "Tin Tức"
+  },
+  "TermsOfService": {
+    "title": "Điều khoản dịch vụ",
+    "introduction": {
+      "title": "Giới thiệu",
+      "content": "Chào mừng bạn đến với trang Điều khoản dịch vụ của chúng tôi. Khi sử dụng dịch vụ của chúng tôi, bạn đồng ý tuân thủ các điều khoản và điều kiện sau."
+    },
+    "usage": {
+      "title": "Sử dụng dịch vụ",
+      "content": "Bạn đồng ý sử dụng dịch vụ của chúng tôi chỉ cho các mục đích hợp pháp và không vi phạm bất kỳ luật nào. Bạn không được phân phối nội dung bất hợp pháp hoặc xâm phạm quyền riêng tư của người khác."
+    },
+    "intellectualProperty": {
+      "title": "Quyền sở hữu trí tuệ",
+      "content": "Tất cả nội dung và tài liệu trên trang web của chúng tôi, bao gồm văn bản, hình ảnh, đồ họa, logo và phần mềm, đều thuộc sở hữu của chúng tôi hoặc bên cấp phép và được bảo vệ bởi luật sở hữu trí tuệ."
+    },
+    "changes": {
+      "title": "Thay đổi điều khoản",
+      "content": "Chúng tôi có quyền sửa đổi các điều khoản này bất kỳ lúc nào mà không cần thông báo trước. Việc tiếp tục sử dụng dịch vụ sau khi thay đổi đồng nghĩa với việc bạn chấp nhận các điều khoản mới."
+    },
+    "contact": {
+      "title": "Liên hệ",
+      "content": "Nếu bạn có bất kỳ câu hỏi nào về các điều khoản này, vui lòng liên hệ với chúng tôi qua email hoặc điện thoại."
+    }
   }
 }

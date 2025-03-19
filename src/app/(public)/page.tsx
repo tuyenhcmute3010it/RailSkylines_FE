@@ -9,7 +9,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Metadata } from "next";
 import envConfig from "@/config";
-
+import Train from "@/app/(public)/train";
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("HomePage");
   return {
@@ -41,6 +41,12 @@ export default async function Home() {
           <p className="text-center text-sm sm:text-base mt-4 text-white">
             {t("description")}
           </p>
+        </div>
+
+        <div className="absolute bottom-[0px] left-0 w-full z-30 bg-white/40 h-[70px]">
+          <div className="w-full py-4">
+            <Train />
+          </div>
         </div>
       </div>
       <section className="space-y-10 py-16">

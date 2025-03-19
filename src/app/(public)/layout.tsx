@@ -1,11 +1,16 @@
+"use client";
 import Link from "next/link";
 import { Menu, Package2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import DarkModeToggle from "@/components/dark-mode-toggle";
 import NavItems from "@/app/(public)/nav-items";
+import Train from "@/app/(public)/train";
 import { SwitchLanguage } from "@/components/switch-language";
 import Image from "next/image";
+import DropdownAvatar from "../manage/dropdown-avatar";
+import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 export default function Layout({
   children,
@@ -14,11 +19,13 @@ export default function Layout({
   children: React.ReactNode;
   modal: React.ReactNode;
 }>) {
+  const loginT = useTranslations("Login");
+  const [isAuth, setIsAuth] = useState(false);
   return (
     <div className="flex min-h-screen w-full flex-col relative ">
       <header className="sticky z-20 top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 bg-[var(--navbg)]">
         <nav className="hidden h-[60px] flex-col gap-5 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-5 w-full">
-          <div className="flex items-center gap-5 w-full justify-evenly ">
+          <div className="flex items-center gap-10 w-full ">
             <Link
               href="/"
               className="flex items-center gap-3 text-lg font-semibold md:text-base"
@@ -62,10 +69,20 @@ export default function Layout({
             </nav>
           </SheetContent>
         </Sheet>
-        {/* <div className="ml-auto flex items-center gap-4">
+        <div className="ml-auto flex items-center gap-4">
           <SwitchLanguage />
           <DarkModeToggle />
-        </div> */}
+          {isAuth ? (
+            <DropdownAvatar />
+          ) : (
+            <Link
+              href="/login"
+              className="bg-[#0087C4] text-white font-semibold px-4 py-2 rounded-lg hover:bg-[#0073A8] transition-all duration-200 shadow-md whitespace-nowrap"
+            >
+              {loginT("title")}
+            </Link>
+          )}
+        </div>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         {children}

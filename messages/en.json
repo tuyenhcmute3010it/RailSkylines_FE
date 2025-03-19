@@ -7,11 +7,13 @@
   },
   "Login": {
     "title": "Login",
-    "header": "Login | Savannah Restaurant"
+    "header": "Login | RailSkyLines "
   },
   "Footer": {
     "title": "RailSkyLines !",
-    "address": "01 D. Vo Van Ngan, Linh Chieu, Thu Duc, Ho Chi Minh"
+    "address": "01 D. Vo Van Ngan, Linh Chieu, Thu Duc, Ho Chi Minh",
+    "ConditionService": "Terms of Service",
+    "AboutWe": "About Us"
   },
   "About": {
     "ourStory": {
@@ -68,5 +70,28 @@
     "Term&Conditions": "Term & Conditions",
     "Contact": "Contact",
     "Blog": "Blog"
+  },
+  "TermsOfService": {
+    "title": "Terms of Service",
+    "introduction": {
+      "title": "Introduction",
+      "content": "Welcome to our Terms of Service page. By using our service, you agree to comply with the following terms and conditions."
+    },
+    "usage": {
+      "title": "Service Usage",
+      "content": "You agree to use our service only for lawful purposes and not to violate any laws. You must not distribute illegal content or violate others' privacy."
+    },
+    "intellectualProperty": {
+      "title": "Intellectual Property",
+      "content": "All content and materials on our website, including text, images, graphics, logos, and software, are owned by us or our licensors and protected by intellectual property laws."
+    },
+    "changes": {
+      "title": "Changes to Terms",
+      "content": "We reserve the right to modify these terms at any time without prior notice. Continuing to use our service after changes means you accept them."
+    },
+    "contact": {
+      "title": "Contact Us",
+      "content": "If you have any questions about these terms, please contact us via email or phone."
+    }
   }
 }

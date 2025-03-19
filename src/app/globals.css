@@ -130,3 +130,54 @@
     -chart-5: 340 75% 55%;
   }
 }
+
+/* @keyframes marquee {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+} */
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+  animation-play-state: running;
+}
+
+.pause-5s {
+  animation: marquee 30s linear infinite;
+  animation-play-state: running;
+  animation-iteration-count: infinite;
+  animation-delay: 0s;
+  animation-timing-function: linear;
+}
+
+/* Dừng 5s sau mỗi lần chạy */
+@keyframes marqueePause {
+  0% {
+    transform: translateX(100%);
+  }
+  90% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee-pause {
+  animation: marqueePause 40s linear infinite 5s; /* Chạy 40s, dừng 5s */
+}

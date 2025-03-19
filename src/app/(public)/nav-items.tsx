@@ -28,6 +28,7 @@ import DropdownAvatar from "../manage/dropdown-avatar";
 
 export default function NavItems({ className }: { className?: string }) {
   const t = useTranslations("NavItem");
+  const loginT = useTranslations("Login");
   const [isAuth, setIsAuth] = useState(false);
   const { role, setRole } = useAppContext();
 
@@ -41,8 +42,8 @@ export default function NavItems({ className }: { className?: string }) {
     { title: t("BookingInfo"), href: "/guest/orders" },
     { title: t("ReturnTicket"), href: "/guest/return" },
     { title: t("Promotion"), href: "/promotion" },
-    { title: t("Term&Conditions"), href: "/terms" },
-    { title: t("Contact"), href: "/contact" },
+    { title: t("Term&Conditions"), href: "/term-of-service" },
+    { title: t("Contact"), href: "/about" },
     { title: t("Blog"), href: "/blog" },
     {
       title: "Quản lý",
@@ -69,15 +70,15 @@ export default function NavItems({ className }: { className?: string }) {
         }
         return null;
       })}
-      <SwitchLanguage />
-      <DarkModeToggle />
-      {isAuth ? (
+      {/* <SwitchLanguage />
+      <DarkModeToggle /> */}
+      {/* {isAuth ? (
         <DropdownAvatar />
       ) : (
         <Link href="/login" className={cn(className, "font-medium")}>
-          Đăng nhập
+          {loginT("title")}
         </Link>
-      )}
+      )} */}
       {role && (
         <AlertDialog>
           <AlertDialogTrigger asChild>

@@ -7,11 +7,13 @@
   },
   "Login": {
     "title": "ログイン",
-    "header": "ログイン | Savannah レストラン"
+    "header": "ログイン | RailSkyLines"
   },
   "Footer": {
     "title": "RailSkyLines !",
-    "address": "01 D. Vo Van Ngan, Linh Chieu, Thu Duc, ホーチミン市"
+    "address": "01 D. Vo Van Ngan, Linh Chieu, Thu Duc, ホーチミン市",
+    "ConditionService": "利用規約",
+    "AboutWe": "私たちについて"
   },
   "About": {
     "ourStory": {
@@ -68,5 +70,28 @@
     "Term&Conditions": "利用規約",
     "Contact": "お問い合わせ",
     "Blog": "ブログ"
+  },
+  "TermsOfService": {
+    "title": "利用規約",
+    "introduction": {
+      "title": "はじめに",
+      "content": "当社の利用規約ページへようこそ。当社のサービスを利用することにより、以下の利用規約に同意したものとみなされます。"
+    },
+    "usage": {
+      "title": "サービスの利用",
+      "content": "お客様は、当社のサービスを合法的な目的のみに使用し、法律に違反しないことに同意します。不法なコンテンツの配布や他者のプライバシーを侵害することは禁止されています。"
+    },
+    "intellectualProperty": {
+      "title": "知的財産権",
+      "content": "当社のウェブサイト上のすべてのコンテンツおよび資料（テキスト、画像、グラフィック、ロゴ、ソフトウェアなど）は、当社またはライセンサーに帰属し、知的財産法によって保護されています。"
+    },
+    "changes": {
+      "title": "利用規約の変更",
+      "content": "当社は、事前の通知なしに本規約を変更する権利を有します。変更後にサービスを継続して利用することで、変更に同意したものとみなされます。"
+    },
+    "contact": {
+      "title": "お問い合わせ",
+      "content": "本規約に関するご質問がございましたら、メールまたはお電話でお問い合わせください。"
+    }
   }
 }

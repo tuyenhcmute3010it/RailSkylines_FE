@@ -3,6 +3,9 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 export default async function Footer() {
   const t = await getTranslations("HomePage");
+  const footerT = await getTranslations("Footer");
+  const privacyPolicyT = await getTranslations("PrivacyPolicy");
+
   return (
     <footer className="w-full p-4 md:p-8 text-muted-foreground border-t">
       <div className=" flex flex-col items-center justify-between gap-4 md:flex-row md:gap-0">
@@ -17,23 +20,23 @@ export default async function Footer() {
               className="hover:underline"
               prefetch={false}
             >
-              Điều khoản dịch vụ
+              {footerT("ConditionService")}
             </Link>
             <Link
               href="/privacy-policy"
               className="hover:underline"
               prefetch={false}
             >
-              Chính sách bảo mật
+              {privacyPolicyT("title")}
             </Link>
             <Link href="/about" className="hover:underline" prefetch={false}>
-              Về chúng tôi
+              {footerT("AboutWe")}
             </Link>
           </div>
         </div>
         <div className="flex items-center gap-4">
           <Link
-            href="https://www.facebook.com"
+            href="https://www.facebook.com/ly.ang.trieu"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-foreground"
@@ -51,7 +54,7 @@ export default async function Footer() {
             <span className="sr-only">Facebook</span>
           </Link>
           <Link
-            href="https://www.youtube.com"
+            href="https://www.youtube.com/@leagueoflegends"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-foreground"
