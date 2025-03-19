@@ -32,7 +32,7 @@ export default async function Home() {
           height={300}
           quality={100}
           alt="Banner"
-          className="absolute top-90 w-full h-full object-cover"
+          className="absolute top-90 w-full h-full object-cover opacity-80"
         />
         <div className="z-20 relative py-10 md:py-20 px-4 sm:px-10 md:px-20">
           <h1 className="text-center text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold text-white">
@@ -43,7 +43,7 @@ export default async function Home() {
           </p>
         </div>
 
-        <div className="absolute bottom-[0px] left-0 w-full z-30 bg-white/40 h-[70px]">
+        <div className="absolute bottom-[0px] left-0 w-full z-30 bg-white/30 h-[70px]">
           <div className="w-full py-4">
             <Train />
           </div>
