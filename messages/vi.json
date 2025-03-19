@@ -48,7 +48,8 @@
   "SwitchLanguage": {
     "title": "Chuyển ngôn ngữ",
     "en": "Tiếng Anh",
-    "vi": "Tiếng Việt"
+    "vi": "Tiếng Việt ",
+    "ja": "Tiếng Nhật"
   },
   "DishDetail": {
     "title": "Savannah",
@@ -59,5 +60,14 @@
     "invalidEmail": "Email Không Xác Định",
     "required": "Trường này bắt buộc nhập",
     "invalidPassword": "Mật khẩu bắt buộc phải có 6 kí tự"
+  },
+  "NavItem": {
+    "FindTicket": "Tìm vé",
+    "BookingInfo": "Thông tin đặt vé",
+    "ReturnTicket": "Hoàn vé",
+    "Promotion": "Khuyến mãi",
+    "Term&Conditions": "Điều khoản & Điều kiện",
+    "Contact": "Liên hệ",
+    "Blog": "Tin Tức"
   }
 }

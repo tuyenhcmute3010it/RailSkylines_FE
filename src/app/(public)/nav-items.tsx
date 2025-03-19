@@ -21,68 +21,38 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-const menuItems: {
-  title: string;
-  href: string;
-  role?: RoleType[];
-  hideWhenLogin?: boolean;
-}[] = [
-  {
-    title: "Trang chủ",
-    href: "/", // auRequired = undefine nghia la dang nhap hay chua deu cho hien thi
-  },
-  {
-    title: "Menu",
-    href: "/guest/menu",
-    role: [Role.Guest],
-  },
-  {
-    title: "Order",
-    href: "/guest/orders",
-    role: [Role.Guest],
-  },
-  {
-    title: "Đăng nhập",
-    href: "/login",
-    hideWhenLogin: true,
-  },
-  {
-    title: "Quản lý",
-    href: "/manage/dashboard",
-    role: [Role.Owner, Role.Employee],
-  },
-];
+import { useTranslations } from "next-intl";
 
 export default function NavItems({ className }: { className?: string }) {
+  const t = useTranslations("NavItem");
   const [isAuth, setIsAuth] = useState(false);
-  console.log(isAuth);
   const { role, setRole } = useAppContext();
+
   useEffect(() => {
     const token = getAccessTokenFromLocalStorage();
     setIsAuth(Boolean(token));
   }, []);
-  // const logoutMutation = useLogoutMutation();
-  // const router = useRouter();
-  // const logout = async () => {
-  //   if (logoutMutation.isPending) return;
 
-  //   try {
-  //     await logoutMutation.mutateAsync();
-  //     setRole();
-  //     router.push("/");
-  //   } catch (error: any) {
-  //     handleErrorApi({
-  //       error,
-  //     });
-  //   }
-  // };
+  const menuItems = [
+    { title: t("FindTicket"), href: "/guest/menu" },
+    { title: t("BookingInfo"), href: "/guest/orders" },
+    { title: t("ReturnTicket"), href: "/guest/return" },
+    { title: t("Promotion"), href: "/promotion" },
+    { title: t("Term&Conditions"), href: "/terms" },
+    { title: t("Contact"), href: "/contact" },
+    { title: t("Blog"), href: "/blog" },
+    { title: "Đăng nhập", href: "/login", hideWhenLogin: true },
+    {
+      title: "Quản lý",
+      href: "/manage/dashboard",
+      role: [Role.Owner, Role.Employee],
+    },
+  ];
+
   return (
     <>
       {menuItems.map((item) => {
-        // Truong hop dang nhap thi chi hien thi menu dang nhap
-        const isAuth = item.role && role && item.role.includes(role);
-        // Truong hop menu item co the hien thi du cho da dang nhap hay chua
+        // const isAuth = item.role && role && item.role.includes(role);
         const canShow =
           (item.role === undefined && !item.hideWhenLogin) ||
           (!role && item.hideWhenLogin);
@@ -98,21 +68,21 @@ export default function NavItems({ className }: { className?: string }) {
       {role && (
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <div className={cn(className, "cursor-pointer")}>Đăng suất</div>
+            <div className={cn(className, "cursor-pointer")}>Đăng xuất</div>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                Are you absolutely sure Logout?
+                Bạn có chắc chắn muốn đăng xuất?
               </AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete your
-                order and remove your data from our servers.
+                Hành động này không thể hoàn tác. Bạn sẽ mất phiên đăng nhập
+                hiện tại.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction>Continue</AlertDialogAction>
+              <AlertDialogCancel>Hủy</AlertDialogCancel>
+              <AlertDialogAction>Tiếp tục</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

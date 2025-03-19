@@ -47,7 +47,8 @@
   "SwitchLanguage": {
     "title": "Switch Language",
     "en": "English",
-    "vi": "Vietnamese"
+    "vi": "Vietnamese",
+    "ja": "Japan"
   },
   "DishDetail": {
     "title": "Savannah",
@@ -58,5 +59,14 @@
     "invalidEmail": "Invalid Email",
     "required": "This field  is required",
     "invalidPassword": "This Password must at lest 6 character"
+  },
+  "NavItem": {
+    "FindTicket": "Search Ticket",
+    "BookingInfo": "Booking Info",
+    "ReturnTicket": "Return Ticket",
+    "Promotion": "Promotion",
+    "Term&Conditions": "Term & Conditions",
+    "Contact": "Contact",
+    "Blog": "Blog"
   }
 }

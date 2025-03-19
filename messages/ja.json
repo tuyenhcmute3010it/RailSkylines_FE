@@ -1,0 +1,72 @@
+{
+  "HomePage": {
+    "title": "RailSkyLines !",
+    "description": "簡単なチケット予約、スムーズな旅！",
+    "defaultTitle": "RailSkyLines !",
+    "diversity": "さまざまなチケットの種類"
+  },
+  "Login": {
+    "title": "ログイン",
+    "header": "ログイン | Savannah レストラン"
+  },
+  "Footer": {
+    "title": "RailSkyLines !",
+    "address": "01 D. Vo Van Ngan, Linh Chieu, Thu Duc, ホーチミン市"
+  },
+  "About": {
+    "ourStory": {
+      "title": "私たちの物語",
+      "content": "RailSkyLines は、列車のチケット予約を迅速、簡単、そしてストレスフリーにすることを使命として設立されました。創業以来、当社は継続的にプラットフォームを改善し、シームレスで安全かつ信頼できるチケット予約体験を提供しています。"
+    },
+    "ourValues": {
+      "title": "私たちの価値観",
+      "content": "私たちは、透明性があり、便利で、安全なオンライン列車チケット予約サービスを提供することに尽力しています。RailSkyLines は信頼できる鉄道運行会社と提携し、最適なチケットオプションを提供し、お客様の旅をよりスムーズにします。"
+    },
+    "ourCommitment": {
+      "title": "私たちのコミットメント",
+      "content": "私たちは、すべての旅が思い出深い体験であるべきだと考えています。RailSkyLines は単なるチケット予約サイトではなく、予約から搭乗までのスムーズな旅行体験を提供するため、専任のカスタマーサポートを提供しています。安心して旅行を楽しんでいただけるよう、私たちのチームがいつでもサポートいたします。"
+    }
+  },
+  "PrivacyPolicy": {
+    "title": "プライバシーポリシー",
+    "dataCollection": {
+      "title": "データ収集",
+      "content": "アカウント作成、注文、またはお問い合わせの際に提供された個人情報を収集します。この情報には、お客様の名前が含まれる場合があります。また、当ウェブサイト訪問時に IP アドレスやブラウザの種類などのデータを自動的に収集します。"
+    },
+    "usagePurpose": {
+      "title": "使用目的",
+      "content": "お客様の個人情報は以下の目的で使用されます。"
+    },
+    "usageList": {
+      "orderProcessing": "注文処理のため: 連絡先および支払い情報を使用して、注文の確認・処理、請求書や配送情報の送付を行います。",
+      "customerService": "カスタマーサービス提供のため: 連絡先情報を使用して、お問い合わせへの対応、問題解決、技術サポートを提供します。",
+      "marketing": "マーケティング情報の送信: お客様の同意を得た場合、電子メールを使用して新商品、サービス、プロモーション、特別イベントに関する情報をお送りすることがあります。",
+      "serviceImprovement": "サービス改善のため: 集計および匿名化されたデータを分析し、サービスの向上に役立てます。"
+    }
+  },
+  "SwitchLanguage": {
+    "title": "言語を切り替える",
+    "en": "英語 🇺🇸",
+    "vi": "ベトナム語 🇻🇳",
+    "ja": "日本語 🇯🇵"
+  },
+  "DishDetail": {
+    "title": "Savannah",
+    "description": "Savannah の詳細",
+    "notFound": "料理が見つかりません"
+  },
+  "ErrorMessage": {
+    "invalidEmail": "無効なメールアドレス",
+    "required": "この項目は必須です",
+    "invalidPassword": "パスワードは6文字以上である必要があります"
+  },
+  "NavItem": {
+    "FindTicket": "チケット検索",
+    "BookingInfo": "予約情報",
+    "ReturnTicket": "チケットの払い戻し",
+    "Promotion": "プロモーション",
+    "Term&Conditions": "利用規約",
+    "Contact": "お問い合わせ",
+    "Blog": "ブログ"
+  }
+}

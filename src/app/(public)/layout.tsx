@@ -14,9 +14,9 @@ export default function Layout({
   modal: React.ReactNode;
 }>) {
   return (
-    <div className="flex min-h-screen w-full flex-col relative">
-      <header className="sticky z-20 top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-        <nav className="hidden h-[60px] flex-col gap-5 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-5">
+    <div className="flex min-h-screen w-full flex-col relative ">
+      <header className="sticky z-20 top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 bg-[var(--navbg)]">
+        <nav className="hidden h-[60px] flex-col gap-5 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-5 ">
           <div className="flex items-center gap-5">
             <Link
               href="/"
@@ -32,7 +32,7 @@ export default function Layout({
               />
               <span className="sr-only">RailSkyLines</span>
             </Link>
-            <NavItems className="text-muted-foreground transition-colors hover:text-foreground flex-shrink-0 text-lg" />
+            <NavItems className="text-muted-foreground transition-colors hover:text-foreground flex-shrink-0 text-lg " />
           </div>
         </nav>
 
@@ -54,10 +54,10 @@ export default function Layout({
                 className="flex items-center gap-2 text-lg font-semibold"
               >
                 <Package2 className="h-6 w-6" />
-                <span className="sr-only">Big boy</span>
+                <span className="sr-only">RailSkyLines</span>
               </Link>
 
-              <NavItems className="text-muted-foreground transition-colors hover:text-foreground" />
+              <NavItems className="text-muted-foreground transition-colors hover:text-foreground " />
             </nav>
           </SheetContent>
         </Sheet>
