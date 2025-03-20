@@ -9,9 +9,15 @@ export const Role = {
   Admin: "Admin",
   Staff: "Staff",
   Guest: "Guest",
+  Customer: "Customer",
 } as const;
 
-export const RoleValues = [Role.Admin, Role.Staff, Role.Guest] as const;
+export const RoleValues = [
+  Role.Admin,
+  Role.Staff,
+  Role.Guest,
+  Role.Customer,
+] as const;
 
 export const DishStatus = {
   Available: "Available",

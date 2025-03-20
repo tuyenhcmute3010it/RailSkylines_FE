@@ -37,7 +37,7 @@ const menuItems = [
     title: "Nhân viên",
     Icon: Users2,
     href: "/manage/accounts",
-    roles: [Role.Admin],
+    // roles: [Role.Admin],
   },
 ];
 

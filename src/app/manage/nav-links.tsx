@@ -30,9 +30,9 @@ export default function NavLinks() {
 
           {menuItems.map((Item, index) => {
             const isActive = pathname === Item.href;
-            if (!Item.roles.includes(role as any)) {
-              return null;
-            }
+            // if (!Item.roles.includes(role as any)) {
+            //   return null;
+            // }
             return (
               <Tooltip key={index}>
                 <TooltipTrigger asChild>

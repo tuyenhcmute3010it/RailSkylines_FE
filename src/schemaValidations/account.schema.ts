@@ -5,7 +5,7 @@ export const AccountSchema = z.object({
   id: z.number(),
   name: z.string(),
   email: z.string(),
-  role: z.enum([Role.Admin, Role.Staff]),
+  role: z.enum([Role.Admin, Role.Staff, Role.Customer, Role.Guest]),
   avatar: z.string().nullable(),
 });
 

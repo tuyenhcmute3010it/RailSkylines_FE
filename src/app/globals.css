@@ -141,7 +141,7 @@
 }
 
 .animate-marquee {
-  animation: marquee 30s linear infinite; /* Animation chạy liên tục */
+  animation: marquee 40s linear infinite; /* Animation chạy liên tục */
   animation-play-state: running;
 }
 

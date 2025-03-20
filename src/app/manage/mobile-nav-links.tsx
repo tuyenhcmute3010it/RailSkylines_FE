@@ -31,9 +31,9 @@ export default function MobileNavLinks() {
           </Link>
           {menuItems.map((Item, index) => {
             const isActive = pathname === Item.href;
-            if (!Item.roles.includes(role as any)) {
-              return null;
-            }
+            // if (!Item.roles.includes(role as any)) {
+            //   return null;
+            // }
             return (
               <Link
                 key={index}

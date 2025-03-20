@@ -53,12 +53,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSearchParams } from "next/navigation";
 import AutoPagination from "@/components/auto-pagination";
-import {
-  useDeleteAccountMutation,
-  useGetAccountList,
-} from "@/queries/useAccount";
-import { toast } from "@/components/ui/use-toast";
-import { handleErrorApi } from "@/lib/utils";
+
 type AccountItem = AccountListResType["data"][0];
 
 const AccountTableContext = createContext<{
@@ -67,14 +62,10 @@ const AccountTableContext = createContext<{
   employeeDelete: AccountItem | null;
   setEmployeeDelete: (value: AccountItem | null) => void;
 }>({
-  setEmployeeIdEdit: (value: number | undefined) => {
-    console.log(value);
-  },
+  setEmployeeIdEdit: (value: number | undefined) => {},
   employeeIdEdit: undefined,
   employeeDelete: null,
-  setEmployeeDelete: (value: AccountItem | null) => {
-    console.log(value);
-  },
+  setEmployeeDelete: (value: AccountItem | null) => {},
 });
 
 export const columns: ColumnDef<AccountType>[] = [
@@ -114,7 +105,7 @@ export const columns: ColumnDef<AccountType>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div>{row.getValue("email")}</div>,
+    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
   },
   {
     id: "actions",
@@ -158,22 +149,6 @@ function AlertDialogDeleteAccount({
   employeeDelete: AccountItem | null;
   setEmployeeDelete: (value: AccountItem | null) => void;
 }) {
-  const { mutateAsync } = useDeleteAccountMutation();
-  const deleteAccount = async () => {
-    if (employeeDelete) {
-      try {
-        const result = await mutateAsync(employeeDelete.id);
-        setEmployeeDelete(null);
-        toast({
-          title: result.payload.message,
-        });
-      } catch (error) {
-        handleErrorApi({
-          error,
-        });
-      }
-    }
-  };
   return (
     <AlertDialog
       open={Boolean(employeeDelete)}
@@ -196,14 +171,13 @@ function AlertDialogDeleteAccount({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={deleteAccount}>
-            Continue
-          </AlertDialogAction>
+          <AlertDialogAction>Continue</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 }
+
 // Số lượng item trên 1 trang
 const PAGE_SIZE = 10;
 export default function AccountTable() {
@@ -215,8 +189,101 @@ export default function AccountTable() {
   const [employeeDelete, setEmployeeDelete] = useState<AccountItem | null>(
     null
   );
-  const accountListQuery = useGetAccountList();
-  const data = accountListQuery.data?.payload.data ?? [];
+  // const data: any[] = [
+  // ];
+  const data: AccountType[] = [
+    {
+      id: 1,
+      avatar: "https://randomuser.me/api/portraits/men/1.jpg",
+      name: "Nguyễn Văn A",
+      email: "nguyenvana@example.com",
+      role: "Admin",
+    },
+    {
+      id: 2,
+      avatar: "https://randomuser.me/api/portraits/women/2.jpg",
+      name: "Trần Thị B",
+      email: "tranthib@example.com",
+      role: "Staff",
+    },
+    {
+      id: 3,
+      avatar: "https://randomuser.me/api/portraits/men/3.jpg",
+      name: "Lê Hoàng C",
+      email: "lehoangc@example.com",
+      role: "Admin",
+    },
+    {
+      id: 4,
+      avatar: "https://randomuser.me/api/portraits/women/4.jpg",
+      name: "Phạm Minh D",
+      email: "phammind@example.com",
+      role: "Staff",
+    },
+    {
+      id: 5,
+      avatar: "https://randomuser.me/api/portraits/men/5.jpg",
+      name: "Đỗ Quốc E",
+      email: "doquoce@example.com",
+      role: "Admin",
+    },
+    {
+      id: 6,
+      avatar: "https://randomuser.me/api/portraits/women/6.jpg",
+      name: "Vũ Hải F",
+      email: "vuhaiF@example.com",
+      role: "Staff",
+    },
+    {
+      id: 7,
+      avatar: "https://randomuser.me/api/portraits/men/7.jpg",
+      name: "Bùi Văn G",
+      email: "buivang@example.com",
+      role: "Admin",
+    },
+    {
+      id: 8,
+      avatar: "https://randomuser.me/api/portraits/women/8.jpg",
+      name: "Dương Thị H",
+      email: "duongthih@example.com",
+      role: "Staff",
+    },
+    {
+      id: 9,
+      avatar: "https://randomuser.me/api/portraits/men/9.jpg",
+      name: "Ngô Thành I",
+      email: "ngothanhi@example.com",
+      role: "Admin",
+    },
+    {
+      id: 10,
+      avatar: "https://randomuser.me/api/portraits/women/10.jpg",
+      name: "Hồ Bích K",
+      email: "hobichk@example.com",
+      role: "Staff",
+    },
+    {
+      id: 11,
+      avatar: "https://randomuser.me/api/portraits/women/10.jpg",
+      name: "Hồ Bích K",
+      email: "hobichk@example.com",
+      role: "Staff",
+    },
+    {
+      id: 12,
+      avatar: "https://randomuser.me/api/portraits/women/10.jpg",
+      name: "Hồ Bích K",
+      email: "hobichk@example.com",
+      role: "Staff",
+    },
+    {
+      id: 13,
+      avatar: "https://randomuser.me/api/portraits/women/10.jpg",
+      name: "Hồ Bích K",
+      email: "hobichk@example.com",
+      role: "Staff",
+    },
+  ];
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);

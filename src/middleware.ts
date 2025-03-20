@@ -6,7 +6,7 @@ import { Role } from "./constants/type";
 const guestPath = ["/guest"];
 const unAuthPaths = ["/login"];
 const managePaths = ["/manage"];
-const onlyOwnerPaths = ["/manage/accounts"];
+// const onlyOwnerPaths = ["/manage/accounts"];
 const privatePaths = [...managePaths, ...guestPath];
 
 // This function can be marked `async` if using `await` inside
@@ -15,9 +15,9 @@ export function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("accessToken")?.value;
   const refreshToken = request.cookies.get("refreshToken")?.value;
   // 1.chua dang nhap thi khong cho vao private path
-  if (privatePaths.some((path) => pathname.startsWith(path)) && !refreshToken) {
-    return NextResponse.redirect(new URL("/logout", request.url));
-  }
+  // if (privatePaths.some((path) => pathname.startsWith(path)) && !refreshToken) {
+  //   return NextResponse.redirect(new URL("/logout", request.url));
+  // }
   // 2. Truong hop da dang nhap
   if (refreshToken) {
     //2.1 neu co tinh vao trang login se redirect ve trang chu
@@ -47,14 +47,14 @@ export function middleware(request: NextRequest) {
       role !== Role.Guest &&
       guestPath.some((path) => pathname.startsWith(path));
     // Khong phai Owner nhung co tinh truy cap vao route owner
-    const isNotOwnerGoToOwnerPath =
-      role !== Role.Admin &&
-      onlyOwnerPaths.some((path) => pathname.startsWith(path));
+    // const isNotOwnerGoToOwnerPath =
+    //   role !== Role.Admin &&
+    //   onlyOwnerPaths.some((path) => pathname.startsWith(path));
 
     if (
       isGuestGoToManagePath ||
-      isNotGuestGoToGuestPath ||
-      isNotOwnerGoToOwnerPath
+      isNotGuestGoToGuestPath
+      // ||isNotOwnerGoToOwnerPath
     ) {
       return NextResponse.redirect(new URL("/", request.url));
     }
