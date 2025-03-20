@@ -21,8 +21,10 @@ import { useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useTranslations } from "next-intl";
 
 export default function AddEmployee() {
+  const manageAccountT = useTranslations("ManageAccount");
   const [file, setFile] = useState<File | null>(null);
   const [open, setOpen] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -51,16 +53,14 @@ export default function AddEmployee() {
         <Button size="sm" className="h-7 gap-1">
           <PlusCircle className="h-3.5 w-3.5" />
           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-            Tạo tài khoản
+            {manageAccountT("CreateAccount")}
           </span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-screen overflow-auto">
         <DialogHeader>
-          <DialogTitle>Tạo tài khoản</DialogTitle>
-          <DialogDescription>
-            Các trường tên, email, mật khẩu là bắt buộc
-          </DialogDescription>
+          <DialogTitle> {manageAccountT("CreateAccount")}</DialogTitle>
+          <DialogDescription>{manageAccountT("AddDes")}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
@@ -115,7 +115,7 @@ export default function AddEmployee() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="grid grid-cols-4 items-center justify-items-start gap-4">
-                      <Label htmlFor="name">Tên</Label>
+                      <Label htmlFor="name"> {manageAccountT("Name")}</Label>
                       <div className="col-span-3 w-full space-y-2">
                         <Input id="name" className="w-full" {...field} />
                         <FormMessage />
@@ -145,7 +145,9 @@ export default function AddEmployee() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="grid grid-cols-4 items-center justify-items-start gap-4">
-                      <Label htmlFor="password">Mật khẩu</Label>
+                      <Label htmlFor="password">
+                        {manageAccountT("Password")}
+                      </Label>
                       <div className="col-span-3 w-full space-y-2">
                         <Input
                           id="password"
@@ -165,7 +167,9 @@ export default function AddEmployee() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="grid grid-cols-4 items-center justify-items-start gap-4">
-                      <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
+                      <Label htmlFor="confirmPassword">
+                        {manageAccountT("ConfirmPassword")}
+                      </Label>
                       <div className="col-span-3 w-full space-y-2">
                         <Input
                           id="confirmPassword"
@@ -184,7 +188,7 @@ export default function AddEmployee() {
         </Form>
         <DialogFooter>
           <Button type="submit" form="add-employee-form">
-            Thêm
+            {manageAccountT("Add")}
           </Button>
         </DialogFooter>
       </DialogContent>

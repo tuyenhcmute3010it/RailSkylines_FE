@@ -93,5 +93,41 @@
       "title": "Contact Us",
       "content": "If you have any questions about these terms, please contact us via email or phone."
     }
+  },
+  "ManageAccount": {
+    "ID": "ID",
+    "Avatar": "Avatar",
+    "Name": "Name",
+    "Email": "Email",
+    "FilterEmails": "Filter emails...",
+    "FilterNames": "Filter Name...",
+    "CreateAccount": "Create account",
+    "Action": "Action",
+    "Previous": "Previous",
+    "Next": "Next",
+    "Edit": "Edit",
+    "Delete": "Delete",
+    "Title": "Manage Account",
+    "Description": "Manage Account Of Staff And Customer",
+    "AddDes": "Create A New Account",
+    "ConfirmPassword": "Confirm Password",
+    "Password": "Password",
+    "Add": "Create",
+    "UpdateAccount": "Update Account",
+    "UpdateAccountDes": "Name, email, and password fields are required",
+    "ChangePassword": "Change Password",
+    "Save": "Save",
+    "Del": "Delete Account?",
+    "Deldes": "Account",
+    "DelDes2": "will be permanently deleted",
+    "Cancel": "Cancel",
+    "Continue": "Continue"
+  },
+  "Pagination": {
+    "Previous": "Previous",
+    "Next": "Next",
+    "Pagi1": "Showing",
+    "Pagi2": "of",
+    "Pagi3": "Results"
   }
 }

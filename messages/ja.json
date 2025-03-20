@@ -93,5 +93,41 @@
       "title": "お問い合わせ",
       "content": "本規約に関するご質問がございましたら、メールまたはお電話でお問い合わせください。"
     }
+  },
+  "ManageAccount": {
+    "ID": "ID",
+    "Avatar": "アバター",
+    "Name": "名前",
+    "Email": "メール",
+    "FilterEmails": "メールをフィルター...",
+    "FilterNames": "名前をフィルター...",
+    "CreateAccount": "アカウントを作成",
+    "Action": "アクション",
+    "Previous": "前へ",
+    "Next": "次へ",
+    "Edit": "編集",
+    "Delete": "削除",
+    "Title": "アカウント管理",
+    "Description": "スタッフと顧客のアカウントを管理",
+    "AddDes": "新しいアカウントを作成",
+    "ConfirmPassword": "パスワードを確認",
+    "Password": "パスワード",
+    "Add": "作成",
+    "UpdateAccount": "アカウントを更新",
+    "UpdateAccountDes": "名前、メール、パスワードの入力は必須です",
+    "ChangePassword": "パスワードを変更",
+    "Save": "保存",
+    "Del": "アカウントを削除しますか？",
+    "Deldes": "アカウント",
+    "DelDes2": "は完全に削除されます",
+    "Cancel": "キャンセル",
+    "Continue": "続行"
+  },
+  "Pagination": {
+    "Previous": "前へ",
+    "Next": "次へ",
+    "Pagi1": "表示中",
+    "Pagi2": "/",
+    "Pagi3": "件の結果"
   }
 }

@@ -21,6 +21,7 @@ import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
+import { useTranslations } from "next-intl";
 
 export default function EditEmployee({
   id,
@@ -31,6 +32,7 @@ export default function EditEmployee({
   setId: (value: number | undefined) => void;
   onSubmitSuccess?: () => void;
 }) {
+  const manageAccountT = useTranslations("ManageAccount");
   const [file, setFile] = useState<File | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const form = useForm<UpdateEmployeeAccountBodyType>({
@@ -65,9 +67,9 @@ export default function EditEmployee({
     >
       <DialogContent className="sm:max-w-[600px] max-h-screen overflow-auto">
         <DialogHeader>
-          <DialogTitle>Cập nhật tài khoản</DialogTitle>
+          <DialogTitle>{manageAccountT("UpdateAccount")}</DialogTitle>
           <DialogDescription>
-            Các trường tên, email, mật khẩu là bắt buộc
+            {manageAccountT("UpdateAccountDes")}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -123,7 +125,7 @@ export default function EditEmployee({
                 render={({ field }) => (
                   <FormItem>
                     <div className="grid grid-cols-4 items-center justify-items-start gap-4">
-                      <Label htmlFor="name">Tên</Label>
+                      <Label htmlFor="name"> {manageAccountT("Name")}</Label>
                       <div className="col-span-3 w-full space-y-2">
                         <Input id="name" className="w-full" {...field} />
                         <FormMessage />
@@ -153,7 +155,10 @@ export default function EditEmployee({
                 render={({ field }) => (
                   <FormItem>
                     <div className="grid grid-cols-4 items-center justify-items-start gap-4">
-                      <Label htmlFor="email">Đổi mật khẩu</Label>
+                      <Label htmlFor="email">
+                        {" "}
+                        {manageAccountT("ChangePassword")}
+                      </Label>
                       <div className="col-span-3 w-full space-y-2">
                         <Switch
                           checked={field.value}
@@ -172,7 +177,10 @@ export default function EditEmployee({
                   render={({ field }) => (
                     <FormItem>
                       <div className="grid grid-cols-4 items-center justify-items-start gap-4">
-                        <Label htmlFor="password">Mật khẩu mới</Label>
+                        <Label htmlFor="password">
+                          {" "}
+                          {manageAccountT("Password")}
+                        </Label>
                         <div className="col-span-3 w-full space-y-2">
                           <Input
                             id="password"
@@ -195,7 +203,7 @@ export default function EditEmployee({
                     <FormItem>
                       <div className="grid grid-cols-4 items-center justify-items-start gap-4">
                         <Label htmlFor="confirmPassword">
-                          Xác nhận mật khẩu mới
+                          {manageAccountT("ConfirmPassword")}
                         </Label>
                         <div className="col-span-3 w-full space-y-2">
                           <Input
@@ -216,7 +224,7 @@ export default function EditEmployee({
         </Form>
         <DialogFooter>
           <Button type="submit" form="edit-employee-form">
-            Lưu
+            {manageAccountT("Save")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,5 +1,4 @@
 "use client";
-
 import { CaretSortIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
 import {
   ColumnDef,
@@ -53,7 +52,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSearchParams } from "next/navigation";
 import AutoPagination from "@/components/auto-pagination";
+import { useTranslations } from "next-intl";
 
+// `${manageAccountT("Avatar")}
 type AccountItem = AccountListResType["data"][0];
 
 const AccountTableContext = createContext<{
@@ -68,119 +69,135 @@ const AccountTableContext = createContext<{
   setEmployeeDelete: (value: AccountItem | null) => {},
 });
 
-export const columns: ColumnDef<AccountType>[] = [
-  {
-    accessorKey: "id",
-    header: "ID",
-  },
-  {
-    accessorKey: "avatar",
-    header: "Avatar",
-    cell: ({ row }) => (
-      <div>
-        <Avatar className="aspect-square w-[100px] h-[100px] rounded-md object-cover">
-          <AvatarImage src={row.getValue("avatar")} />
-          <AvatarFallback className="rounded-none">
-            {row.original.name}
-          </AvatarFallback>
-        </Avatar>
-      </div>
-    ),
-  },
-  {
-    accessorKey: "name",
-    header: "Tên",
-    cell: ({ row }) => <div className="capitalize">{row.getValue("name")}</div>,
-  },
-  {
-    accessorKey: "email",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Email
-          <CaretSortIcon className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: function Actions({ row }) {
-      const { setEmployeeIdEdit, setEmployeeDelete } =
-        useContext(AccountTableContext);
-      const openEditEmployee = () => {
-        setEmployeeIdEdit(row.original.id);
-      };
-
-      const openDeleteEmployee = () => {
-        setEmployeeDelete(row.original);
-      };
-      return (
-        <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <DotsHorizontalIcon className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={openEditEmployee}>Sửa</DropdownMenuItem>
-            <DropdownMenuItem onClick={openDeleteEmployee}>
-              Xóa
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
-
-function AlertDialogDeleteAccount({
-  employeeDelete,
-  setEmployeeDelete,
-}: {
-  employeeDelete: AccountItem | null;
-  setEmployeeDelete: (value: AccountItem | null) => void;
-}) {
-  return (
-    <AlertDialog
-      open={Boolean(employeeDelete)}
-      onOpenChange={(value) => {
-        if (!value) {
-          setEmployeeDelete(null);
-        }
-      }}
-    >
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Xóa nhân viên?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Tài khoản{" "}
-            <span className="bg-foreground text-primary-foreground rounded px-1">
-              {employeeDelete?.name}
-            </span>{" "}
-            sẽ bị xóa vĩnh viễn
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction>Continue</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}
-
 // Số lượng item trên 1 trang
 const PAGE_SIZE = 10;
 export default function AccountTable() {
+  const manageAccountT = useTranslations("ManageAccount");
+  const paginationT = useTranslations("Pagination");
+
+  function AlertDialogDeleteAccount({
+    employeeDelete,
+    setEmployeeDelete,
+  }: {
+    employeeDelete: AccountItem | null;
+    setEmployeeDelete: (value: AccountItem | null) => void;
+  }) {
+    return (
+      <AlertDialog
+        open={Boolean(employeeDelete)}
+        onOpenChange={(value) => {
+          if (!value) {
+            setEmployeeDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{manageAccountT("Del")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {manageAccountT("Deldes")}{" "}
+              <span className="bg-foreground text-primary-foreground rounded px-1">
+                {employeeDelete?.name}
+              </span>{" "}
+              {manageAccountT("DelDes2")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel> {manageAccountT("Cancel")}</AlertDialogCancel>
+            <AlertDialogAction> {manageAccountT("Continue")}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  }
+
+  const columns: ColumnDef<AccountType>[] = [
+    {
+      accessorKey: "id",
+      header: `${manageAccountT("ID")}`,
+    },
+    {
+      accessorKey: "avatar",
+      header: `${manageAccountT("Avatar")}`,
+      cell: ({ row }) => (
+        <div>
+          <Avatar className="aspect-square w-[100px] h-[100px] rounded-md object-cover">
+            <AvatarImage src={row.getValue("avatar")} />
+            <AvatarFallback className="rounded-none">
+              {row.original.name}
+            </AvatarFallback>
+          </Avatar>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "name",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {manageAccountT("Name")}
+            <CaretSortIcon className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("name")}</div>,
+    },
+    {
+      accessorKey: "email",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {manageAccountT("Email")}
+            <CaretSortIcon className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="lowercase">{row.getValue("email")}</div>
+      ),
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: function Actions({ row }) {
+        const { setEmployeeIdEdit, setEmployeeDelete } =
+          useContext(AccountTableContext);
+        const openEditEmployee = () => {
+          setEmployeeIdEdit(row.original.id);
+        };
+
+        const openDeleteEmployee = () => {
+          setEmployeeDelete(row.original);
+        };
+        return (
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <DotsHorizontalIcon className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>{manageAccountT("Action")}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={openEditEmployee}>
+                {manageAccountT("Edit")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={openDeleteEmployee}>
+                {manageAccountT("Delete")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
   const searchParam = useSearchParams();
   const page = searchParam.get("page") ? Number(searchParam.get("page")) : 1;
   const pageIndex = page - 1;
@@ -342,15 +359,29 @@ export default function AccountTable() {
           employeeDelete={employeeDelete}
           setEmployeeDelete={setEmployeeDelete}
         />
-        <div className="flex items-center py-4">
-          <Input
-            placeholder="Filter emails..."
-            value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("email")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
+        <div className="flex items-center py-4 ">
+          <div className="flex gap-5 ">
+            <Input
+              placeholder={manageAccountT("FilterEmails")}
+              value={
+                (table.getColumn("email")?.getFilterValue() as string) ?? ""
+              }
+              onChange={(event) =>
+                table.getColumn("email")?.setFilterValue(event.target.value)
+              }
+              className="w-72"
+            />
+            <Input
+              placeholder={manageAccountT("FilterNames")}
+              value={
+                (table.getColumn("email")?.getFilterValue() as string) ?? ""
+              }
+              onChange={(event) =>
+                table.getColumn("email")?.setFilterValue(event.target.value)
+              }
+              className="w-72"
+            />
+          </div>
           <div className="ml-auto flex items-center gap-2">
             <AddEmployee />
           </div>
@@ -407,9 +438,10 @@ export default function AccountTable() {
         </div>
         <div className="flex items-center justify-end space-x-2 py-4">
           <div className="text-xs text-muted-foreground py-4 flex-1 ">
-            Hiển thị{" "}
-            <strong>{table.getPaginationRowModel().rows.length}</strong> trong{" "}
-            <strong>{data.length}</strong> kết quả
+            {paginationT("Pagi1")}{" "}
+            <strong>{table.getPaginationRowModel().rows.length}</strong>{" "}
+            {paginationT("Pagi2")} <strong>{data.length}</strong>{" "}
+            {paginationT("Pagi3")}
           </div>
           <div>
             <AutoPagination

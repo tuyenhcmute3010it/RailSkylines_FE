@@ -94,5 +94,40 @@
       "title": "Liên hệ",
       "content": "Nếu bạn có bất kỳ câu hỏi nào về các điều khoản này, vui lòng liên hệ với chúng tôi qua email hoặc điện thoại."
     }
+  },
+  "ManageAccount": {
+    "ID": "STT",
+    "Avatar": "Ảnh Đại Diện",
+    "Name": "Tên",
+    "Email": "Email",
+    "FilterEmails": "Lọc theo email...",
+    "FilterNames": "Lọc theo tên...",
+    "CreateAccount": "Tạo tài khoản",
+    "Action": "Hành Động",
+
+    "Edit": "Sửa",
+    "Delete": "Xóa",
+    "Title": "Quản lý tài khoản",
+    "Description": "Quản lý tài khoản của nhân viên và khách hàng",
+    "AddDes": "Tạo tài khoản mới",
+    "ConfirmPassword": "Xác nhận mật khẩu",
+    "Password": "Mật khẩu",
+    "Add": "Thêm",
+    "UpdateAccount": "Cập nhật tài khoản",
+    "UpdateAccountDes": "Các trường tên, email, mật khẩu là bắt buộc",
+    "ChangePassword": "Đổi mật khẩu",
+    "Save": "Lưu",
+    "Del": "Xóa Tài Khoản ?",
+    "Deldes": "Tài Khoản",
+    "DelDes2": "sẽ bị xóa vĩnh viễn",
+    "Cancel": "Loại Bỏ",
+    "Continue": "Tiếp Tục"
+  },
+  "Pagination": {
+    "Previous": "Trước",
+    "Next": "Tiếp theo",
+    "Pagi1": "Hiển Thị",
+    "Pagi2": "Trong",
+    "Pagi3": "Kết Quả"
   }
 }
