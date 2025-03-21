@@ -129,5 +129,23 @@
     "Pagi1": "Showing",
     "Pagi2": "of",
     "Pagi3": "Results"
+  },
+  "ManageCarriage": {
+    "ID": "ID",
+    "CarriageNumber": "Carriage Number",
+    "TrainNumber": "Train Number",
+    "Capacity": "Capacity",
+    "Type": "Type",
+    "Action": "Actions",
+    "Edit": "Edit",
+    "Delete": "Delete",
+    "Del": "Delete Carriage",
+    "Deldes": "Are you sure you want to delete the carriage",
+    "DelDes2": "? This action cannot be undone.",
+    "Cancel": "Cancel",
+    "Continue": "Continue",
+    "FilterCarriageNumbers": "Filter carriage numbers...",
+    "FilterTrainNumbers": "Filter train numbers...",
+    "UpdateCarriage": "Update Carriage"
   }
 }

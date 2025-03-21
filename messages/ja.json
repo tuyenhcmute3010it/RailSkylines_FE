@@ -129,5 +129,23 @@
     "Pagi1": "表示中",
     "Pagi2": "/",
     "Pagi3": "件の結果"
+  },
+  "ManageCarriage": {
+    "ID": "ID",
+    "CarriageNumber": "車両番号",
+    "TrainNumber": "列車番号",
+    "Capacity": "定員",
+    "Type": "種類",
+    "Action": "アクション",
+    "Edit": "編集",
+    "Delete": "削除",
+    "Del": "車両の削除",
+    "Deldes": "本当に車両",
+    "DelDes2": "を削除しますか？この操作は元に戻せません。",
+    "Cancel": "キャンセル",
+    "Continue": "続行",
+    "FilterCarriageNumbers": "車両番号をフィルタリング...",
+    "FilterTrainNumbers": "列車番号をフィルタリング...",
+    "UpdateCarriage": "車両を更新"
   }
 }

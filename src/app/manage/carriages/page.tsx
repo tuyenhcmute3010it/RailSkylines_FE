@@ -1,67 +1,32 @@
-"use client";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import AddCarriage from "./add-carriage";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
-interface TrainCar {
-  id: number;
-  name: string;
-  seats: number;
-}
+import { Suspense } from "react";
+import { getTranslations } from "next-intl/server";
+import CarriageTable from "./carriages-table";
 
-const initialTrainCars: TrainCar[] = [
-  { id: 1, name: "Toa A", seats: 50 },
-  { id: 2, name: "Toa B", seats: 40 },
-  { id: 3, name: "Toa C", seats: 45 },
-];
-
-export default function TrainCarManagement() {
-  const [trainCars, setTrainCars] = useState<TrainCar[]>(initialTrainCars);
-
-  const deleteTrainCar = (id: number) => {
-    setTrainCars(trainCars.filter((car) => car.id !== id));
-  };
-
+export default async function Dashboard() {
+  const manageAccountT = await getTranslations("ManageAccount");
   return (
-    <div className="p-6 space-y-4">
-      <h1 className="text-xl font-bold">🚆 Train Car Management</h1>
-
-      {/* Nút chuyển đến trang thêm toa tàu */}
-      <AddCarriage />
-      {/* Bảng danh sách toa tàu */}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Seats</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {trainCars.map((car) => (
-            <TableRow key={car.id}>
-              <TableCell>{car.name}</TableCell>
-              <TableCell>{car.seats}</TableCell>
-              <TableCell>
-                <Button
-                  variant="destructive"
-                  onClick={() => deleteTrainCar(car.id)}
-                >
-                  Delete
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+      <div className="space-y-2">
+        <Card x-chunk="dashboard-06-chunk-0">
+          <CardHeader>
+            <CardTitle>Manage Carriages</CardTitle>
+            <CardDescription>Manage Carriages Of System</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Suspense>
+              <CarriageTable />
+            </Suspense>
+          </CardContent>
+        </Card>
+      </div>
+    </main>
   );
 }

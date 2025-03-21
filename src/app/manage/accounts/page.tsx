@@ -6,9 +6,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import AccountTable from "@/app/manage/accounts/account-table";
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
+import AccountTable from "./account-table";
 
 export default async function Dashboard() {
   const manageAccountT = await getTranslations("ManageAccount");

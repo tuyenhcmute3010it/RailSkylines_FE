@@ -1,17 +1,13 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
@@ -20,9 +16,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useState } from "react";
-import { PlusCircle } from "lucide-react";
-import { TrainDialog } from "./train-dialog";
+import { useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -30,9 +25,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TrainDialog } from "./train-dialog";
+import { useTranslations } from "next-intl";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function AddCarriage() {
-  const [open, setOpen] = useState(false);
+// Định nghĩa type cho Carriage
+type Carriage = {
+  id: number;
+  carriageNumber: string;
+  trainNumber: string;
+  capacity: number;
+  type: string;
+};
+
+type EditCarriageProps = {
+  id?: number;
+  setId?: (value: number | undefined) => void;
+  onSubmitSuccess?: () => void;
+};
+
+export default function EditCarriage({
+  id,
+  setId,
+  onSubmitSuccess,
+}: EditCarriageProps) {
+  const manageCarriageT = useTranslations("ManageCarriage");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Lấy carriageId từ props hoặc query params
+  const carriageId = id || Number(searchParams.get("id"));
+  const [open, setOpen] = useState(!!carriageId);
+
+  // Dữ liệu mẫu (thay bằng API call trong thực tế)
+  const [carriageData, setCarriageData] = useState<Carriage | null>(null);
+
   const form = useForm({
     defaultValues: {
       trainNumber: "",
@@ -41,6 +68,7 @@ export default function AddCarriage() {
       type: "",
     },
   });
+
   const CarriageTypes = [
     { value: "soft_seat_ac", label: "Soft Seat with AC" },
     { value: "hard_seat", label: "Hard Seat" },
@@ -48,29 +76,65 @@ export default function AddCarriage() {
     { value: "soft_bed_4", label: "Soft Berth (4 Beds)" },
   ];
 
+  // Giả lập fetch dữ liệu carriage dựa trên id
+  useEffect(() => {
+    if (carriageId) {
+      // Thay bằng API call thực tế: fetch(`/api/carriages/${carriageId}`)
+      const mockData: Carriage = {
+        id: carriageId,
+        carriageNumber: `C00${carriageId}`,
+        trainNumber: `SE${carriageId}`,
+        capacity: 50 + carriageId * 10,
+        type: CarriageTypes[carriageId % 4].value,
+      };
+      setCarriageData(mockData);
+      form.reset({
+        carriageNumber: mockData.carriageNumber,
+        trainNumber: mockData.trainNumber,
+        capacity: mockData.capacity.toString(),
+        type: mockData.type,
+      });
+    }
+  }, [carriageId, form]);
+
+  const onSubmit = (data: any) => {
+    // Xử lý submit form (gọi API để cập nhật carriage)
+    console.log("Updated carriage:", { id: carriageId, ...data });
+
+    // Sau khi submit thành công
+    setOpen(false);
+    if (setId) setId(undefined); // Đóng dialog nếu dùng props
+    if (onSubmitSuccess) onSubmitSuccess();
+    router.push("/manage/carriages"); // Chuyển hướng về danh sách
+  };
+
   return (
-    <Dialog onOpenChange={setOpen} open={open}>
+    <Dialog
+      open={open}
+      onOpenChange={(value) => {
+        setOpen(value);
+        if (!value && setId) setId(undefined);
+        if (!value) router.push("/manage/carriages");
+      }}
+    >
       <DialogTrigger asChild>
         <Button size="sm" className="h-7 gap-1">
-          <PlusCircle className="h-3.5 w-3.5" />
-          <span>Add Carriage</span>
+          Edit Carriage
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Add Carriage</DialogTitle>
-          <DialogDescription>
-            Enter the details of the new carriage.
-          </DialogDescription>
-        </DialogHeader>
         <Form {...form}>
-          <form noValidate id="add-carriage-form" className="grid gap-4 py-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            id="edit-carriage-form"
+            className="grid gap-4 py-4"
+          >
             <FormField
               control={form.control}
               name="carriageNumber"
               render={({ field }) => (
                 <FormItem>
-                  <Label htmlFor="carriageNumber">Carriage Number</Label>
+                  <FormLabel>{manageCarriageT("CarriageNumber")}</FormLabel>
                   <Input id="carriageNumber" {...field} />
                   <FormMessage />
                 </FormItem>
@@ -82,7 +146,7 @@ export default function AddCarriage() {
               render={({ field }) => (
                 <FormItem>
                   <div className="grid grid-cols-4 items-center justify-items-start gap-4">
-                    <Label htmlFor="trainNumber">Choose Train</Label>
+                    <FormLabel>{manageCarriageT("TrainNumber")}</FormLabel>
                     <div className="col-span-3 w-full space-y-2">
                       <div className="flex items-center gap-4">
                         <div>{field.value}</div>
@@ -99,11 +163,22 @@ export default function AddCarriage() {
             />
             <FormField
               control={form.control}
+              name="capacity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{manageCarriageT("Capacity")}</FormLabel>
+                  <Input id="capacity" type="number" {...field} />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="type"
               render={({ field }) => (
                 <FormItem>
                   <div className="grid grid-cols-4 items-center justify-items-start gap-4">
-                    <FormLabel>Type of Carriage</FormLabel>
+                    <FormLabel>{manageCarriageT("Type")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl className="col-span-3">
                         <SelectTrigger className="w-[200px]">
@@ -126,8 +201,8 @@ export default function AddCarriage() {
           </form>
         </Form>
         <DialogFooter>
-          <Button type="submit" form="add-carriage-form">
-            Add Carriage
+          <Button type="submit" form="edit-carriage-form">
+            {manageCarriageT("UpdateCarriage")}
           </Button>
         </DialogFooter>
       </DialogContent>

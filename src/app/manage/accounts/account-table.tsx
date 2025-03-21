@@ -206,8 +206,6 @@ export default function AccountTable() {
   const [employeeDelete, setEmployeeDelete] = useState<AccountItem | null>(
     null
   );
-  // const data: any[] = [
-  // ];
   const data: AccountType[] = [
     {
       id: 1,

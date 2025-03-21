@@ -129,5 +129,23 @@
     "Pagi1": "Hiển Thị",
     "Pagi2": "Trong",
     "Pagi3": "Kết Quả"
+  },
+  "ManageCarriage": {
+    "ID": "ID",
+    "CarriageNumber": "Số toa",
+    "TrainNumber": "Số tàu",
+    "Capacity": "Sức chứa",
+    "Type": "Loại",
+    "Action": "Hành động",
+    "Edit": "Sửa",
+    "Delete": "Xóa",
+    "Del": "Xóa toa tàu",
+    "Deldes": "Bạn có chắc chắn muốn xóa toa tàu",
+    "DelDes2": "? Hành động này không thể hoàn tác.",
+    "Cancel": "Hủy",
+    "Continue": "Tiếp tục",
+    "FilterCarriageNumbers": "Lọc số toa...",
+    "FilterTrainNumbers": "Lọc số tàu...",
+    "UpdateCarriage": "Cập nhật toa tàu"
   }
 }
