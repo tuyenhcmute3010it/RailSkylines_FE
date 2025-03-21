@@ -25,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TrainDialog } from "./train-dialog";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -137,27 +136,6 @@ export default function EditCarriage({
                   <FormLabel>{manageCarriageT("CarriageNumber")}</FormLabel>
                   <Input id="carriageNumber" {...field} />
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="trainNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="grid grid-cols-4 items-center justify-items-start gap-4">
-                    <FormLabel>{manageCarriageT("TrainNumber")}</FormLabel>
-                    <div className="col-span-3 w-full space-y-2">
-                      <div className="flex items-center gap-4">
-                        <div>{field.value}</div>
-                        <TrainDialog
-                          onChoose={(train) => {
-                            field.onChange(train.name);
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
                 </FormItem>
               )}
             />

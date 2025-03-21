@@ -7,6 +7,7 @@ import {
   Salad,
   Table,
   Caravan,
+  TrainFront,
 } from "lucide-react";
 
 const menuItems = [
@@ -23,16 +24,16 @@ const menuItems = [
     roles: [Role.Admin, Role.Staff],
   },
   {
-    title: "Bàn ăn",
-    Icon: Table,
-    href: "/manage/tables",
-    roles: [Role.Admin, Role.Staff],
+    title: "Tàu Hỏa",
+    Icon: TrainFront,
+    href: "/manage/trains",
+    // roles: [Role.Admin, Role.Staff],
   },
   {
     title: "Toa Tàu",
     Icon: Caravan,
     href: "/manage/carriages",
-    roles: [Role.Admin, Role.Staff],
+    // roles: [Role.Admin, Role.Staff],
   },
   {
     title: "Nhân viên",

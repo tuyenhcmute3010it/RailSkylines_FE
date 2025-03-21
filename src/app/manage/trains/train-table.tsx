@@ -61,7 +61,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TrainDialog } from "./train-dialog";
 import AutoPagination from "@/components/auto-pagination";
 import {
   AlertDialog,
@@ -74,8 +73,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useSearchParams } from "next/navigation";
-import AddCarriage from "./add-carriage";
-import EditCarriage from "./edit-carriage";
+import AddTrain from "./add-train";
 
 // Định nghĩa type cho Carriage
 type Carriage = {
@@ -137,7 +135,7 @@ function DeleteCarriageDialog({
 
 const PAGE_SIZE = 10;
 
-export default function CarriageTable() {
+export default function TrainTable() {
   const searchParam = useSearchParams();
   const page = searchParam.get("page") ? Number(searchParam.get("page")) : 1;
   const pageIndex = page - 1;
@@ -360,13 +358,13 @@ export default function CarriageTable() {
     >
       <div className="w-full">
         {/* Render EditCarriage chỉ khi carriageIdEdit có giá trị */}
-        {carriageIdEdit !== undefined && (
+        {/* {carriageIdEdit !== undefined && (
           <EditCarriage
             id={carriageIdEdit}
             setId={setCarriageIdEdit}
             onSubmitSuccess={() => setCarriageIdEdit(undefined)}
           />
-        )}
+        )} */}
         <DeleteCarriageDialog
           carriageDelete={carriageDelete}
           setCarriageDelete={setCarriageDelete}
@@ -396,7 +394,7 @@ export default function CarriageTable() {
             className="max-w-sm w-100"
           />
           <div className="ml-auto flex items-center gap-2">
-            <AddCarriage />
+            <AddTrain />
           </div>
         </div>
         <div className="rounded-md border">
