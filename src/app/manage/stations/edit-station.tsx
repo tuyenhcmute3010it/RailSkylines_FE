@@ -28,10 +28,10 @@ import {
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 
-// Định nghĩa type cho Carriage
-type Carriage = {
+// Định nghĩa type cho Station
+type Station = {
   id: number;
-  carriageNumber: string;
+  stationName: string;
   trainNumber: string;
   capacity: number;
   type: string;
@@ -43,7 +43,7 @@ type EditCarriageProps = {
   onSubmitSuccess?: () => void;
 };
 
-export default function EditTrain({
+export default function EditStation({
   id,
   setId,
   onSubmitSuccess,
@@ -57,14 +57,11 @@ export default function EditTrain({
   const [open, setOpen] = useState(!!carriageId);
 
   // Dữ liệu mẫu (thay bằng API call trong thực tế)
-  const [carriageData, setCarriageData] = useState<Carriage | null>(null);
+  const [carriageData, setCarriageData] = useState<Station | null>(null);
 
   const form = useForm({
     defaultValues: {
-      trainNumber: "",
-      carriageNumber: "",
-      capacity: "",
-      type: "",
+      stationName: "",
     },
   });
 
@@ -76,25 +73,6 @@ export default function EditTrain({
   ];
 
   // Giả lập fetch dữ liệu carriage dựa trên id
-  useEffect(() => {
-    if (carriageId) {
-      // Thay bằng API call thực tế: fetch(`/api/carriages/${carriageId}`)
-      const mockData: Carriage = {
-        id: carriageId,
-        carriageNumber: `C00${carriageId}`,
-        trainNumber: `SE${carriageId}`,
-        capacity: 50 + carriageId * 10,
-        type: CarriageTypes[carriageId % 4].value,
-      };
-      setCarriageData(mockData);
-      form.reset({
-        carriageNumber: mockData.carriageNumber,
-        trainNumber: mockData.trainNumber,
-        capacity: mockData.capacity.toString(),
-        type: mockData.type,
-      });
-    }
-  }, [carriageId, form]);
 
   const onSubmit = (data: any) => {
     // Xử lý submit form (gọi API để cập nhật carriage)
@@ -104,7 +82,7 @@ export default function EditTrain({
     setOpen(false);
     if (setId) setId(undefined); // Đóng dialog nếu dùng props
     if (onSubmitSuccess) onSubmitSuccess();
-    router.push("/manage/carriages"); // Chuyển hướng về danh sách
+    router.push("/manage/stations"); // Chuyển hướng về danh sách
   };
 
   return (
@@ -113,12 +91,12 @@ export default function EditTrain({
       onOpenChange={(value) => {
         setOpen(value);
         if (!value && setId) setId(undefined);
-        if (!value) router.push("/manage/carriages");
+        if (!value) router.push("/manage/stations");
       }}
     >
       <DialogTrigger asChild>
         <Button size="sm" className="h-7 gap-1">
-          Edit Carriage
+          Edit Station
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
@@ -130,38 +108,12 @@ export default function EditTrain({
           >
             <FormField
               control={form.control}
-              name="carriageNumber"
+              name="stationName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{manageCarriageT("CarriageNumber")}</FormLabel>
-                  <Input id="carriageNumber" {...field} />
+                  <Input id="stationName" {...field} />
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="grid grid-cols-4 items-center justify-items-start gap-4">
-                    <FormLabel>{manageCarriageT("Type")}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl className="col-span-3">
-                        <SelectTrigger className="w-[200px]">
-                          <SelectValue placeholder="Type Carriage" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {CarriageTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </div>
                 </FormItem>
               )}
             />

@@ -73,54 +73,54 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useSearchParams } from "next/navigation";
-import AddTrain from "./add-train";
-import EditTrain from "./edit-train";
+import EditStation from "./edit-station";
+import AddStation from "./add-station";
 
-// Định nghĩa type cho Train
-type Train = {
+// Định nghĩa type cho Station
+type Station = {
   id: number;
-  carriageNumber: string;
+  stationName: string;
   trainNumber: string;
   capacity: number;
   type: string;
 };
 
 const CarriageTableContext = createContext<{
-  setTrainIdEdit: (value: number) => void;
-  trainIdEdit: number | undefined;
-  trainDelete: Train | null;
-  setTrainDelete: (value: Train | null) => void;
+  setCarriageIdEdit: (value: number) => void;
+  carriageIdEdit: number | undefined;
+  carriageDelete: Station | null;
+  setCarriageDelete: (value: Station | null) => void;
 }>({
-  setTrainIdEdit: (value: number | undefined) => {},
-  trainIdEdit: undefined,
-  trainDelete: null,
-  setTrainDelete: (value: Train | null) => {},
+  setCarriageIdEdit: (value: number | undefined) => {},
+  carriageIdEdit: undefined,
+  carriageDelete: null,
+  setCarriageDelete: (value: Station | null) => {},
 });
 
 // Component xác nhận xóa
 function DeleteCarriageDialog({
-  trainDelete,
-  setTrainDelete,
+  carriageDelete,
+  setCarriageDelete,
 }: {
-  trainDelete: Train | null;
-  setTrainDelete: (value: Train | null) => void;
+  carriageDelete: Station | null;
+  setCarriageDelete: (value: Station | null) => void;
 }) {
   return (
     <AlertDialog
-      open={Boolean(trainDelete)}
+      open={Boolean(carriageDelete)}
       onOpenChange={(value) => {
         if (!value) {
-          setTrainDelete(null);
+          setCarriageDelete(null);
         }
       }}
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Train</AlertDialogTitle>
+          <AlertDialogTitle>Delete Station</AlertDialogTitle>
           <AlertDialogDescription>
             Are you sure you want to delete carriage{" "}
             <span className="bg-foreground text-primary-foreground rounded px-1">
-              {trainDelete?.carriageNumber}
+              {carriageDelete?.stationName}
             </span>
             ? This action cannot be undone.
           </AlertDialogDescription>
@@ -136,154 +136,124 @@ function DeleteCarriageDialog({
 
 const PAGE_SIZE = 10;
 
-export default function TrainTable() {
+export default function StationTable() {
   const searchParam = useSearchParams();
   const page = searchParam.get("page") ? Number(searchParam.get("page")) : 1;
   const pageIndex = page - 1;
 
-  const [trainIdEdit, setTrainIdEdit] = useState<number | undefined>();
-  const [trainDelete, setTrainDelete] = useState<Train | null>(null);
+  const [carriageIdEdit, setCarriageIdEdit] = useState<number | undefined>();
+  const [carriageDelete, setCarriageDelete] = useState<Station | null>(null);
 
   // Dữ liệu mẫu
-  const data: Train[] = [
+  const data: Station[] = [
     {
       id: 1,
-      carriageNumber: "C001",
+      stationName: "C001",
       trainNumber: "SE1",
       capacity: 50,
       type: "soft_seat_ac",
     },
     {
       id: 2,
-      carriageNumber: "C002",
+      stationName: "C002",
       trainNumber: "SE2",
       capacity: 60,
       type: "hard_seat",
     },
     {
       id: 3,
-      carriageNumber: "C003",
+      stationName: "C003",
       trainNumber: "SE3",
       capacity: 60,
       type: "hard_seat",
     },
     {
       id: 4,
-      carriageNumber: "C004",
+      stationName: "C004",
       trainNumber: "SE4",
       capacity: 60,
       type: "hard_seat",
     },
     {
       id: 5,
-      carriageNumber: "C005",
+      stationName: "C005",
       trainNumber: "SE5",
       capacity: 60,
       type: "hard_seat",
     },
     {
       id: 6,
-      carriageNumber: "C006",
+      stationName: "C006",
       trainNumber: "SE6",
       capacity: 60,
       type: "hard_seat",
     },
     {
       id: 7,
-      carriageNumber: "C007",
+      stationName: "C007",
       trainNumber: "SE7",
       capacity: 60,
       type: "hard_seat",
     },
     {
       id: 8,
-      carriageNumber: "C008",
+      stationName: "C008",
       trainNumber: "SE8",
       capacity: 60,
       type: "hard_seat",
     },
     {
       id: 9,
-      carriageNumber: "C009",
+      stationName: "C009",
       trainNumber: "SE9",
       capacity: 60,
       type: "hard_seat",
     },
     {
       id: 10,
-      carriageNumber: "C010",
+      stationName: "C010",
       trainNumber: "SE10",
       capacity: 60,
       type: "hard_seat",
     },
     {
       id: 11,
-      carriageNumber: "C011",
+      stationName: "C011",
       trainNumber: "SE11",
       capacity: 60,
       type: "hard_seat",
     },
     {
       id: 12,
-      carriageNumber: "C012",
+      stationName: "C012",
       trainNumber: "SE12",
       capacity: 60,
       type: "hard_seat",
     },
   ];
 
-  const columns: ColumnDef<Train>[] = [
+  const columns: ColumnDef<Station>[] = [
     {
       accessorKey: "id",
       header: "ID",
     },
     {
-      accessorKey: "carriageNumber",
+      accessorKey: "stationName",
       header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Train Number
+          Station Name
           <CaretSortIcon className="ml-2 h-4 w-4" />
         </Button>
       ),
-    },
-    {
-      accessorKey: "trainNumber",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Train Number
-          <CaretSortIcon className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-    },
-    {
-      accessorKey: "capacity",
-      header: "Capacity",
-    },
-    {
-      accessorKey: "type",
-      header: "Type",
-      cell: ({ row }) => {
-        const type = row.getValue("type") as string;
-        const carriageType = [
-          { value: "soft_seat_ac", label: "Soft Seat with AC" },
-          { value: "hard_seat", label: "Hard Seat" },
-          { value: "soft_bed_6", label: "Soft Berth (6 Beds)" },
-          { value: "soft_bed_4", label: "Soft Berth (4 Beds)" },
-        ].find((t) => t.value === type)?.label;
-        return <div>{carriageType}</div>;
-      },
     },
     {
       id: "actions",
       enableHiding: false,
       cell: function Actions({ row }) {
-        const { setTrainIdEdit, setTrainDelete } =
+        const { setCarriageIdEdit, setCarriageDelete } =
           useContext(CarriageTableContext);
         return (
           <DropdownMenu modal={false}>
@@ -295,10 +265,12 @@ export default function TrainTable() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setTrainIdEdit(row.original.id)}>
+              <DropdownMenuItem
+                onClick={() => setCarriageIdEdit(row.original.id)}
+              >
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTrainDelete(row.original)}>
+              <DropdownMenuItem onClick={() => setCarriageDelete(row.original)}>
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -349,35 +321,33 @@ export default function TrainTable() {
   return (
     <CarriageTableContext.Provider
       value={{
-        trainIdEdit,
-        setTrainIdEdit,
-        trainDelete,
-        setTrainDelete,
+        carriageIdEdit,
+        setCarriageIdEdit,
+        carriageDelete,
+        setCarriageDelete,
       }}
     >
       <div className="w-full">
-        {trainIdEdit !== undefined && (
-          <EditTrain
-            id={trainIdEdit}
-            setId={setTrainIdEdit}
-            onSubmitSuccess={() => setTrainIdEdit(undefined)}
+        {/* Render EditCarriage chỉ khi carriageIdEdit có giá trị */}
+        {carriageIdEdit !== undefined && (
+          <EditStation
+            id={carriageIdEdit}
+            setId={setCarriageIdEdit}
+            onSubmitSuccess={() => setCarriageIdEdit(undefined)}
           />
         )}
         <DeleteCarriageDialog
-          trainDelete={trainDelete}
-          setTrainDelete={setTrainDelete}
+          carriageDelete={carriageDelete}
+          setCarriageDelete={setCarriageDelete}
         />
         <div className="flex items-center py-4 gap-5">
           <Input
             placeholder="Filter carriage numbers..."
             value={
-              (table.getColumn("carriageNumber")?.getFilterValue() as string) ??
-              ""
+              (table.getColumn("stationName")?.getFilterValue() as string) ?? ""
             }
             onChange={(event) =>
-              table
-                .getColumn("carriageNumber")
-                ?.setFilterValue(event.target.value)
+              table.getColumn("stationName")?.setFilterValue(event.target.value)
             }
             className="max-w-sm w-100"
           />
@@ -392,7 +362,7 @@ export default function TrainTable() {
             className="max-w-sm w-100"
           />
           <div className="ml-auto flex items-center gap-2">
-            <AddTrain />
+            <AddStation />
           </div>
         </div>
         <div className="rounded-md border">
@@ -443,13 +413,13 @@ export default function TrainTable() {
         <div className="flex items-center justify-between py-4 ">
           <div className="text-xs text-muted-foreground">
             Showing <strong>{table.getPaginationRowModel().rows.length}</strong>{" "}
-            of <strong>{data.length}</strong> carriages
+            of <strong>{data.length}</strong> stations
           </div>
           <div>
             <AutoPagination
               page={table.getState().pagination.pageIndex + 1}
               pageSize={table.getPageCount()}
-              pathname="/manage/trains"
+              pathname="/manage/stations"
             />
           </div>
         </div>

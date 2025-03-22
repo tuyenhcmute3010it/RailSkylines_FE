@@ -8,6 +8,7 @@ import {
   Table,
   Caravan,
   TrainFront,
+  BellElectric,
 } from "lucide-react";
 
 const menuItems = [
@@ -33,6 +34,12 @@ const menuItems = [
     title: "Toa Tàu",
     Icon: Caravan,
     href: "/manage/carriages",
+    // roles: [Role.Admin, Role.Staff],
+  },
+  {
+    title: "Ga",
+    Icon: BellElectric,
+    href: "/manage/stations",
     // roles: [Role.Admin, Role.Staff],
   },
   {

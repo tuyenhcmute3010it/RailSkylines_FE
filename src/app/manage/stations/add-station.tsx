@@ -30,15 +30,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export default function AddTrain() {
+export default function AddStation() {
   const [open, setOpen] = useState(false);
   const form = useForm({
     defaultValues: {
-      trainName: "",
-      route: "",
-      carriageNumber: "",
-      capacity: "",
-      type: "",
+      stationName: "",
     },
   });
 
@@ -47,12 +43,12 @@ export default function AddTrain() {
       <DialogTrigger asChild>
         <Button size="sm" className="h-7 gap-1">
           <PlusCircle className="h-3.5 w-3.5" />
-          <span>Add Train</span>
+          <span>Add Station</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Add Train</DialogTitle>
+          <DialogTitle>Add Station</DialogTitle>
           <DialogDescription>
             Enter the details of the new carriage.
           </DialogDescription>
@@ -61,11 +57,11 @@ export default function AddTrain() {
           <form noValidate id="add-carriage-form" className="grid gap-4 py-4">
             <FormField
               control={form.control}
-              name="trainName"
+              name="stationName"
               render={({ field }) => (
                 <FormItem>
-                  <Label htmlFor="trainName">Train Name</Label>
-                  <Input id="trainName" {...field} />
+                  <Label htmlFor="stationName">Station Name</Label>
+                  <Input id="stationName" {...field} />
                   <FormMessage />
                 </FormItem>
               )}
@@ -74,7 +70,7 @@ export default function AddTrain() {
         </Form>
         <DialogFooter>
           <Button type="submit" form="add-carriage-form">
-            Add Train
+            Add Station
           </Button>
         </DialogFooter>
       </DialogContent>
