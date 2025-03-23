@@ -9,6 +9,7 @@ import {
   Caravan,
   TrainFront,
   BellElectric,
+  BadgeCent,
 } from "lucide-react";
 
 const menuItems = [
@@ -40,6 +41,12 @@ const menuItems = [
     title: "Ga",
     Icon: BellElectric,
     href: "/manage/stations",
+    // roles: [Role.Admin, Role.Staff],
+  },
+  {
+    title: "Ưu Đãi",
+    Icon: BadgeCent,
+    href: "/manage/promotions",
     // roles: [Role.Admin, Role.Staff],
   },
   {

@@ -28,61 +28,54 @@ import {
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 
-// Định nghĩa type cho Station
-type Station = {
+// Định nghĩa type cho Promotion
+type Promotion = {
   id: number;
-  stationName: string;
-  trainNumber: string;
-  capacity: number;
-  type: string;
+  promotionName: string;
+  discount: number;
 };
 
-type EditCarriageProps = {
+type EditPromotionProps = {
   id?: number;
   setId?: (value: number | undefined) => void;
   onSubmitSuccess?: () => void;
 };
 
-export default function EditStation({
+export default function EditPromotion({
   id,
   setId,
   onSubmitSuccess,
-}: EditCarriageProps) {
+}: EditPromotionProps) {
   const manageCarriageT = useTranslations("ManageCarriage");
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Lấy carriageId từ props hoặc query params
-  const carriageId = id || Number(searchParams.get("id"));
-  const [open, setOpen] = useState(!!carriageId);
+  // Lấy promotionId từ props hoặc query params
+  const promotionId = id || Number(searchParams.get("id"));
+  const [open, setOpen] = useState(!!promotionId);
 
   // Dữ liệu mẫu (thay bằng API call trong thực tế)
-  const [carriageData, setCarriageData] = useState<Station | null>(null);
+  const [promotionData, setPromotionData] = useState<Promotion | null>(null);
 
   const form = useForm({
     defaultValues: {
-      stationName: "",
+      trainNumber: "",
+      promotionName: "",
+      discount: "",
     },
   });
 
-  const CarriageTypes = [
-    { value: "soft_seat_ac", label: "Soft Seat with AC" },
-    { value: "hard_seat", label: "Hard Seat" },
-    { value: "soft_bed_6", label: "Soft Berth (6 Beds)" },
-    { value: "soft_bed_4", label: "Soft Berth (4 Beds)" },
-  ];
-
-  // Giả lập fetch dữ liệu carriage dựa trên id
+  // Giả lập fetch dữ liệu promotion dựa trên id
 
   const onSubmit = (data: any) => {
-    // Xử lý submit form (gọi API để cập nhật carriage)
-    console.log("Updated carriage:", { id: carriageId, ...data });
+    // Xử lý submit form (gọi API để cập nhật promotion)
+    console.log("Updated promotion:", { id: promotionId, ...data });
 
     // Sau khi submit thành công
     setOpen(false);
     if (setId) setId(undefined); // Đóng dialog nếu dùng props
     if (onSubmitSuccess) onSubmitSuccess();
-    router.push("/manage/stations"); // Chuyển hướng về danh sách
+    router.push("/manage/promotions"); // Chuyển hướng về danh sách
   };
 
   return (
@@ -91,28 +84,39 @@ export default function EditStation({
       onOpenChange={(value) => {
         setOpen(value);
         if (!value && setId) setId(undefined);
-        if (!value) router.push("/manage/stations");
+        if (!value) router.push("/manage/promotions");
       }}
     >
       <DialogTrigger asChild>
         <Button size="sm" className="h-7 gap-1">
-          Edit Station
+          Edit Promotion
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            id="edit-carriage-form"
+            id="edit-promotion-form"
             className="grid gap-4 py-4"
           >
             <FormField
               control={form.control}
-              name="stationName"
+              name="promotionName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Station Name</FormLabel>
-                  <Input id="stationName" {...field} />
+                  <FormLabel>Promotion Name</FormLabel>
+                  <Input id="promotionName" {...field} />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="discount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Discount</FormLabel>
+                  <Input id="discount" {...field} />
                   <FormMessage />
                 </FormItem>
               )}
@@ -120,8 +124,8 @@ export default function EditStation({
           </form>
         </Form>
         <DialogFooter>
-          <Button type="submit" form="edit-carriage-form">
-            Update Station
+          <Button type="submit" form="edit-promotion-form">
+            {manageCarriageT("UpdateCarriage")}
           </Button>
         </DialogFooter>
       </DialogContent>

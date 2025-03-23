@@ -73,51 +73,52 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useSearchParams } from "next/navigation";
-import EditStation from "./edit-station";
-import AddStation from "./add-station";
+import EditPromotion from "./edit-promotion";
+import AddPromotion from "./add-promotion";
 
-// Định nghĩa type cho Station
-type Station = {
+// Định nghĩa type cho Promotion
+type Promotion = {
   id: number;
-  stationName: string;
+  promotionName: string;
+  discount: number;
 };
 
 const CarriageTableContext = createContext<{
-  setCarriageIdEdit: (value: number) => void;
-  carriageIdEdit: number | undefined;
-  carriageDelete: Station | null;
-  setCarriageDelete: (value: Station | null) => void;
+  setPromotionIdEdit: (value: number) => void;
+  promotionIdEdit: number | undefined;
+  promotionDelete: Promotion | null;
+  setPromotionDelete: (value: Promotion | null) => void;
 }>({
-  setCarriageIdEdit: (value: number | undefined) => {},
-  carriageIdEdit: undefined,
-  carriageDelete: null,
-  setCarriageDelete: (value: Station | null) => {},
+  setPromotionIdEdit: (value: number | undefined) => {},
+  promotionIdEdit: undefined,
+  promotionDelete: null,
+  setPromotionDelete: (value: Promotion | null) => {},
 });
 
 // Component xác nhận xóa
-function DeleteCarriageDialog({
-  carriageDelete,
-  setCarriageDelete,
+function DeletePromotionDialog({
+  promotionDelete,
+  setPromotionDelete,
 }: {
-  carriageDelete: Station | null;
-  setCarriageDelete: (value: Station | null) => void;
+  promotionDelete: Promotion | null;
+  setPromotionDelete: (value: Promotion | null) => void;
 }) {
   return (
     <AlertDialog
-      open={Boolean(carriageDelete)}
+      open={Boolean(promotionDelete)}
       onOpenChange={(value) => {
         if (!value) {
-          setCarriageDelete(null);
+          setPromotionDelete(null);
         }
       }}
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Station</AlertDialogTitle>
+          <AlertDialogTitle>Delete Promotion</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete carriage{" "}
+            Are you sure you want to delete promotion{" "}
             <span className="bg-foreground text-primary-foreground rounded px-1">
-              {carriageDelete?.stationName}
+              {promotionDelete?.promotionName}
             </span>
             ? This action cannot be undone.
           </AlertDialogDescription>
@@ -133,71 +134,104 @@ function DeleteCarriageDialog({
 
 const PAGE_SIZE = 10;
 
-export default function StationTable() {
+export default function PromotionTable() {
   const searchParam = useSearchParams();
   const page = searchParam.get("page") ? Number(searchParam.get("page")) : 1;
   const pageIndex = page - 1;
 
-  const [carriageIdEdit, setCarriageIdEdit] = useState<number | undefined>();
-  const [carriageDelete, setCarriageDelete] = useState<Station | null>(null);
+  const [promotionIdEdit, setPromotionIdEdit] = useState<number | undefined>();
+  const [promotionDelete, setPromotionDelete] = useState<Promotion | null>(
+    null
+  );
 
   // Dữ liệu mẫu
-  const data: Station[] = [
+  const data: Promotion[] = [
     {
       id: 1,
-      stationName: "Ga Quảng Ngãi",
+      promotionName: "Khuyến mãi mùa xuân",
+      discount: 20,
     },
     {
       id: 2,
-      stationName: "Ga Dĩ An",
+      promotionName: "Giảm giá vé sớm",
+      discount: 15,
     },
     {
       id: 3,
-      stationName: "Ga Hà Nội",
+      promotionName: "Ưu đãi Ga Quảng Ngãi",
+      discount: 10,
     },
     {
       id: 4,
-      stationName: "Ga Sài Gòn",
+      promotionName: "Vé khứ hồi giảm giá",
+      discount: 25,
     },
     {
       id: 5,
-      stationName: "Ga Đà Nẵng",
+      promotionName: "Khuyến mãi sinh viên",
+      discount: 30,
     },
     {
       id: 6,
-      stationName: "Ga Huế",
+      promotionName: "Giảm giá ngày lễ",
+      discount: 20,
     },
     {
       id: 7,
-      stationName: "Ga Nha Trang",
+      promotionName: "Ưu đãi Ga Dĩ An",
+      discount: 15,
     },
     {
       id: 8,
-      stationName: "Ga Vinh",
+      promotionName: "Khuyến mãi gia đình",
+      discount: 25,
     },
     {
       id: 9,
-      stationName: "Ga Đồng Hới",
+      promotionName: "Vé cuối tuần",
+      discount: 10,
     },
     {
       id: 10,
-      stationName: "Ga Lào Cai",
+      promotionName: "Giảm giá đoàn đông",
+      discount: 35,
+    },
+    {
+      id: 11,
+      promotionName: "Ưu đãi Ga Hà Nội",
+      discount: 20,
+    },
+    {
+      id: 12,
+      promotionName: "Khuyến mãi mùa hè",
+      discount: 30,
     },
   ];
-
-  const columns: ColumnDef<Station>[] = [
+  const columns: ColumnDef<Promotion>[] = [
     {
       accessorKey: "id",
       header: "ID",
     },
     {
-      accessorKey: "stationName",
+      accessorKey: "promotionName",
       header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Station Name
+          Promotion Name
+          <CaretSortIcon className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+    },
+    {
+      accessorKey: "discount",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Discount
           <CaretSortIcon className="ml-2 h-4 w-4" />
         </Button>
       ),
@@ -206,7 +240,7 @@ export default function StationTable() {
       id: "actions",
       enableHiding: false,
       cell: function Actions({ row }) {
-        const { setCarriageIdEdit, setCarriageDelete } =
+        const { setPromotionIdEdit, setPromotionDelete } =
           useContext(CarriageTableContext);
         return (
           <DropdownMenu modal={false}>
@@ -219,11 +253,13 @@ export default function StationTable() {
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => setCarriageIdEdit(row.original.id)}
+                onClick={() => setPromotionIdEdit(row.original.id)}
               >
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setCarriageDelete(row.original)}>
+              <DropdownMenuItem
+                onClick={() => setPromotionDelete(row.original)}
+              >
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -274,39 +310,51 @@ export default function StationTable() {
   return (
     <CarriageTableContext.Provider
       value={{
-        carriageIdEdit,
-        setCarriageIdEdit,
-        carriageDelete,
-        setCarriageDelete,
+        promotionIdEdit,
+        setPromotionIdEdit,
+        promotionDelete,
+        setPromotionDelete,
       }}
     >
       <div className="w-full">
-        {/* Render EditCarriage chỉ khi carriageIdEdit có giá trị */}
-        {carriageIdEdit !== undefined && (
-          <EditStation
-            id={carriageIdEdit}
-            setId={setCarriageIdEdit}
-            onSubmitSuccess={() => setCarriageIdEdit(undefined)}
+        {/* Render EditCarriage chỉ khi promotionIdEdit có giá trị */}
+        {promotionIdEdit !== undefined && (
+          <EditPromotion
+            id={promotionIdEdit}
+            setId={setPromotionIdEdit}
+            onSubmitSuccess={() => setPromotionIdEdit(undefined)}
           />
         )}
-        <DeleteCarriageDialog
-          carriageDelete={carriageDelete}
-          setCarriageDelete={setCarriageDelete}
+        <DeletePromotionDialog
+          promotionDelete={promotionDelete}
+          setPromotionDelete={setPromotionDelete}
         />
         <div className="flex items-center py-4 gap-5">
           <Input
-            placeholder="Filter station name..."
+            placeholder="Filter Promotion Name..."
             value={
-              (table.getColumn("stationName")?.getFilterValue() as string) ?? ""
+              (table.getColumn("promotionName")?.getFilterValue() as string) ??
+              ""
             }
             onChange={(event) =>
-              table.getColumn("stationName")?.setFilterValue(event.target.value)
+              table
+                .getColumn("promotionName")
+                ?.setFilterValue(event.target.value)
             }
             className="max-w-sm w-100"
           />
-
+          <Input
+            placeholder="Filter Discount..."
+            value={
+              (table.getColumn("discount")?.getFilterValue() as string) ?? ""
+            }
+            onChange={(event) =>
+              table.getColumn("discount")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm w-100"
+          />
           <div className="ml-auto flex items-center gap-2">
-            <AddStation />
+            <AddPromotion />
           </div>
         </div>
         <div className="rounded-md border">
@@ -357,13 +405,13 @@ export default function StationTable() {
         <div className="flex items-center justify-between py-4 ">
           <div className="text-xs text-muted-foreground">
             Showing <strong>{table.getPaginationRowModel().rows.length}</strong>{" "}
-            of <strong>{data.length}</strong> stations
+            of <strong>{data.length}</strong> promotions
           </div>
           <div>
             <AutoPagination
               page={table.getState().pagination.pageIndex + 1}
               pageSize={table.getPageCount()}
-              pathname="/manage/stations"
+              pathname="/manage/promotions"
             />
           </div>
         </div>
