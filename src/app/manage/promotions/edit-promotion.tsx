@@ -56,7 +56,6 @@ export default function EditPromotion({
 
   // Dữ liệu mẫu (thay bằng API call trong thực tế)
   const [promotionData, setPromotionData] = useState<Promotion | null>(null);
-
   const form = useForm({
     defaultValues: {
       trainNumber: "",
