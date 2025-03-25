@@ -149,9 +149,7 @@ export default function ArticleTable() {
           </Button>
         );
       },
-      cell: ({ row }) => (
-        <div className="lowercase">{row.getValue("content")}</div>
-      ),
+      cell: ({ row }) => <div>{row.getValue("content")}</div>,
     },
     {
       id: "actions",
