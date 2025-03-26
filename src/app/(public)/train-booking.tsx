@@ -1,55 +1,3 @@
-// "use client";
-// import { useState } from "react";
-// import { Card, CardContent } from "@/components/ui/card";
-// import { Button } from "@/components/ui/button";
-
-// const seats = Array.from({ length: 64 }, (_, i) => i + 1);
-// const bookedSeats = [
-//   1, 2, 3, 6, 7, 8, 9, 10, 14, 15, 16, 18, 19, 20, 21, 23, 24,
-// ];
-
-// export default function TrainTicketBooking() {
-//   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
-
-//   const toggleSeatSelection = (seat: number) => {
-//     if (bookedSeats.includes(seat)) return;
-//     setSelectedSeats((prev) =>
-//       prev.includes(seat) ? prev.filter((s) => s !== seat) : [...prev, seat]
-//     );
-//   };
-
-//   return (
-//     <div className="p-6">
-//       <h2 className="text-xl font-bold mb-4">Toa số 1: Ngồi mềm điều hòa</h2>
-//       <div className="grid grid-cols-8 gap-2">
-//         {seats.map((seat) => (
-//           <Card
-//             key={seat}
-//             className={`p-2 text-center cursor-pointer ${
-//               bookedSeats.includes(seat)
-//                 ? "bg-red-500 text-white cursor-not-allowed"
-//                 : selectedSeats.includes(seat)
-//                 ? "bg-blue-500 text-white"
-//                 : "bg-gray-100"
-//             }`}
-//             onClick={() => toggleSeatSelection(seat)}
-//           >
-//             <CardContent>{seat}</CardContent>
-//           </Card>
-//         ))}
-//       </div>
-//       <div className="mt-4">
-//         <Button
-//           className="bg-green-600 text-white"
-//           disabled={selectedSeats.length === 0}
-//         >
-//           Xác nhận đặt chỗ ({selectedSeats.length} ghế)
-//         </Button>
-//       </div>
-//     </div>
-//   );
-// }
-
 "use client";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -68,7 +16,8 @@ const trains = [
       {
         id: 1,
         name: "Toa số 1: Ngồi mềm điều hòa",
-        seats: Array.from({ length: 64 }, (_, i) => i + 1),
+        type: "seat",
+        seats: Array.from({ length: 56 }, (_, i) => i + 1),
         bookedSeats: [
           1, 2, 3, 6, 7, 8, 9, 10, 14, 15, 16, 18, 19, 20, 21, 23, 24,
         ],
@@ -76,25 +25,29 @@ const trains = [
       {
         id: 2,
         name: "Toa số 2: Ngồi cứng điều hòa",
-        seats: Array.from({ length: 64 }, (_, i) => i + 1),
+        type: "seat",
+        seats: Array.from({ length: 56 }, (_, i) => i + 1),
         bookedSeats: [4, 5, 11, 12, 17, 22, 25, 26, 30, 31],
       },
       {
         id: 3,
         name: "Toa số 3: Ngồi cứng điều hòa",
-        seats: Array.from({ length: 64 }, (_, i) => i + 1),
+        type: "seat",
+        seats: Array.from({ length: 56 }, (_, i) => i + 1),
         bookedSeats: [4, 5, 11, 12, 17, 22, 25, 26, 30, 31],
       },
       {
         id: 4,
         name: "Toa số 4: Ngồi cứng điều hòa",
-        seats: Array.from({ length: 64 }, (_, i) => i + 1),
+        type: "seat",
+        seats: Array.from({ length: 56 }, (_, i) => i + 1),
         bookedSeats: [4, 5, 11, 12, 17, 22, 25, 26, 30, 31],
       },
       {
         id: 5,
         name: "Toa số 5: Ngồi cứng điều hòa",
-        seats: Array.from({ length: 64 }, (_, i) => i + 1),
+        type: "seat",
+        seats: Array.from({ length: 56 }, (_, i) => i + 1),
         bookedSeats: [4, 5, 11, 12, 17, 22, 25, 26, 30, 31],
       },
     ],
@@ -109,7 +62,8 @@ const trains = [
       {
         id: 1,
         name: "Toa số 1: Giường nằm khoang 4",
-        seats: Array.from({ length: 36 }, (_, i) => i + 1),
+        type: "4-bed",
+        seats: Array.from({ length: 28 }, (_, i) => i + 1),
         bookedSeats: [1, 3, 5, 8, 10, 12, 15, 18, 22, 25],
       },
     ],
@@ -124,13 +78,15 @@ const trains = [
       {
         id: 1,
         name: "Toa số 1: Giường nằm khoang 6",
+        type: "6-bed",
         seats: Array.from({ length: 42 }, (_, i) => i + 1),
         bookedSeats: [2, 4, 7, 11, 14, 17, 19, 21, 26, 30, 35],
       },
       {
         id: 2,
         name: "Toa số 2: Ngồi cứng điều hòa",
-        seats: Array.from({ length: 64 }, (_, i) => i + 1),
+        type: "seat",
+        seats: Array.from({ length: 56 }, (_, i) => i + 1),
         bookedSeats: [5, 9, 13, 22, 24, 28, 31, 37, 40],
       },
     ],
@@ -145,13 +101,15 @@ const trains = [
       {
         id: 1,
         name: "Toa số 1: Ngồi mềm điều hòa",
-        seats: Array.from({ length: 64 }, (_, i) => i + 1),
+        type: "seat",
+        seats: Array.from({ length: 56 }, (_, i) => i + 1),
         bookedSeats: [1, 6, 9, 15, 19, 21, 29, 34, 40, 48, 53, 58, 60],
       },
       {
         id: 2,
         name: "Toa số 2: Giường nằm khoang 4",
-        seats: Array.from({ length: 36 }, (_, i) => i + 1),
+        type: "4-bed",
+        seats: Array.from({ length: 28 }, (_, i) => i + 1),
         bookedSeats: [2, 5, 10, 14, 18, 22, 27, 30],
       },
     ],
@@ -166,13 +124,15 @@ const trains = [
       {
         id: 1,
         name: "Toa số 1: Giường nằm khoang 6",
+        type: "6-bed",
         seats: Array.from({ length: 42 }, (_, i) => i + 1),
         bookedSeats: [3, 7, 12, 16, 20, 24, 29, 32, 38, 40],
       },
       {
         id: 2,
         name: "Toa số 2: Ngồi cứng điều hòa",
-        seats: Array.from({ length: 64 }, (_, i) => i + 1),
+        type: "seat",
+        seats: Array.from({ length: 56 }, (_, i) => i + 1),
         bookedSeats: [5, 8, 15, 22, 28, 33, 39, 44, 51, 55],
       },
     ],
@@ -259,28 +219,6 @@ export default function TrainTicketBooking() {
           </Card>
         ))}
       </div>
-      {/* 
-      {selectedTrain && (
-        <>
-          <div className="grid grid-cols-5 gap-4 mt-3">
-            {selectedTrain.carriages.map((coach) => (
-              <Card
-                key={coach.id}
-                className={`p-4 text-center cursor-pointer ${
-                  selectedCoach?.id === coach.id
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100"
-                }`}
-                onClick={() => handleCoachSelect(coach.id)}
-              >
-                <CardContent>
-                  <h3 className="text-sm font-bold">{coach.name}</h3>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </>
-      )} */}
       {selectedTrain && (
         <>
           <div className="flex items-center mt-3">
@@ -305,10 +243,6 @@ export default function TrainTicketBooking() {
                 }}
                 onClick={() => handleCoachSelect(coach.id)}
               >
-                {/* Lớp phủ mờ để giúp chữ dễ đọc hơn */}
-
-                {/* <CardContent className="relative z-10 text-white">
-                </CardContent> */}
                 <h3 className="text-sm font-bold mt-3 text-white">
                   {coach.id}
                 </h3>
@@ -321,25 +255,159 @@ export default function TrainTicketBooking() {
       {selectedCoach && (
         <>
           <h2 className="text-xl font-bold mt-6">{selectedCoach.name}</h2>
-          <div className="grid grid-cols-8 gap-2">
-            {selectedCoach.seats.map((seat) => (
-              <Card
-                key={seat}
-                className={`p-2 text-center cursor-pointer bg-cover bg-center h-[70px] w-[60px] ${
-                  selectedCoach.bookedSeats.includes(seat)
-                    ? "bg-orange-600 text-white cursor-not-allowed"
-                    : selectedSeats.includes(seat)
-                    ? "bg-[#a6b727] text-white"
-                    : "bg-transparent"
-                }`}
-                style={{
-                  backgroundImage: `url('/seat.png')`, // Thay ảnh tương ứng
-                }}
-                onClick={() => toggleSeatSelection(seat)}
-              >
-                <h3 className="text-sm font-bold mt-3 text-white">{seat}</h3>
-              </Card>
-            ))}
+
+          <div className="grid grid-cols-[repeat(7,minmax(0,1fr))] gap-4">
+            {selectedCoach.type === "4-bed" &&
+              Array.from({ length: selectedCoach.seats.length / 4 }, (_, i) => {
+                const startIdx = i * 4;
+                return (
+                  <div
+                    key={i}
+                    className="grid grid-rows-2 gap-2 text-center border-x-4 border-blue-700 p-2 rounded-lg"
+                  >
+                    {[0, 2].map((offset, rowIndex) => {
+                      const seatT1 = selectedCoach.seats[startIdx + offset];
+                      const seatT2 = selectedCoach.seats[startIdx + offset + 1];
+
+                      return (
+                        <div
+                          key={seatT1}
+                          className={`flex gap-2 ${
+                            rowIndex === 0 ? "border-b-2 border-gray-500" : ""
+                          }`}
+                        >
+                          {[seatT1, seatT2].map((seat) => (
+                            <Card
+                              key={seat}
+                              className={`p-2 text-center cursor-pointer bg-cover bg-center h-[50px] w-[50px] flex items-center justify-center ${
+                                selectedCoach.bookedSeats.includes(seat)
+                                  ? "bg-orange-600 text-white cursor-not-allowed"
+                                  : selectedSeats.includes(seat)
+                                  ? "bg-[#a6b727] text-white"
+                                  : "bg-transparent"
+                              }`}
+                              style={{
+                                backgroundImage: `url('/bed.png')`,
+                              }}
+                              onClick={() => toggleSeatSelection(seat)}
+                            >
+                              <h3 className="text-sm font-bold">{seat}</h3>
+                            </Card>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+          </div>
+
+          <div className="grid grid-cols-[repeat(7,minmax(0,1fr))] gap-4">
+            {selectedCoach.type === "6-bed" &&
+              Array.from({ length: selectedCoach.seats.length / 6 }, (_, i) => {
+                const startIdx = i * 6;
+                return (
+                  <div
+                    key={i}
+                    className="grid grid-rows-3 gap-2 text-center border-x-4 border-blue-700 p-1 rounded-lg"
+                  >
+                    {[0, 2, 4].map((offset, rowIndex) => {
+                      const seatT1 = selectedCoach.seats[startIdx + offset];
+                      const seatT2 = selectedCoach.seats[startIdx + offset + 1];
+
+                      return (
+                        <div
+                          key={seatT1}
+                          className={`flex gap-2 ${
+                            rowIndex < 2
+                              ? "border-b-2 border-gray-500 pb-2"
+                              : ""
+                          }`}
+                        >
+                          {[seatT1, seatT2].map((seat) => (
+                            <Card
+                              key={seat}
+                              className={`p-2 text-center cursor-pointer bg-cover bg-center h-[50px] w-[50px] flex items-center justify-center ${
+                                selectedCoach.bookedSeats.includes(seat)
+                                  ? "bg-orange-600 text-white cursor-not-allowed"
+                                  : selectedSeats.includes(seat)
+                                  ? "bg-[#a6b727] text-white"
+                                  : "bg-transparent"
+                              }`}
+                              style={{
+                                backgroundImage: `url('/bed.png')`,
+                              }}
+                              onClick={() => toggleSeatSelection(seat)}
+                            >
+                              <h3 className="text-sm font-bold">{seat}</h3>
+                            </Card>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+          </div>
+
+          {/* <div className="grid grid-cols-8 gap-2">
+            {selectedCoach.type === "seat" &&
+              selectedCoach.seats.map((seat) => (
+                <Card
+                  key={seat}
+                  className={`p-2 text-center cursor-pointer bg-cover bg-center h-[70px] w-[60px] ${
+                    selectedCoach.bookedSeats.includes(seat)
+                      ? "bg-orange-600 text-white cursor-not-allowed"
+                      : selectedSeats.includes(seat)
+                      ? "bg-[#a6b727] text-white"
+                      : "bg-transparent"
+                  }`}
+                  style={{
+                    backgroundImage: `url('/seat.png')`, // Thay ảnh tương ứng
+                  }}
+                  onClick={() => toggleSeatSelection(seat)}
+                >
+                  <h3 className="text-sm font-bold mt-3 text-white">{seat}</h3>
+                </Card>
+              ))}
+          </div> */}
+          <div className="grid grid-cols-2 gap-4">
+            {selectedCoach.type === "seat" &&
+              Array.from(
+                { length: selectedCoach.seats.length / 14 },
+                (_, partIndex) => {
+                  const startIdx = partIndex * 14;
+                  return (
+                    <div
+                      key={partIndex}
+                      className="grid grid-cols-7 grid-rows-2 gap-2 border p-2 rounded-lg"
+                    >
+                      {selectedCoach.seats
+                        .slice(startIdx, startIdx + 14)
+                        .map((seat) => (
+                          <Card
+                            key={seat}
+                            className={`p-2 text-center cursor-pointer bg-cover bg-center h-[70px] w-[60px] ${
+                              selectedCoach.bookedSeats.includes(seat)
+                                ? "bg-orange-600 text-white cursor-not-allowed"
+                                : selectedSeats.includes(seat)
+                                ? "bg-[#a6b727] text-white"
+                                : "bg-transparent"
+                            }`}
+                            style={{
+                              backgroundImage: `url('/seat.png')`, // Thay ảnh ghế
+                            }}
+                            onClick={() => toggleSeatSelection(seat)}
+                          >
+                            <h3 className="text-sm font-bold mt-3 text-white">
+                              {seat}
+                            </h3>
+                          </Card>
+                        ))}
+                    </div>
+                  );
+                }
+              )}
           </div>
         </>
       )}
