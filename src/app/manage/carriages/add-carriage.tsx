@@ -38,6 +38,7 @@ export default function AddCarriage() {
       trainNumber: "",
       carriageNumber: "",
       capacity: "",
+      price: "",
       type: "",
     },
   });
@@ -120,6 +121,17 @@ export default function AddCarriage() {
                     </Select>
                     <FormMessage />
                   </div>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <Label htmlFor="price">Price</Label>
+                  <Input id="price" {...field} />
+                  <FormMessage />
                 </FormItem>
               )}
             />

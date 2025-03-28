@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SearchTicket from "../search-ticket";
 import { Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 const trains = [
   {
     id: "SE8",
@@ -16,8 +17,9 @@ const trains = [
     carriages: [
       {
         id: 1,
-        name: "Toa số 1: Ngồi mềm điều hòa",
+        name: "Ngồi mềm điều hòa",
         type: "seat",
+        basePrice: 500000, // Base price in VND
         seats: Array.from({ length: 56 }, (_, i) => i + 1),
         bookedSeats: [
           1, 2, 3, 6, 7, 8, 9, 10, 14, 15, 16, 18, 19, 20, 21, 23, 24,
@@ -25,29 +27,33 @@ const trains = [
       },
       {
         id: 2,
-        name: "Toa số 2: Ngồi cứng điều hòa",
+        name: " Ngồi cứng điều hòa",
         type: "seat",
+        basePrice: 500000, // Base price in VND
         seats: Array.from({ length: 56 }, (_, i) => i + 1),
         bookedSeats: [4, 5, 11, 12, 17, 22, 25, 26, 30, 31],
       },
       {
         id: 3,
-        name: "Toa số 3: Ngồi cứng điều hòa",
+        name: " Ngồi cứng điều hòa",
         type: "seat",
+        basePrice: 500000, // Base price in VND
         seats: Array.from({ length: 56 }, (_, i) => i + 1),
         bookedSeats: [4, 5, 11, 12, 17, 22, 25, 26, 30, 31],
       },
       {
         id: 4,
-        name: "Toa số 4: Ngồi cứng điều hòa",
+        name: " Ngồi cứng điều hòa",
         type: "seat",
+        basePrice: 500000, // Base price in VND
         seats: Array.from({ length: 56 }, (_, i) => i + 1),
         bookedSeats: [4, 5, 11, 12, 17, 22, 25, 26, 30, 31],
       },
       {
         id: 5,
-        name: "Toa số 5: Ngồi cứng điều hòa",
+        name: " Ngồi cứng điều hòa",
         type: "seat",
+        basePrice: 500000, // Base price in VND
         seats: Array.from({ length: 56 }, (_, i) => i + 1),
         bookedSeats: [4, 5, 11, 12, 17, 22, 25, 26, 30, 31],
       },
@@ -62,7 +68,8 @@ const trains = [
     carriages: [
       {
         id: 1,
-        name: "Toa số 1: Giường nằm khoang 4",
+        name: "Giường nằm khoang 4",
+        basePrice: 900000, // Base price in VND
         type: "4-bed",
         seats: Array.from({ length: 28 }, (_, i) => i + 1),
         bookedSeats: [1, 3, 5, 8, 10, 12, 15, 18, 22, 25],
@@ -78,15 +85,17 @@ const trains = [
     carriages: [
       {
         id: 1,
-        name: "Toa số 1: Giường nằm khoang 6",
+        name: "Giường nằm khoang 6",
+        basePrice: 700000, // Base price in VND
         type: "6-bed",
         seats: Array.from({ length: 42 }, (_, i) => i + 1),
         bookedSeats: [2, 4, 7, 11, 14, 17, 19, 21, 26, 30, 35],
       },
       {
         id: 2,
-        name: "Toa số 2: Ngồi cứng điều hòa",
+        name: " Ngồi cứng điều hòa",
         type: "seat",
+        basePrice: 500000, // Base price in VND
         seats: Array.from({ length: 56 }, (_, i) => i + 1),
         bookedSeats: [5, 9, 13, 22, 24, 28, 31, 37, 40],
       },
@@ -101,15 +110,17 @@ const trains = [
     carriages: [
       {
         id: 1,
-        name: "Toa số 1: Ngồi mềm điều hòa",
+        name: "Ngồi mềm điều hòa",
+        basePrice: 500000, // Base price in VND
         type: "seat",
         seats: Array.from({ length: 56 }, (_, i) => i + 1),
         bookedSeats: [1, 6, 9, 15, 19, 21, 29, 34, 40, 48, 53, 58, 60],
       },
       {
         id: 2,
-        name: "Toa số 2: Giường nằm khoang 4",
+        name: " Giường nằm khoang 4",
         type: "4-bed",
+        basePrice: 1000000, // Base price in VND
         seats: Array.from({ length: 28 }, (_, i) => i + 1),
         bookedSeats: [2, 5, 10, 14, 18, 22, 27, 30],
       },
@@ -124,14 +135,16 @@ const trains = [
     carriages: [
       {
         id: 1,
-        name: "Toa số 1: Giường nằm khoang 6",
+        name: "Giường nằm khoang 6",
+        basePrice: 600000, // Base price in VND
         type: "6-bed",
         seats: Array.from({ length: 42 }, (_, i) => i + 1),
         bookedSeats: [3, 7, 12, 16, 20, 24, 29, 32, 38, 40],
       },
       {
         id: 2,
-        name: "Toa số 2: Ngồi cứng điều hòa",
+        name: " Ngồi cứng điều hòa",
+        basePrice: 500000, // Base price in VND
         type: "seat",
         seats: Array.from({ length: 56 }, (_, i) => i + 1),
         bookedSeats: [5, 8, 15, 22, 28, 33, 39, 44, 51, 55],
@@ -145,15 +158,18 @@ interface CartItem {
   trainId: string;
   trainName: string;
   coachName: string;
+  coachId: number;
   seatNumber: number;
   departure: string;
   arrival: string;
   timestamp: number;
+  price: number; // Added price field
 }
 
 // ... (trains array remains unchanged)
 
 export default function Search() {
+  const router = useRouter(); // Add this line
   const [selectedTrain, setSelectedTrain] = useState<(typeof trains)[0] | null>(
     null
   );
@@ -203,6 +219,11 @@ export default function Search() {
 
     // Update cart
     if (!currentSeats.includes(seat)) {
+      const price = calculateSeatPrice(
+        selectedCoach.basePrice,
+        seat,
+        selectedCoach.type
+      );
       const newCartItem: CartItem = {
         trainId: selectedTrain.id,
         trainName: selectedTrain.name,
@@ -210,7 +231,9 @@ export default function Search() {
         seatNumber: seat,
         departure: selectedTrain.departure,
         arrival: selectedTrain.arrival,
+        coachId: selectedCoach.id,
         timestamp: Date.now(),
+        price,
       };
       setCartItems((prev) => [...prev, newCartItem]);
       setTimer(600);
@@ -292,7 +315,34 @@ export default function Search() {
     const coachKey = `${selectedTrain.id}-${selectedCoach.id}`;
     return selectedSeatsByCoach[coachKey] || [];
   };
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
+  const calculateSeatPrice = (
+    basePrice: number,
+    seatNumber: number,
+    type: string
+  ) => {
+    if (type === "seat") return basePrice;
 
+    if (type === "6-bed") {
+      const positionInCompartment = (seatNumber + 1) % 6;
+      if (positionInCompartment >= 4) return basePrice * 0.9; // Tier 2: -10%
+      if (positionInCompartment >= 2) return basePrice * 0.8; // Tier 3: -20%
+      return basePrice; // Tier 1: full price
+    }
+
+    if (type === "4-bed") {
+      const positionInCompartment = (seatNumber + 1) % 4;
+      if (positionInCompartment >= 2) return basePrice * 0.9; // Upper beds: -10%
+      return basePrice; // Lower beds: full price
+    }
+
+    return basePrice;
+  };
   return (
     <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-4">
       <div className="col-span-3 border rounded-lg bg-white shadow-md p-4">
@@ -373,10 +423,10 @@ export default function Search() {
           {selectedCoach && (
             <div className="border-4 border-[#385d8a] p-4 mt-2 rounded-lg">
               <h2 className="text-xl text-center font-bold mt-2 mb-3">
-                {selectedCoach.name}
+                Toa Số {selectedCoach.id} : {selectedCoach.name}
               </h2>
 
-              {/* 4-bed layout */}
+              {/* 4-bed layout with price tooltip */}
               <div className="grid grid-cols-[repeat(7,minmax(0,1fr))] gap-4">
                 {selectedCoach.type === "4-bed" &&
                   Array.from(
@@ -402,28 +452,43 @@ export default function Search() {
                                     : ""
                                 }`}
                               >
-                                {[seatT1, seatT2].map((seat) => (
-                                  <Card
-                                    key={seat}
-                                    className={`p-2 text-center cursor-pointer bg-cover bg-center h-[50px] w-[50px] flex items-center justify-center ${
-                                      selectedCoach.bookedSeats.includes(seat)
-                                        ? "bg-orange-600 text-white cursor-not-allowed"
-                                        : getCurrentSelectedSeats().includes(
+                                {[seatT1, seatT2].map((seat) => {
+                                  const price = calculateSeatPrice(
+                                    selectedCoach.basePrice,
+                                    seat,
+                                    selectedCoach.type
+                                  );
+                                  return (
+                                    <div key={seat} className="relative group">
+                                      <Card
+                                        className={`p-2 text-center cursor-pointer bg-cover bg-center h-[50px] w-[50px] flex items-center justify-center ${
+                                          selectedCoach.bookedSeats.includes(
                                             seat
                                           )
-                                        ? "bg-[#a6b727] text-white"
-                                        : "bg-transparent"
-                                    }`}
-                                    style={{
-                                      backgroundImage: `url('/bed.png')`,
-                                    }}
-                                    onClick={() => toggleSeatSelection(seat)}
-                                  >
-                                    <h3 className="text-sm font-bold">
-                                      {seat}
-                                    </h3>
-                                  </Card>
-                                ))}
+                                            ? "bg-orange-600 text-white cursor-not-allowed"
+                                            : getCurrentSelectedSeats().includes(
+                                                seat
+                                              )
+                                            ? "bg-[#a6b727] text-white"
+                                            : "bg-transparent"
+                                        }`}
+                                        style={{
+                                          backgroundImage: `url('/bed.png')`,
+                                        }}
+                                        onClick={() =>
+                                          toggleSeatSelection(seat)
+                                        }
+                                      >
+                                        <h3 className="text-sm font-bold">
+                                          {seat}
+                                        </h3>
+                                      </Card>
+                                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 z-10">
+                                        {formatPrice(price)}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             );
                           })}
@@ -433,7 +498,6 @@ export default function Search() {
                   )}
               </div>
 
-              {/* 6-bed layout */}
               <div className="grid grid-cols-[repeat(7,minmax(0,1fr))] gap-4">
                 {selectedCoach.type === "6-bed" &&
                   Array.from(
@@ -459,28 +523,43 @@ export default function Search() {
                                     : ""
                                 }`}
                               >
-                                {[seatT1, seatT2].map((seat) => (
-                                  <Card
-                                    key={seat}
-                                    className={`p-2 text-center cursor-pointer bg-cover bg-center h-[50px] w-[50px] flex items-center justify-center ${
-                                      selectedCoach.bookedSeats.includes(seat)
-                                        ? "bg-orange-600 text-white cursor-not-allowed"
-                                        : getCurrentSelectedSeats().includes(
+                                {[seatT1, seatT2].map((seat) => {
+                                  const price = calculateSeatPrice(
+                                    selectedCoach.basePrice,
+                                    seat,
+                                    selectedCoach.type
+                                  );
+                                  return (
+                                    <div key={seat} className="relative group">
+                                      <Card
+                                        className={`p-2 text-center cursor-pointer bg-cover bg-center h-[50px] w-[50px] flex items-center justify-center ${
+                                          selectedCoach.bookedSeats.includes(
                                             seat
                                           )
-                                        ? "bg-[#a6b727] text-white"
-                                        : "bg-transparent"
-                                    }`}
-                                    style={{
-                                      backgroundImage: `url('/bed.png')`,
-                                    }}
-                                    onClick={() => toggleSeatSelection(seat)}
-                                  >
-                                    <h3 className="text-sm font-bold">
-                                      {seat}
-                                    </h3>
-                                  </Card>
-                                ))}
+                                            ? "bg-orange-600 text-white cursor-not-allowed"
+                                            : getCurrentSelectedSeats().includes(
+                                                seat
+                                              )
+                                            ? "bg-[#a6b727] text-white"
+                                            : "bg-transparent"
+                                        }`}
+                                        style={{
+                                          backgroundImage: `url('/bed.png')`,
+                                        }}
+                                        onClick={() =>
+                                          toggleSeatSelection(seat)
+                                        }
+                                      >
+                                        <h3 className="text-sm font-bold">
+                                          {seat}
+                                        </h3>
+                                      </Card>
+                                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 z-10">
+                                        {formatPrice(price)}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             );
                           })}
@@ -491,6 +570,7 @@ export default function Search() {
               </div>
 
               {/* Seat layout */}
+
               <div className="grid grid-cols-2 gap-4">
                 {selectedCoach.type === "seat" &&
                   Array.from(
@@ -504,24 +584,39 @@ export default function Search() {
                         >
                           {selectedCoach.seats
                             .slice(startIdx, startIdx + 14)
-                            .map((seat) => (
-                              <Card
-                                key={seat}
-                                className={`p-2 text-center cursor-pointer bg-cover bg-center h-[70px] w-[60px] ${
-                                  selectedCoach.bookedSeats.includes(seat)
-                                    ? "bg-orange-600 text-white cursor-not-allowed"
-                                    : getCurrentSelectedSeats().includes(seat)
-                                    ? "bg-[#a6b727] text-white"
-                                    : "bg-transparent"
-                                }`}
-                                style={{ backgroundImage: `url('/seat.png')` }}
-                                onClick={() => toggleSeatSelection(seat)}
-                              >
-                                <h3 className="text-sm font-bold mt-3 text-white">
-                                  {seat}
-                                </h3>
-                              </Card>
-                            ))}
+                            .map((seat) => {
+                              const price = calculateSeatPrice(
+                                selectedCoach.basePrice,
+                                seat,
+                                selectedCoach.type
+                              );
+                              return (
+                                <div key={seat} className="relative group">
+                                  <Card
+                                    className={`p-2 text-center cursor-pointer bg-cover bg-center h-[70px] w-[60px] ${
+                                      selectedCoach.bookedSeats.includes(seat)
+                                        ? "bg-orange-600 text-white cursor-not-allowed"
+                                        : getCurrentSelectedSeats().includes(
+                                            seat
+                                          )
+                                        ? "bg-[#a6b727] text-white"
+                                        : "bg-transparent"
+                                    }`}
+                                    style={{
+                                      backgroundImage: `url('/seat.png')`,
+                                    }}
+                                    onClick={() => toggleSeatSelection(seat)}
+                                  >
+                                    <h3 className="text-sm font-bold mt-3 text-white">
+                                      {seat}
+                                    </h3>
+                                  </Card>
+                                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 z-10">
+                                    {formatPrice(price)}
+                                  </div>
+                                </div>
+                              );
+                            })}
                         </div>
                       );
                     }
@@ -552,13 +647,23 @@ export default function Search() {
                   <div>
                     <p className="font-semibold">{item.trainName}</p>
                     <p className="text-sm">
-                      {" "}
-                      <span className="font-bold ">Toa:</span> {item.coachName}
+                      <span className="font-bold ">Toa: {item.coachId} -</span>{" "}
+                      {item.coachName}
                     </p>
-                    <p className="text-sm">
-                      {" "}
-                      <span className="font-bold ">Ghế:</span> {item.seatNumber}
-                    </p>
+                    <div className="flex gap-2">
+                      <p className="text-sm">
+                        <span className="font-bold ">Ghế:</span>{" "}
+                        {item.seatNumber} -
+                      </p>
+                      <p className="text-sm ">
+                        {" "}
+                        <span className="font-bold">Giá:</span>{" "}
+                        <span className="text-red-500 font-bold text-md">
+                          {item.price} đ
+                        </span>
+                      </p>
+                    </div>
+
                     <div className="flex gap-2">
                       <p className="text-sm">
                         <span className="font-bold ">Khởi hành:</span>{" "}
@@ -586,10 +691,15 @@ export default function Search() {
                 <Button
                   className="mt-2 w-full"
                   onClick={() => {
-                    alert("Đặt vé thành công!");
+                    const query = new URLSearchParams({
+                      tickets: JSON.stringify(cartItems),
+                      timer: timer.toString(), // Pass the current timer value
+                    }).toString();
+
+                    router.push(`/payment?${query}`);
                     setCartItems([]);
                     setSelectedSeatsByCoach({});
-                    setTimer(0);
+                    // setTimer(0);
                   }}
                 >
                   Xác nhận đặt vé
