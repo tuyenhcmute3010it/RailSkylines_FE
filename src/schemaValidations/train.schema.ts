@@ -13,8 +13,8 @@ export const TrainSchema = z.object({
   trainId: z.number(),
   trainName: z.string(),
   trainStatus: z.enum(TrainStatusValues),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  // createdAt: z.date(),
+  // updatedAt: z.date(),
 });
 
 export const TrainRes = z.object({

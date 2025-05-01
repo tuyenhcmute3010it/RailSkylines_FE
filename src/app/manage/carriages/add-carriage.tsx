@@ -10,7 +10,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import {
   Form,
@@ -30,24 +29,61 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  CreateCarriageBody,
+  CreateCarriageBodyType,
+} from "@/schemaValidations/carriage.schema";
+import { CarriageTypes, CarriageTypesValues } from "@/constants/type";
+import { useAddCarriageMutation } from "@/queries/useCarriage";
+import { toast } from "@/components/ui/use-toast";
+import { handleErrorApi } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { TrainSchema } from "@/schemaValidations/train.schema";
 
 export default function AddCarriage() {
   const [open, setOpen] = useState(false);
-  const form = useForm({
+  const [selectedTrainName, setSelectedTrainName] = useState<string>(""); // Track train name for display
+  const form = useForm<CreateCarriageBodyType>({
+    resolver: zodResolver(CreateCarriageBody),
     defaultValues: {
-      trainNumber: "",
-      carriageNumber: "",
-      capacity: "",
-      price: "",
-      type: "",
+      carriageType: CarriageTypes.SixBeds,
+      discount: 0,
+      price: 0,
+      train: {
+        trainId: 0, // Placeholder ID (will be updated by TrainDialog)
+        trainName: "", // Placeholder name
+      }, // Initialize with 0, will be updated by TrainDialog
     },
   });
-  const CarriageTypes = [
-    { value: "soft_seat_ac", label: "Soft Seat with AC" },
-    { value: "hard_seat", label: "Hard Seat" },
-    { value: "soft_bed_6", label: "Soft Berth (6 Beds)" },
-    { value: "soft_bed_4", label: "Soft Berth (4 Beds)" },
-  ];
+  const addCarriageMutation = useAddCarriageMutation();
+
+  const reset = () => {
+    form.reset();
+    setSelectedTrainName("");
+  };
+
+  const onSubmit = async (values: CreateCarriageBodyType) => {
+    console.log(values);
+    if (!values.train) {
+      form.setError("train", { message: "Please select a train" });
+      return;
+    }
+    if (addCarriageMutation.isPending) return;
+    try {
+      const body = values;
+      const result = await addCarriageMutation.mutateAsync(body);
+      toast({
+        description: result.payload.message,
+      });
+      reset();
+      setOpen(false);
+    } catch (error) {
+      handleErrorApi({
+        error,
+        setError: form.setError,
+      });
+    }
+  };
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
@@ -65,62 +101,81 @@ export default function AddCarriage() {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form noValidate id="add-carriage-form" className="grid gap-4 py-4">
+          <form
+            id="add-carriage-form"
+            className="grid gap-4 py-4"
+            onReset={reset}
+            onSubmit={form.handleSubmit(onSubmit, (e) => {
+              console.log("Form errors:", e);
+            })}
+          >
             <FormField
               control={form.control}
-              name="carriageNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <Label htmlFor="carriageNumber">Carriage Number</Label>
-                  <Input id="carriageNumber" {...field} />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="trainNumber"
+              name="carriageType"
               render={({ field }) => (
                 <FormItem>
                   <div className="grid grid-cols-4 items-center justify-items-start gap-4">
-                    <Label htmlFor="trainNumber">Choose Train</Label>
+                    <FormLabel htmlFor="carriageType">
+                      Type of Carriage
+                    </FormLabel>
                     <div className="col-span-3 w-full space-y-2">
-                      <div className="flex items-center gap-4">
-                        <div>{field.value}</div>
-                        <TrainDialog
-                          onChoose={(train) => {
-                            field.onChange(train.name);
-                          }}
-                        />
-                      </div>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Type Carriage" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {CarriageTypesValues.map((carriageType) => (
+                            <SelectItem key={carriageType} value={carriageType}>
+                              {carriageType}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  </div>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="grid grid-cols-4 items-center justify-items-start gap-4">
-                    <FormLabel>Type of Carriage</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl className="col-span-3">
-                        <SelectTrigger className="w-[200px]">
-                          <SelectValue placeholder="Type Carriage" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {CarriageTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </div>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="train"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="grid grid-cols-4 items-center justify-items-start gap-4">
+                    <FormLabel htmlFor="train">Choose Train</FormLabel>
+                    <div className="col-span-3 w-full space-y-2">
+                      <div>{selectedTrainName || "No train selected"}</div>
+                      <TrainDialog
+                        onChoose={(train) => {
+                          form.setValue("train", train);
+                          setSelectedTrainName(train.trainName);
+                        }}
+                      />
+                    </div>
+                    <FormMessage />
+                  </div>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="discount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="discount">Discount (%)</FormLabel>
+                  <Input
+                    id="discount"
+                    type="number"
+                    {...field}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  />
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -129,8 +184,14 @@ export default function AddCarriage() {
               name="price"
               render={({ field }) => (
                 <FormItem>
-                  <Label htmlFor="price">Price</Label>
-                  <Input id="price" {...field} />
+                  <FormLabel htmlFor="price">Price</FormLabel>
+                  <Input
+                    id="price"
+                    type="number"
+                    // value={field.value}
+                    {...field}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  />
                   <FormMessage />
                 </FormItem>
               )}

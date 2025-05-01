@@ -130,6 +130,55 @@
     "Pagi2": "of",
     "Pagi3": "Results"
   },
+  "TrainDialog": {
+    "ChangeTrain": "Change Train",
+    "ChooseTrain": "Choose Train",
+    "FilterTrainName": "Filter Train Name",
+    "FilterStatus": "Filter Status",
+    "All": "All",
+    "Active": "Active",
+    "Inactive": "Inactive",
+    "NoResults": "No results",
+    "Previous": "Previous",
+    "Next": "Next",
+    "Page": "Page",
+    "Of": "of",
+    "RowsPerPage": "Rows per page"
+  },
+  "TrainTable": {
+    "TrainId": "Train ID",
+    "TrainName": "Train Name",
+    "TrainStatus": "Train Status",
+    "Action": "Actions",
+    "Edit": "Edit",
+    "Delete": "Delete",
+    "FilterTrainName": "Filter Train Name...",
+    "FilterStatus": "Filter train status...",
+    "All": "All",
+    "Active": "Active",
+    "Inactive": "Inactive",
+    "NoResults": "No results",
+    "Showing": "Showing {count} of {total} trains",
+    "DeleteTrain": "Delete Train",
+    "DeleteConfirm": "Are you sure you want to delete train {name}? This action cannot be undone.",
+    "Cancel": "Cancel",
+    "Continue": "Continue",
+    "Deleting": "Deleting..."
+  },
+  "ManageTrain": {
+    "EditTrain": "Edit Train",
+    "AddTrain": "Add Train",
+    "TrainName": "Train Name",
+    "TrainStatus": "Train Status",
+    "EnterTrainName": "Enter train name",
+    "SelectStatus": "Select status",
+    "Active": "Active",
+    "Inactive": "Inactive",
+    "UpdateTrain": "Update Train",
+    "CreateTrain": "Create Train",
+    "Cancel": "Cancel",
+    "Saving": "Saving..."
+  },
   "ManageCarriage": {
     "ID": "ID",
     "CarriageNumber": "Carriage Number",
@@ -146,6 +195,13 @@
     "Continue": "Continue",
     "FilterCarriageNumbers": "Filter carriage numbers...",
     "FilterTrainNumbers": "Filter train numbers...",
-    "UpdateCarriage": "Update Carriage"
+    "UpdateCarriage": "Update Carriage",
+    "SoftSeatAC": "Soft Seat AC",
+    "SoftBerth6": "Soft Berth (6 beds)",
+    "SoftBerth4": "Soft Berth (4 beds)",
+    "EnterCarriageNumber": "Enter carriage number",
+    "EnterTrainId": "Enter train ID",
+    "EnterCapacity": "Enter capacity",
+    "SelectType": "Select type"
   }
 }

@@ -56,5 +56,15 @@ export const OrderStatusValues = [
   OrderStatus.Delivered,
   OrderStatus.Paid,
 ] as const;
+export const CarriageTypes = {
+  SixBeds: "sixBeds",
+  FourBed: "fourBeds",
+  Seat: "seat",
+} as const;
 
+export const CarriageTypesValues = [
+  CarriageTypes.SixBeds,
+  CarriageTypes.FourBed,
+  CarriageTypes.Seat,
+] as const;
 export const ManagerRoom = "manager" as const;
