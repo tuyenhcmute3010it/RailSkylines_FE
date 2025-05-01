@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { UseFormSetError } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
-import { EntityError } from "./http";
+import { BadRequestError, EntityError, HttpError } from "./http";
 import { toast } from "@/components/ui/use-toast";
 import { OrderStatus, Role, TableStatus } from "@/constants/type";
 import envConfig from "@/config";
@@ -27,19 +27,42 @@ export const handleErrorApi = ({
   setError?: UseFormSetError<any>;
   duration?: number;
 }) => {
-  console.log(">>>> 23", error);
   if (error instanceof EntityError && setError) {
+    // Handle 422 errors with field-specific messages
     error.payload.errors.forEach((item) => {
       setError(item.field, {
         type: "server",
         message: item.message,
       });
     });
-  } else {
-    alert(error);
+  } else if (error instanceof BadRequestError) {
+    // Handle 400 errors with custom error message
     toast({
       title: "Lỗi",
-      description: error?.payload?.message ?? "Lỗi không xác định",
+      description: error.payload.error || "Lỗi yêu cầu không hợp lệ",
+      variant: "destructive",
+      duration: duration ?? 5000,
+    });
+    if (setError) {
+      // Optionally map to a specific field (e.g., trainName for uniqueness errors)
+      setError("trainName", {
+        type: "server",
+        message: error.payload.error,
+      });
+    }
+  } else if (error instanceof HttpError) {
+    // Handle other HTTP errors
+    toast({
+      title: "Lỗi",
+      description: error.payload.message || "Lỗi không xác định",
+      variant: "destructive",
+      duration: duration ?? 5000,
+    });
+  } else {
+    // Handle unexpected errors
+    toast({
+      title: "Lỗi",
+      description: "Lỗi không xác định",
       variant: "destructive",
       duration: duration ?? 5000,
     });

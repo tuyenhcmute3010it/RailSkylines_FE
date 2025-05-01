@@ -10,9 +10,9 @@ export const CreateTrainBody = z.object({
 export type CreateTrainBodyType = z.TypeOf<typeof CreateTrainBody>;
 
 export const TrainSchema = z.object({
-  id: z.number(),
+  trainId: z.number(),
   trainName: z.string(),
-  status: z.enum(TrainStatusValues),
+  trainStatus: z.enum(TrainStatusValues),
   createdAt: z.date(),
   updatedAt: z.date(),
 });

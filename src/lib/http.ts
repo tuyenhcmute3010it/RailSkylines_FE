@@ -8,7 +8,7 @@ type CustomOptions = Omit<RequestInit, "method"> & {
 
 const ENTITY_ERROR_STATUS = 422;
 const AUTHENTICATION_ERROR_STATUS = 401;
-
+const BAD_REQUEST_STATUS = 400;
 type EntityErrorPayload = {
   message: string;
   errors: {
@@ -54,6 +54,27 @@ export class EntityError extends HttpError {
   }
 }
 
+type BadRequestErrorPayload = {
+  statusCode: number;
+  error: string;
+  message: string;
+  data: any;
+};
+export class BadRequestError extends HttpError {
+  status: typeof BAD_REQUEST_STATUS;
+  payload: BadRequestErrorPayload;
+  constructor({
+    status,
+    payload,
+  }: {
+    status: typeof BAD_REQUEST_STATUS;
+    payload: BadRequestErrorPayload;
+  }) {
+    super({ status, payload, message: payload.error || "Lỗi yêu cầu" });
+    this.status = status;
+    this.payload = payload;
+  }
+}
 let clientLogoutRequest: null | Promise<any> = null;
 const isClient = typeof window !== "undefined";
 const request = async <Response>(
@@ -113,6 +134,13 @@ const request = async <Response>(
         data as {
           status: 422;
           payload: EntityErrorPayload;
+        }
+      );
+    } else if (res.status === BAD_REQUEST_STATUS) {
+      throw new BadRequestError(
+        data as {
+          status: 400;
+          payload: BadRequestErrorPayload;
         }
       );
     } else if (res.status === AUTHENTICATION_ERROR_STATUS) {

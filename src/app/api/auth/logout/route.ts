@@ -1,4 +1,4 @@
-// import authApiRequest from "@/apiRequests/auth";
+import authApiRequest from "@/apiRequests/auth";
 import { cookies } from "next/headers";
 export async function POST() {
   const cookieStore = cookies();
@@ -17,11 +17,11 @@ export async function POST() {
     );
   }
   try {
-    // const result = await authApiRequest.sLogout({
-    //   accessToken,
-    //   refreshToken,
-    // });
-    // return Response.json(result.payload);
+    const result = await authApiRequest.sLogout({
+      accessToken,
+      refreshToken,
+    });
+    return Response.json(result.payload);
   } catch (error) {
     console.log(error);
     return Response.json(
