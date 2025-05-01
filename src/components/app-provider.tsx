@@ -9,8 +9,8 @@ import {
   getAccessTokenFromLocalStorage,
   getRefreshTokenFromLocalStorage,
 } from "@/lib/utils";
-import { Socket } from "socket.io-client";
-import ListenLogoutSocket from "./listen-logout-socket";
+// import { Socket } from "socket.io-client";
+// import ListenLogoutSocket from "./listen-logout-socket";
 
 // gc : 0
 // staleTime
@@ -53,7 +53,7 @@ export default function AppProvider({
       <QueryClientProvider client={queryClient}>
         {children}
         <RefreshToken />
-        <ListenLogoutSocket />
+        {/* <ListenLogoutSocket /> */}
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </AppContext.Provider>

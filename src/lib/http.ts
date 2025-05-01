@@ -100,6 +100,7 @@ const request = async <Response>(
     method,
   });
   const payload: Response = await res.json();
+  console.log(payload);
   const data = {
     status: res.status,
     payload,

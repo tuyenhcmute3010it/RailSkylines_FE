@@ -3,7 +3,7 @@ import { UseFormSetError } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
 import { EntityError } from "./http";
 import { toast } from "@/components/ui/use-toast";
-import { DishStatus, OrderStatus, Role, TableStatus } from "@/constants/type";
+import { OrderStatus, Role, TableStatus } from "@/constants/type";
 import envConfig from "@/config";
 import jwt from "jsonwebtoken";
 import { format } from "date-fns";
@@ -27,6 +27,7 @@ export const handleErrorApi = ({
   setError?: UseFormSetError<any>;
   duration?: number;
 }) => {
+  console.log(">>>> 23", error);
   if (error instanceof EntityError && setError) {
     error.payload.errors.forEach((item) => {
       setError(item.field, {
@@ -35,6 +36,7 @@ export const handleErrorApi = ({
       });
     });
   } else {
+    alert(error);
     toast({
       title: "Lỗi",
       description: error?.payload?.message ?? "Lỗi không xác định",
@@ -106,18 +108,18 @@ export const formatCurrency = (number: number) => {
   }).format(number);
 };
 
-export const getVietnameseDishStatus = (
-  status: (typeof DishStatus)[keyof typeof DishStatus]
-) => {
-  switch (status) {
-    case DishStatus.Available:
-      return "Có sẵn";
-    case DishStatus.Unavailable:
-      return "Không có sẵn";
-    default:
-      return "Ẩn";
-  }
-};
+// export const getVietnameseDishStatus = (
+//   status: (typeof DishStatus)[keyof typeof DishStatus]
+// ) => {
+//   switch (status) {
+//     case DishStatus.Available:
+//       return "Có sẵn";
+//     case DishStatus.Unavailable:
+//       return "Không có sẵn";
+//     default:
+//       return "Ẩn";
+//   }
+// };
 
 export const getVietnameseOrderStatus = (
   status: (typeof OrderStatus)[keyof typeof OrderStatus]

@@ -19,16 +19,14 @@ export const RoleValues = [
   Role.Customer,
 ] as const;
 
-export const DishStatus = {
-  Available: "Available",
-  Unavailable: "Unavailable",
-  Hidden: "Hidden",
+export const TrainStatus = {
+  Active: "active",
+  InActive: "inactive",
 } as const;
 
-export const DishStatusValues = [
-  DishStatus.Available,
-  DishStatus.Unavailable,
-  DishStatus.Hidden,
+export const TrainStatusValues = [
+  TrainStatus.Active,
+  TrainStatus.InActive,
 ] as const;
 
 export const TableStatus = {

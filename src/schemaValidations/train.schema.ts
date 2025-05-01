@@ -1,21 +1,20 @@
-import { TableStatusValues } from "@/constants/type";
+import { TableStatusValues, TrainStatusValues } from "@/constants/type";
 import z from "zod";
 ///// Train
+
 export const CreateTrainBody = z.object({
-  number: z.coerce.number().positive(),
-  capacity: z.coerce.number().positive(),
-  status: z.enum(TableStatusValues).optional(),
+  trainName: z.string().min(1).max(256),
+  trainStatus: z.enum(TrainStatusValues).optional(),
 });
 
-export type CreateTableBodyType = z.TypeOf<typeof CreateTrainBody>;
+export type CreateTrainBodyType = z.TypeOf<typeof CreateTrainBody>;
 
 export const TrainSchema = z.object({
-  name: z.string(),
-  route: z.string(),
-  status: z.enum(TableStatusValues),
+  id: z.number(),
+  trainName: z.string(),
+  status: z.enum(TrainStatusValues),
   createdAt: z.date(),
   updatedAt: z.date(),
-  id: z.number(),
 });
 
 export const TrainRes = z.object({
@@ -26,21 +25,24 @@ export const TrainRes = z.object({
 export type TrainResType = z.TypeOf<typeof TrainRes>;
 
 export const TrainListRes = z.object({
-  data: z.array(TrainSchema),
+  statusCode: z.number(),
+  error: z.string().nullable(),
   message: z.string(),
+  data: z.object({
+    meta: z.object({
+      page: z.number(),
+      pageSize: z.number(),
+      pages: z.number(),
+      total: z.number(),
+    }),
+    result: z.array(TrainSchema),
+  }),
 });
-
 export type TrainListResType = z.TypeOf<typeof TrainListRes>;
 
-export const UpdateTableBody = z.object({
-  changeToken: z.boolean(),
-  capacity: z.coerce.number().positive(),
-  status: z.enum(TableStatusValues).optional(),
+export const UpdateTrainBody = CreateTrainBody;
+export type UpdateTrainBodyType = CreateTrainBodyType;
+export const TrainParams = z.object({
+  id: z.coerce.number(),
 });
-
-//////////
-export type UpdateTableBodyType = z.TypeOf<typeof UpdateTableBody>;
-export const TableParams = z.object({
-  number: z.coerce.number(),
-});
-export type TableParamsType = z.TypeOf<typeof TableParams>;
+export type TrainParamsType = z.TypeOf<typeof TrainParams>;

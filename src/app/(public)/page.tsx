@@ -13,6 +13,7 @@ import Train from "@/app/(public)/train";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import SearchTicket from "./search-ticket";
+import { SearchParams } from "next/dist/server/request/search-params";
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("HomePage");
   return {
@@ -22,6 +23,10 @@ export async function generateMetadata(): Promise<Metadata> {
       canonical: envConfig.NEXT_PUBLIC_URL,
     },
   };
+}
+
+interface SearchTicketProps {
+  onSearch: (params: SearchParams) => void;
 }
 export default async function Home() {
   const resetDateFilter = () => {};

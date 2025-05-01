@@ -1,7 +1,7 @@
 "use client";
 
-import authApiRequest from "@/apiRequests/auth";
-import socket from "@/lib/socket";
+// import authApiRequest from "@/apiRequests/auth";
+// import socket from "@/lib/socket";
 import {
   checkAndRefreshToken,
   getAccessTokenFromLocalStorage,
@@ -37,30 +37,30 @@ export default function RefreshToken() {
     onRefreshToken();
     // Time out interval phai be hon thoi gian het han cua access token
     // vi du thoi gian het han access token la 10s thi 1s minh se cho check 1 lan
-    const TIMEOUT = 1000;
-    interval = setInterval(onRefreshToken, TIMEOUT);
+    // const TIMEOUT = 1000;
+    // interval = setInterval(onRefreshToken, TIMEOUT);
 
-    const onConnect = () => {
-      console.log(socket.id);
-    };
-    if (socket.connected) {
-      onConnect();
-    }
-    function onDisconnect() {
-      console.log("disconnect");
-    }
-    function onRefreshTokenSocket() {
-      onRefreshToken(true);
-    }
-    socket.on("connect", onConnect);
-    socket.on("disconnect", onDisconnect);
-    socket.on("refresh-token", onRefreshTokenSocket);
-    return () => {
-      clearInterval(interval);
-      socket.off("connect", onConnect);
-      socket.off("disconnect", onDisconnect);
-      socket.off("refresh-token", onRefreshTokenSocket);
-    };
+    // const onConnect = () => {
+    //   console.log(socket.id);
+    // };
+    // if (socket.connected) {
+    //   onConnect();
+    // }
+    // function onDisconnect() {
+    //   console.log("disconnect");
+    // }
+    // function onRefreshTokenSocket() {
+    //   onRefreshToken(true);
+    // }
+    // socket.on("connect", onConnect);
+    // socket.on("disconnect", onDisconnect);
+    // socket.on("refresh-token", onRefreshTokenSocket);
+    // return () => {
+    //   clearInterval(interval);
+    //   socket.off("connect", onConnect);
+    //   socket.off("disconnect", onDisconnect);
+    //   socket.off("refresh-token", onRefreshTokenSocket);
+    // };
   }, [pathName, router]);
 
   return null;

@@ -1,5 +1,4 @@
 "use client";
-
 import {
   CaretSortIcon,
   DotsHorizontalIcon,
@@ -18,23 +17,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -44,15 +26,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useForm } from "react-hook-form";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { useState, createContext, useContext, useEffect } from "react";
 import {
   Select,
@@ -61,7 +34,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import AutoPagination from "@/components/auto-pagination";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -72,38 +44,39 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import AddTrain from "./add-train";
 import EditTrain from "./edit-train";
+import { useGetTrainList } from "@/queries/useTrain";
+import { TrainListResType } from "@/schemaValidations/train.schema";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-// Định nghĩa type cho Train
-type Train = {
-  id: number;
-  carriageNumber: string;
-  trainNumber: string;
-  capacity: number;
-  type: string;
-};
-
-const CarriageTableContext = createContext<{
+type TrainItem = TrainListResType["data"]["result"][0];
+const TrainTableContext = createContext<{
   setTrainIdEdit: (value: number) => void;
   trainIdEdit: number | undefined;
-  trainDelete: Train | null;
-  setTrainDelete: (value: Train | null) => void;
+  trainDelete: TrainItem | null;
+  setTrainDelete: (value: TrainItem | null) => void;
 }>({
   setTrainIdEdit: (value: number | undefined) => {},
   trainIdEdit: undefined,
   trainDelete: null,
-  setTrainDelete: (value: Train | null) => {},
+  setTrainDelete: (value: TrainItem | null) => {},
 });
 
-// Component xác nhận xóa
 function DeleteCarriageDialog({
   trainDelete,
   setTrainDelete,
 }: {
-  trainDelete: Train | null;
-  setTrainDelete: (value: Train | null) => void;
+  trainDelete: TrainItem | null;
+  setTrainDelete: (value: TrainItem | null) => void;
 }) {
   return (
     <AlertDialog
@@ -118,9 +91,9 @@ function DeleteCarriageDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Train</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete carriage{" "}
+            Are you sure you want to delete train{" "}
             <span className="bg-foreground text-primary-foreground rounded px-1">
-              {trainDelete?.carriageNumber}
+              {trainDelete?.trainName}
             </span>
             ? This action cannot be undone.
           </AlertDialogDescription>
@@ -137,154 +110,77 @@ function DeleteCarriageDialog({
 const PAGE_SIZE = 10;
 
 export default function TrainTable() {
-  const searchParam = useSearchParams();
-  const page = searchParam.get("page") ? Number(searchParam.get("page")) : 1;
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const page = searchParams.get("page") ? Number(searchParams.get("page")) : 1;
   const pageIndex = page - 1;
 
   const [trainIdEdit, setTrainIdEdit] = useState<number | undefined>();
-  const [trainDelete, setTrainDelete] = useState<Train | null>(null);
+  const [trainDelete, setTrainDelete] = useState<TrainItem | null>(null);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE); // Dynamic page size
 
-  // Dữ liệu mẫu
-  const data: Train[] = [
-    {
-      id: 1,
-      carriageNumber: "C001",
-      trainNumber: "SE1",
-      capacity: 50,
-      type: "soft_seat_ac",
-    },
-    {
-      id: 2,
-      carriageNumber: "C002",
-      trainNumber: "SE2",
-      capacity: 60,
-      type: "hard_seat",
-    },
-    {
-      id: 3,
-      carriageNumber: "C003",
-      trainNumber: "SE3",
-      capacity: 60,
-      type: "hard_seat",
-    },
-    {
-      id: 4,
-      carriageNumber: "C004",
-      trainNumber: "SE4",
-      capacity: 60,
-      type: "hard_seat",
-    },
-    {
-      id: 5,
-      carriageNumber: "C005",
-      trainNumber: "SE5",
-      capacity: 60,
-      type: "hard_seat",
-    },
-    {
-      id: 6,
-      carriageNumber: "C006",
-      trainNumber: "SE6",
-      capacity: 60,
-      type: "hard_seat",
-    },
-    {
-      id: 7,
-      carriageNumber: "C007",
-      trainNumber: "SE7",
-      capacity: 60,
-      type: "hard_seat",
-    },
-    {
-      id: 8,
-      carriageNumber: "C008",
-      trainNumber: "SE8",
-      capacity: 60,
-      type: "hard_seat",
-    },
-    {
-      id: 9,
-      carriageNumber: "C009",
-      trainNumber: "SE9",
-      capacity: 60,
-      type: "hard_seat",
-    },
-    {
-      id: 10,
-      carriageNumber: "C010",
-      trainNumber: "SE10",
-      capacity: 60,
-      type: "hard_seat",
-    },
-    {
-      id: 11,
-      carriageNumber: "C011",
-      trainNumber: "SE11",
-      capacity: 60,
-      type: "hard_seat",
-    },
-    {
-      id: 12,
-      carriageNumber: "C012",
-      trainNumber: "SE12",
-      capacity: 60,
-      type: "hard_seat",
-    },
-  ];
+  // Fetch train list with dynamic page and size
+  const trainListQuery = useGetTrainList(page, pageSize);
+  const data = trainListQuery.data?.payload.data.result ?? [];
+  const totalItems = trainListQuery.data?.payload.data.meta.total ?? 0; // Assume API returns total count
+  const totalPages = Math.ceil(totalItems / pageSize);
 
-  const columns: ColumnDef<Train>[] = [
+  const columns: ColumnDef<TrainItem>[] = [
     {
-      accessorKey: "id",
-      header: "ID",
-    },
-    {
-      accessorKey: "carriageNumber",
+      accessorKey: "trainId",
       header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Train Number
+          Train Id
           <CaretSortIcon className="ml-2 h-4 w-4" />
         </Button>
       ),
     },
     {
-      accessorKey: "trainNumber",
+      accessorKey: "trainName",
       header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Train Number
+          Train Name
           <CaretSortIcon className="ml-2 h-4 w-4" />
         </Button>
       ),
+      filterFn: (row, columnId, filterValue) => {
+        if (!filterValue) return true;
+        const value = row.getValue(columnId) as string;
+        return value.toLowerCase().includes(filterValue.toLowerCase());
+      },
     },
     {
-      accessorKey: "capacity",
-      header: "Capacity",
-    },
-    {
-      accessorKey: "type",
-      header: "Type",
-      cell: ({ row }) => {
-        const type = row.getValue("type") as string;
-        const carriageType = [
-          { value: "soft_seat_ac", label: "Soft Seat with AC" },
-          { value: "hard_seat", label: "Hard Seat" },
-          { value: "soft_bed_6", label: "Soft Berth (6 Beds)" },
-          { value: "soft_bed_4", label: "Soft Berth (4 Beds)" },
-        ].find((t) => t.value === type)?.label;
-        return <div>{carriageType}</div>;
+      accessorKey: "trainStatus",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Train Status
+          <CaretSortIcon className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => row.original.trainStatus ?? "N/A",
+      filterFn: (row, columnId, filterValue) => {
+        const value = row.getValue(columnId);
+        if (filterValue === "all" || filterValue === undefined) return true;
+        return value === filterValue;
       },
     },
     {
       id: "actions",
+      header: "Action",
       enableHiding: false,
       cell: function Actions({ row }) {
         const { setTrainIdEdit, setTrainDelete } =
-          useContext(CarriageTableContext);
+          useContext(TrainTableContext);
         return (
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
@@ -312,10 +208,6 @@ export default function TrainTable() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
-  const [pagination, setPagination] = useState({
-    pageIndex,
-    pageSize: PAGE_SIZE,
-  });
 
   const table = useReactTable({
     data,
@@ -328,32 +220,34 @@ export default function TrainTable() {
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    onPaginationChange: setPagination,
-    autoResetPageIndex: false,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
-      pagination,
+      pagination: { pageIndex, pageSize },
     },
+    pageCount: totalPages,
+    manualPagination: true,
   });
 
+  // Sync table pagination with URL
   useEffect(() => {
-    table.setPagination({
-      pageIndex,
-      pageSize: PAGE_SIZE,
-    });
+    table.setPageIndex(pageIndex);
   }, [table, pageIndex]);
 
+  // Handle page navigation
+  const goToPage = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("page", newPage.toString());
+      router.push(`${pathname}?${params.toString()}`);
+    }
+  };
+
   return (
-    <CarriageTableContext.Provider
-      value={{
-        trainIdEdit,
-        setTrainIdEdit,
-        trainDelete,
-        setTrainDelete,
-      }}
+    <TrainTableContext.Provider
+      value={{ trainIdEdit, setTrainIdEdit, trainDelete, setTrainDelete }}
     >
       <div className="w-full">
         {trainIdEdit !== undefined && (
@@ -368,26 +262,33 @@ export default function TrainTable() {
           setTrainDelete={setTrainDelete}
         />
         <div className="flex items-center py-4 gap-5">
-          <Input
-            placeholder="Filter carriage numbers..."
+          <Select
             value={
-              (table.getColumn("carriageNumber")?.getFilterValue() as string) ??
-              ""
+              (table.getColumn("trainStatus")?.getFilterValue() as string) ??
+              "all"
             }
-            onChange={(event) =>
+            onValueChange={(value) => {
               table
-                .getColumn("carriageNumber")
-                ?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm w-100"
-          />
+                .getColumn("trainStatus")
+                ?.setFilterValue(value === "all" ? undefined : value);
+            }}
+          >
+            <SelectTrigger className="max-w-sm w-100">
+              <SelectValue placeholder="Filter train status..." />
+            </SelectTrigger>
+            <SelectContent className="max-w-sm w-100">
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
           <Input
-            placeholder="Filter Train numbers..."
+            placeholder="Filter Train Name..."
             value={
-              (table.getColumn("trainNumber")?.getFilterValue() as string) ?? ""
+              (table.getColumn("trainName")?.getFilterValue() as string) ?? ""
             }
             onChange={(event) =>
-              table.getColumn("trainNumber")?.setFilterValue(event.target.value)
+              table.getColumn("trainName")?.setFilterValue(event.target.value)
             }
             className="max-w-sm w-100"
           />
@@ -440,20 +341,50 @@ export default function TrainTable() {
             </TableBody>
           </Table>
         </div>
-        <div className="flex items-center justify-between py-4 ">
+        <div className="flex items-center justify-between py-4">
           <div className="text-xs text-muted-foreground">
-            Showing <strong>{table.getPaginationRowModel().rows.length}</strong>{" "}
-            of <strong>{data.length}</strong> carriages
+            Showing <strong>{table.getRowModel().rows.length}</strong> of{" "}
+            <strong>{totalItems}</strong> trains
           </div>
-          <div>
-            <AutoPagination
-              page={table.getState().pagination.pageIndex + 1}
-              pageSize={table.getPageCount()}
-              pathname="/manage/trains"
-            />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => goToPage(page - 1)}
+              disabled={page === 1}
+            >
+              Previous
+            </Button>
+            <span>
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => goToPage(page + 1)}
+              disabled={page === totalPages}
+            >
+              Next
+            </Button>
+            <Select
+              value={pageSize.toString()}
+              onValueChange={(value) => {
+                setPageSize(Number(value));
+                goToPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[100px]">
+                <SelectValue placeholder="Rows per page" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
-    </CarriageTableContext.Provider>
+    </TrainTableContext.Provider>
   );
 }
