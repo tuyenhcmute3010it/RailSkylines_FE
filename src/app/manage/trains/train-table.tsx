@@ -57,6 +57,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import TableSkeleton from "@/components/Skeleton";
 
 type TrainItem = TrainListResType["data"]["result"][0];
 const TrainTableContext = createContext<{
@@ -263,129 +264,141 @@ export default function TrainTable() {
           trainDelete={trainDelete}
           setTrainDelete={setTrainDelete}
         />
-        <div className="flex items-center py-4 gap-5">
-          <Select
-            value={
-              (table.getColumn("trainStatus")?.getFilterValue() as string) ??
-              "all"
-            }
-            onValueChange={(value) => {
-              table
-                .getColumn("trainStatus")
-                ?.setFilterValue(value === "all" ? undefined : value);
-            }}
-          >
-            <SelectTrigger className="max-w-sm w-100">
-              <SelectValue placeholder="Filter train status..." />
-            </SelectTrigger>
-            <SelectContent className="max-w-sm w-100">
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-          <Input
-            placeholder="Filter Train Name..."
-            value={
-              (table.getColumn("trainName")?.getFilterValue() as string) ?? ""
-            }
-            onChange={(event) =>
-              table.getColumn("trainName")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm w-100"
-          />
-          <div className="ml-auto flex items-center gap-2">
-            <AddTrain />
-          </div>
-        </div>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
+        {trainListQuery.isLoading ? (
+          <TableSkeleton />
+        ) : trainListQuery.error ? (
+          <div className="text-red-500">Error:</div>
+        ) : (
+          <>
+            <div className="flex items-center py-4 gap-5">
+              <Select
+                value={
+                  (table
+                    .getColumn("trainStatus")
+                    ?.getFilterValue() as string) ?? "all"
+                }
+                onValueChange={(value) => {
+                  table
+                    .getColumn("trainStatus")
+                    ?.setFilterValue(value === "all" ? undefined : value);
+                }}
+              >
+                <SelectTrigger className="max-w-sm w-100">
+                  <SelectValue placeholder="Filter train status..." />
+                </SelectTrigger>
+                <SelectContent className="max-w-sm w-100">
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="Filter Train Name..."
+                value={
+                  (table.getColumn("trainName")?.getFilterValue() as string) ??
+                  ""
+                }
+                onChange={(event) =>
+                  table
+                    .getColumn("trainName")
+                    ?.setFilterValue(event.target.value)
+                }
+                className="max-w-sm w-100"
+              />
+              <div className="ml-auto flex items-center gap-2">
+                <AddTrain />
+              </div>
+            </div>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      ))}
+                    </TableRow>
                   ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow key={row.id}>
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id}>
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center"
+                      >
+                        No results.
                       </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="flex items-center justify-between py-4">
-          <div className="text-xs text-muted-foreground">
-            Showing <strong>{table.getRowModel().rows.length}</strong> of{" "}
-            <strong>{totalItems}</strong> trains
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(page - 1)}
-              disabled={page === 1}
-            >
-              Previous
-            </Button>
-            <span>
-              Page {page} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(page + 1)}
-              disabled={page === totalPages}
-            >
-              Next
-            </Button>
-            <Select
-              value={pageSize.toString()}
-              onValueChange={(value) => {
-                setPageSize(Number(value));
-                goToPage(1);
-              }}
-            >
-              <SelectTrigger className="w-[100px]">
-                <SelectValue placeholder="Rows per page" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex items-center justify-between py-4">
+              <div className="text-xs text-muted-foreground">
+                Showing <strong>{table.getRowModel().rows.length}</strong> of{" "}
+                <strong>{totalItems}</strong> trains
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(page - 1)}
+                  disabled={page === 1}
+                >
+                  Previous
+                </Button>
+                <span>
+                  Page {page} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(page + 1)}
+                  disabled={page === totalPages}
+                >
+                  Next
+                </Button>
+                <Select
+                  value={pageSize.toString()}
+                  onValueChange={(value) => {
+                    setPageSize(Number(value));
+                    goToPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue placeholder="Rows per page" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </TrainTableContext.Provider>
   );

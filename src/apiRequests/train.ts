@@ -1,4 +1,3 @@
-import AddTrain from "@/app/manage/trains/add-train";
 import http from "@/lib/http";
 
 import {

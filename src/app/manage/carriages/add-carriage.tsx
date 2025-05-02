@@ -50,9 +50,9 @@ export default function AddCarriage() {
       discount: 0,
       price: 0,
       train: {
-        trainId: 0, // Placeholder ID (will be updated by TrainDialog)
-        trainName: "", // Placeholder name
-      }, // Initialize with 0, will be updated by TrainDialog
+        trainId: 0,
+        trainName: "",
+      },
     },
   });
   const addCarriageMutation = useAddCarriageMutation();
@@ -171,8 +171,7 @@ export default function AddCarriage() {
                   <FormLabel htmlFor="discount">Discount (%)</FormLabel>
                   <Input
                     id="discount"
-                    type="number"
-                    {...field}
+                    type="string"
                     onChange={(e) => field.onChange(Number(e.target.value))}
                   />
                   <FormMessage />
@@ -187,9 +186,9 @@ export default function AddCarriage() {
                   <FormLabel htmlFor="price">Price</FormLabel>
                   <Input
                     id="price"
-                    type="number"
+                    type="string"
                     // value={field.value}
-                    {...field}
+                    // {...field}
                     onChange={(e) => field.onChange(Number(e.target.value))}
                   />
                   <FormMessage />

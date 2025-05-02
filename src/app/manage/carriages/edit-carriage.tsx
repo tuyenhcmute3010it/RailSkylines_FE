@@ -1,23 +1,23 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
-  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { useState, useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -25,22 +25,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TrainDialog } from "./train-dialog";
 import { useTranslations } from "next-intl";
-import { useRouter, useSearchParams } from "next/navigation";
-
-// Định nghĩa type cho Carriage
-type Carriage = {
-  id: number;
-  carriageNumber: string;
-  trainNumber: string;
-  capacity: number;
-  type: string;
-};
+import { useEffect, useState } from "react";
+import { toast } from "@/components/ui/use-toast";
+import { handleErrorApi } from "@/lib/utils";
+import { TrainDialog } from "./train-dialog";
+import { CarriageTypesValues } from "@/constants/type";
+import {
+  useGetCarriage,
+  useUpdateCarriageMutation,
+} from "@/queries/useCarriage";
+import {
+  UpdateCarriageBody,
+  UpdateCarriageBodyType,
+} from "@/schemaValidations/carriage.schema";
 
 type EditCarriageProps = {
-  id?: number;
-  setId?: (value: number | undefined) => void;
+  id: number;
+  setId: (value: number | undefined) => void;
   onSubmitSuccess?: () => void;
 };
 
@@ -49,149 +51,171 @@ export default function EditCarriage({
   setId,
   onSubmitSuccess,
 }: EditCarriageProps) {
-  const manageCarriageT = useTranslations("ManageCarriage");
-  const searchParams = useSearchParams();
-  const router = useRouter();
+  const t = useTranslations("ManageCarriage");
+  const { data } = useGetCarriage({
+    id,
+    enabled: Boolean(id),
+  });
+  const updateCarriageMutation = useUpdateCarriageMutation();
 
-  // Lấy carriageId từ props hoặc query params
-  const carriageId = id || Number(searchParams.get("id"));
-  const [open, setOpen] = useState(!!carriageId);
-
-  // Dữ liệu mẫu (thay bằng API call trong thực tế)
-  const [carriageData, setCarriageData] = useState<Carriage | null>(null);
-
-  const form = useForm({
+  const form = useForm<UpdateCarriageBodyType>({
+    resolver: zodResolver(UpdateCarriageBody),
     defaultValues: {
-      trainNumber: "",
-      carriageNumber: "",
-      capacity: "",
-      type: "",
+      carriageType: "seat",
+      discount: 0,
+      price: 0,
+      train: {
+        trainId: 0,
+        trainName: "",
+      },
     },
   });
 
-  const CarriageTypes = [
-    { value: "soft_seat_ac", label: "Soft Seat with AC" },
-    { value: "hard_seat", label: "Hard Seat" },
-    { value: "soft_bed_6", label: "Soft Berth (6 Beds)" },
-    { value: "soft_bed_4", label: "Soft Berth (4 Beds)" },
-  ];
+  const [selectedTrainName, setSelectedTrainName] = useState<string>("");
 
-  // Giả lập fetch dữ liệu carriage dựa trên id
   useEffect(() => {
-    if (carriageId) {
-      // Thay bằng API call thực tế: fetch(`/api/carriages/${carriageId}`)
-      const mockData: Carriage = {
-        id: carriageId,
-        carriageNumber: `C00${carriageId}`,
-        trainNumber: `SE${carriageId}`,
-        capacity: 50 + carriageId * 10,
-        type: CarriageTypes[carriageId % 4].value,
-      };
-      setCarriageData(mockData);
+    if (data) {
+      const { carriageType, discount, price, train } = data.payload.data;
       form.reset({
-        carriageNumber: mockData.carriageNumber,
-        trainNumber: mockData.trainNumber,
-        capacity: mockData.capacity.toString(),
-        type: mockData.type,
+        carriageType,
+        discount,
+        price,
+        train: {
+          trainId: train.trainId,
+          trainName: train.trainName,
+        },
+      });
+      setSelectedTrainName(train.trainName);
+    }
+  }, [data, form]);
+
+  const reset = () => {
+    form.reset();
+    setSelectedTrainName("");
+    setId(undefined);
+  };
+
+  const onSubmit = async (values: UpdateCarriageBodyType) => {
+    if (updateCarriageMutation.isPending) return;
+    try {
+      const body: UpdateCarriageBodyType & { id: number } = {
+        id,
+        ...values,
+      };
+      const result = await updateCarriageMutation.mutateAsync(body);
+      toast({
+        description: result.payload.message,
+      });
+      reset();
+      if (onSubmitSuccess) onSubmitSuccess();
+    } catch (error) {
+      handleErrorApi({
+        error,
+        setError: form.setError,
       });
     }
-  }, [carriageId, form]);
-
-  const onSubmit = (data: any) => {
-    // Xử lý submit form (gọi API để cập nhật carriage)
-    console.log("Updated carriage:", { id: carriageId, ...data });
-
-    // Sau khi submit thành công
-    setOpen(false);
-    if (setId) setId(undefined); // Đóng dialog nếu dùng props
-    if (onSubmitSuccess) onSubmitSuccess();
-    router.push("/manage/carriages"); // Chuyển hướng về danh sách
   };
 
   return (
     <Dialog
-      open={open}
+      open={Boolean(id)}
       onOpenChange={(value) => {
-        setOpen(value);
-        if (!value && setId) setId(undefined);
-        if (!value) router.push("/manage/carriages");
+        if (!value) {
+          reset();
+        }
       }}
     >
-      <DialogTrigger asChild>
-        <Button size="sm" className="h-7 gap-1">
-          Edit Carriage
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent
+        className="sm:max-w-[600px] max-h-screen overflow-auto"
+        onCloseAutoFocus={() => {
+          form.reset();
+          setId(undefined);
+        }}
+      >
+        <DialogHeader>
+          <DialogTitle>{t("UpdateCarriage")}</DialogTitle>
+        </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            className="grid auto-rows-max items-start gap-4 md:gap-8"
             id="edit-carriage-form"
-            className="grid gap-4 py-4"
+            onSubmit={form.handleSubmit(onSubmit, (e) => {
+              console.log("Form errors:", e);
+            })}
           >
-            <FormField
-              control={form.control}
-              name="carriageNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{manageCarriageT("CarriageNumber")}</FormLabel>
-                  <Input id="carriageNumber" {...field} />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="trainNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="grid grid-cols-4 items-center justify-items-start gap-4">
-                    <FormLabel>{manageCarriageT("TrainNumber")}</FormLabel>
-                    <div className="col-span-3 w-full space-y-2">
-                      <div className="flex items-center gap-4">
-                        <div>{field.value}</div>
+            <div className="grid gap-4 py-4">
+              <FormField
+                control={form.control}
+                name="train"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="grid grid-cols-4 items-center justify-items-start gap-4">
+                      <Label htmlFor="train">{t("TrainNumber")}</Label>
+                      <div className="col-span-3 w-full space-y-2">
+                        <div>{selectedTrainName || t("NoTrainSelected")}</div>
                         <TrainDialog
                           onChoose={(train) => {
-                            field.onChange(train.name);
+                            form.setValue("train", train);
+                            setSelectedTrainName(train.trainName);
                           }}
                         />
+                        <FormMessage />
                       </div>
                     </div>
-                  </div>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="grid grid-cols-4 items-center justify-items-start gap-4">
-                    <FormLabel>{manageCarriageT("Type")}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl className="col-span-3">
-                        <SelectTrigger className="w-[200px]">
-                          <SelectValue placeholder="Type Carriage" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {CarriageTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </div>
-                </FormItem>
-              )}
-            />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="grid grid-cols-4 items-center justify-items-start gap-4">
+                      <Label htmlFor="price">{t("Price")}</Label>
+                      <div className="col-span-3 w-full space-y-2">
+                        <Input
+                          id="price"
+                          type="number"
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                          value={field.value}
+                        />
+                        <FormMessage />
+                      </div>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="discount"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="grid grid-cols-4 items-center justify-items-start gap-4">
+                      <Label htmlFor="discount">{t("Discount")}</Label>
+                      <div className="col-span-3 w-full space-y-2">
+                        <Input
+                          id="discount"
+                          type="number"
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                          value={field.value}
+                        />
+                        <FormMessage />
+                      </div>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
           </form>
         </Form>
         <DialogFooter>
           <Button type="submit" form="edit-carriage-form">
-            {manageCarriageT("UpdateCarriage")}
+            {t("UpdateCarriage")}
           </Button>
         </DialogFooter>
       </DialogContent>

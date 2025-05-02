@@ -133,7 +133,7 @@
   "ManageCarriage": {
     "ID": "ID",
     "CarriageNumber": "Số toa",
-    "TrainNumber": "Số tàu",
+    "TrainNumber": "Tên tàu",
     "Capacity": "Sức chứa",
     "Type": "Loại",
     "Action": "Hành động",
@@ -147,5 +147,25 @@
     "FilterCarriageNumbers": "Lọc số toa...",
     "FilterTrainNumbers": "Lọc số tàu...",
     "UpdateCarriage": "Cập nhật toa tàu"
+  },
+  "TrainDialog": {
+    "ChangeTrain": "Thay đổi tàu",
+    "ChooseTrain": "Chọn tàu",
+    "FilterTrainName": "Lọc tên tàu...",
+    "FilterStatus": "Lọc trạng thái",
+    "All": "Tất cả",
+    "Active": "Hoạt động",
+    "Inactive": "Không hoạt động",
+    "NoResults": "Không có kết quả",
+    "Previous": "Trước",
+    "Next": "Tiếp",
+    "Page": "Trang",
+    "Of": "của",
+    "RowsPerPage": "Số hàng mỗi trang"
+  },
+  "Pagination": {
+    "Pagi1": "Hiển thị",
+    "Pagi2": "trong số",
+    "Pagi3": "mục"
   }
 }

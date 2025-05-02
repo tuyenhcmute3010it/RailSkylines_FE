@@ -68,3 +68,27 @@ export const CarriageTypesValues = [
   CarriageTypes.Seat,
 ] as const;
 export const ManagerRoom = "manager" as const;
+
+export const SeatStatus = {
+  Available: "available",
+  Unavailable: "unavailable",
+  Pending: "pending",
+} as const;
+
+export const SeatStatusValues = [
+  SeatStatus.Available,
+  SeatStatus.Unavailable,
+  SeatStatus.Pending,
+] as const;
+
+export const SeatType = {
+  LEVEL_1: "LEVEL_1",
+  LEVEL_2: "LEVEL_2",
+  LEVEL_3: "LEVEL_3",
+} as const;
+
+export const SeatTypeValues = [
+  SeatType.LEVEL_1,
+  SeatType.LEVEL_2,
+  SeatType.LEVEL_3,
+] as const;

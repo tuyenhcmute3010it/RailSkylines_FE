@@ -1,12 +1,12 @@
 import { CarriageTypesValues } from "@/constants/type";
 import { z } from "zod";
-import { TrainSchema } from "./train.schema";
+import { TrainSchema, TrainSummarySchema } from "./train.schema";
 
 // Define carriage type enum
 
 // Schema for creating a carriage
 export const CreateCarriageBody = z.object({
-  train: TrainSchema.optional(), // Make train optional
+  train: TrainSummarySchema,
   carriageType: z.enum(CarriageTypesValues).optional(),
   price: z.number().min(0, "Min is 0"),
   discount: z.number().min(0, "Min is 0%").max(100, "Max is 100%"),
@@ -16,13 +16,10 @@ export type CreateCarriageBodyType = z.TypeOf<typeof CreateCarriageBody>;
 // Schema for a single carriage
 export const CarriageSchema = z.object({
   carriageId: z.number(),
-  train: TrainSchema.optional(), // Make train optional
-  capacity: z.number(),
+  train: TrainSummarySchema,
   price: z.number(),
   discount: z.number(),
   carriageType: z.enum(CarriageTypesValues),
-  createdAt: z.date(),
-  updatedAt: z.date(),
 });
 
 export type CarriageSchemaType = z.TypeOf<typeof CarriageSchema>;

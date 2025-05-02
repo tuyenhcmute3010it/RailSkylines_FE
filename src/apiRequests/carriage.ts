@@ -5,6 +5,7 @@ import {
   CreateCarriageBodyType,
   UpdateCarriageBodyType,
 } from "@/schemaValidations/carriage.schema";
+import { SeatListResType } from "@/schemaValidations/seat.schema";
 
 const prefix = "/api/v1/carriages";
 const carriagesApiRequest = {
@@ -17,6 +18,9 @@ const carriagesApiRequest = {
   getCarriage: (id: number) => http.get<CarriageResType>(`${prefix}/${id}`),
   deleteCarriage: (id: number) =>
     http.delete<CarriageResType>(`${prefix}/${id}`),
+
+  getSeatByCarriage: (id: number, page: number = 1, size: number = 10) =>
+    http.get<SeatListResType>(`${prefix}/seat/${id}?page${page}&size=${size}`), // Assuming it returns an array of Seat
 };
 
 export default carriagesApiRequest;

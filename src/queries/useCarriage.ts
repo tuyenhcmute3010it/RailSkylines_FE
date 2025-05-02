@@ -58,3 +58,21 @@ export const useDeleteCarriageMutation = () => {
     },
   });
 };
+
+export const useGetSeatByCarriageQuery = ({
+  id,
+  enabled,
+  page,
+  size,
+}: {
+  id: number;
+  enabled: boolean;
+  page: number;
+  size: number;
+}) => {
+  return useQuery({
+    queryKey: ["seats", id, page, size],
+    queryFn: () => carriagesApiRequest.getSeatByCarriage(id, page, size),
+    enabled,
+  });
+};

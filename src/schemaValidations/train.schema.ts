@@ -16,7 +16,9 @@ export const TrainSchema = z.object({
   // createdAt: z.date(),
   // updatedAt: z.date(),
 });
-
+export const TrainSummarySchema = TrainSchema.omit({
+  trainStatus: true,
+});
 export const TrainRes = z.object({
   data: TrainSchema,
   message: z.string(),
