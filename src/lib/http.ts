@@ -1,7 +1,9 @@
+////////////////// code for this///////////////////////////////////////////////////////////
 import envConfig from "@/config";
 import { normalizePath } from "@/lib/utils";
 import { LoginResType } from "@/schemaValidations/auth.schema";
 import { redirect } from "next/navigation";
+
 type CustomOptions = Omit<RequestInit, "method"> & {
   baseUrl?: string | undefined;
 };
@@ -9,6 +11,7 @@ type CustomOptions = Omit<RequestInit, "method"> & {
 const ENTITY_ERROR_STATUS = 422;
 const AUTHENTICATION_ERROR_STATUS = 401;
 const BAD_REQUEST_STATUS = 400;
+
 type EntityErrorPayload = {
   message: string;
   errors: {
@@ -60,6 +63,7 @@ type BadRequestErrorPayload = {
   message: string;
   data: any;
 };
+
 export class BadRequestError extends HttpError {
   status: typeof BAD_REQUEST_STATUS;
   payload: BadRequestErrorPayload;
@@ -75,8 +79,10 @@ export class BadRequestError extends HttpError {
     this.payload = payload;
   }
 }
+
 let clientLogoutRequest: null | Promise<any> = null;
 const isClient = typeof window !== "undefined";
+
 const request = async <Response>(
   method: "GET" | "POST" | "PUT" | "DELETE",
   url: string,
@@ -102,9 +108,6 @@ const request = async <Response>(
       baseHeaders.Authorization = `Bearer ${accessToken}`;
     }
   }
-  // Nếu không truyền baseUrl (hoặc baseUrl = undefined) thì lấy từ envConfig.NEXT_PUBLIC_API_ENDPOINT
-  // Nếu truyền baseUrl thì lấy giá trị truyền vào, truyền vào '' thì đồng nghĩa với việc chúng ta gọi API đến Next.js Server
-
   const baseUrl =
     options?.baseUrl === undefined
       ? envConfig.NEXT_PUBLIC_API_ENDPOINT
@@ -121,13 +124,11 @@ const request = async <Response>(
     method,
   });
   const payload: Response = await res.json();
-  console.log(payload);
   const data = {
     status: res.status,
     payload,
   };
 
-  // Interceptor là nời chúng ta xử lý request và response trước khi trả về cho phía component
   if (!res.ok) {
     if (res.status === ENTITY_ERROR_STATUS) {
       throw new EntityError(
@@ -148,7 +149,7 @@ const request = async <Response>(
         if (!clientLogoutRequest) {
           clientLogoutRequest = fetch("/api/auth/logout", {
             method: "POST",
-            body: null, // Logout mình sẽ cho phép luôn luôn thành công
+            body: null,
             headers: {
               ...baseHeaders,
             } as any,
@@ -159,18 +160,11 @@ const request = async <Response>(
             console.error("An error occurred:", error);
           } finally {
             localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
             clientLogoutRequest = null;
-            // Redirect về trang login có thể dẫn đến loop vô hạn
-            // Nếu không không được xử lý đúng cách
-            // Vì nếu rơi vào trường hợp tại trang Login, chúng ta có gọi các API cần access token
-            // Mà access token đã bị xóa thì nó lại nhảy vào đây, và cứ thế nó sẽ bị lặp
             location.href = `/login`;
           }
         }
       } else {
-        // Đây là trường hợp khi mà chúng ta vẫn còn access token (còn hạn)
-        // Và chúng ta gọi API ở Next.js Server (Route Handler , Server Component) đến Server Backend
         const accessToken = (options?.headers as any)?.Authorization.split(
           "Bearer "
         )[1];
@@ -180,25 +174,22 @@ const request = async <Response>(
       throw new HttpError(data);
     }
   }
-  // Đảm bảo logic dưới đây chỉ chạy ở phía client (browser)
+
   if (isClient) {
     const normalizeUrl = normalizePath(url);
-    if (["api/auth/login", "api/guest/auth/login"].includes(normalizeUrl)) {
-      const { accessToken, refreshToken } = (payload as LoginResType).data;
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
-    } else if ("api/auth/token" === normalizeUrl) {
+    if (["api/v1/auth/login"].includes(normalizeUrl)) {
+      const { access_token } = (payload as LoginResType).data;
+      localStorage.setItem("accessToken", access_token);
+      // Refresh token is handled as an HTTP-only cookie, not stored in localStorage
+    } else if ("api/v1/auth/token" === normalizeUrl) {
       const { accessToken, refreshToken } = payload as {
         accessToken: string;
         refreshToken: string;
       };
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
-    } else if (
-      ["api/auth/logout", "api/guest/auth/logout"].includes(normalizeUrl)
-    ) {
+    } else if (["api/v1/auth/logout"].includes(normalizeUrl)) {
       localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
     }
   }
   return data;

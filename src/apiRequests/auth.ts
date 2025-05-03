@@ -1,3 +1,4 @@
+// export default authApiRequest;
 import http from "@/lib/http";
 import {
   LoginBodyType,
@@ -8,35 +9,51 @@ import {
 } from "@/schemaValidations/auth.schema";
 
 const authApiRequest = {
-  sLogin: (body: LoginBodyType) => http.post<LoginResType>("/auth/login", body),
   login: (body: LoginBodyType) =>
-    http.post<LoginResType>("/api/auth/login", body, {
-      baseUrl: "",
+    http.post<LoginResType>("/api/v1/auth/login", body, {
+      baseUrl: "http://localhost:8080",
+      credentials: "include", // Include cookies for refresh token
     }),
-  sLogout: (
-    body: LogoutBodyType & {
-      accessToken: string;
-    }
-  ) =>
-    http.post(
-      "/auth/logout",
-      {
-        refreshToken: body.refreshToken,
+  sLogin: (body: LoginBodyType) =>
+    http.post<LoginResType>("/api/v1/auth/login", body, {
+      baseUrl: "http://localhost:8080",
+      credentials: "include",
+    }), // Server-side login, same as login
+  logout: (body: LogoutBodyType & { accessToken: string }) =>
+    http.post<void>("/api/v1/auth/logout", null, {
+      baseUrl: "http://localhost:8080",
+      credentials: "include",
+      headers: {
+        Authorization: `Bearer ${body.accessToken}`,
       },
+    }),
+  sLogout: (body: LogoutBodyType & { accessToken: string }) =>
+    http.post<void>(
+      "/api/v1/auth/logout",
+      { refreshToken: body.refreshToken },
       {
+        baseUrl: "http://localhost:8080",
+        credentials: "include",
         headers: {
-          Authorization: `Bearer ${body.accessToken}}`,
+          Authorization: `Bearer ${body.accessToken}`,
         },
       }
-    ),
-  logout: () => http.post("/api/auth/logout", null, { baseUrl: "" }),
-  sRefreshToken: (body: RefreshTokenBodyType) =>
-    http.post<RefreshTokenResType>("/auth/refresh-token", body),
+    ), // Server-side logout with refreshToken in body
   refreshToken: () =>
-    http.post<RefreshTokenResType>("/api/auth/refresh-token", null, {
-      baseUrl: "",
+    http.post<RefreshTokenResType>("/api/v1/auth/refresh", null, {
+      baseUrl: "http://localhost:8080",
+      credentials: "include",
     }),
+  sRefreshToken: (body: RefreshTokenBodyType) =>
+    http.post<RefreshTokenResType>("/api/v1/auth/refresh", body, {
+      baseUrl: "http://localhost:8080",
+      credentials: "include",
+    }), // Server-side refresh with explicit refreshToken
   setTokenToCookie: (body: { accessToken: string; refreshToken: string }) =>
-    http.post("/api/auth/token", body, { baseUrl: "" }),
+    http.post("/api/v1/auth/token", body, {
+      baseUrl: "http://localhost:8080",
+      credentials: "include",
+    }),
 };
+
 export default authApiRequest;

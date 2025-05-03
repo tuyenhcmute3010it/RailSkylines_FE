@@ -132,7 +132,7 @@
     "Error": "Error",
     "Loading": "Loading...",
     "Submitting": "Submitting...",
-    "FailedToAddAccount": "FailedToAddAccount",
+    "FailedToAddAccount": "Account is already exist , pls use another email",
     "AccountAdded": "Account {email} was successfully added.",
     "AccountUpdated": "Account {email} was successfully updated.",
     "AccountDeleted": "Account {userId} was successfully deleted.",

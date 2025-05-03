@@ -101,7 +101,6 @@ export default function AddEmployee() {
       reset();
       setOpen(false);
     } catch (error) {
-      console.error("Submission error:", error);
       handleErrorApi({
         error,
         setError: form.setError,

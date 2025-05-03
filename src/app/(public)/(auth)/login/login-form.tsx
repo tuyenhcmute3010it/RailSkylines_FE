@@ -22,6 +22,8 @@ import envConfig from "@/config";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { LoaderCircle } from "lucide-react";
+import { useLoginMutation } from "@/queries/useAuth";
+
 const getOauthGoogleUrl = () => {
   const rootUrl = "https://accounts.google.com/o/oauth2/v2/auth";
   const options = {
@@ -44,19 +46,42 @@ const googleOauthUrl = getOauthGoogleUrl();
 export default function LoginForm() {
   const t = useTranslations("Login");
   const errorMessageT = useTranslations("ErrorMessage");
-  // const loginMutation = useLoginMutation();
+  const loginMutation = useLoginMutation();
   const router = useRouter();
   const [isAuth, setIsAuth] = useState(false);
   const { role, setRole } = useAppContext();
-  console.log(isAuth);
-  console.log(role);
+
   const form = useForm<LoginBodyType>({
     resolver: zodResolver(LoginBody),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   });
+
+  const onSubmit = async (data: LoginBodyType) => {
+    if (loginMutation.isPending) {
+      return;
+    }
+    try {
+      const result = await loginMutation.mutateAsync(data);
+      // Store access token in localStorage
+      localStorage.setItem("access_token", result.payload.data.access_token);
+      // Set role from response
+      setRole(result.payload.data.user.role.name);
+      setIsAuth(true);
+      router.push("/");
+      toast({
+        description: result.payload.message,
+      });
+    } catch (error: any) {
+      handleErrorApi({
+        error,
+        setError: form.setError,
+      });
+    }
+  };
+
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
@@ -70,28 +95,28 @@ export default function LoginForm() {
           <form
             className="space-y-2 max-w-[600px] flex-shrink-0 w-full"
             noValidate
-            // onSubmit={form.handleSubmit(onSubmit, (err) => {
-            //   console.warn(err);
-            // })}
+            onSubmit={form.handleSubmit(onSubmit, (err) => {
+              console.warn(err);
+            })}
           >
             <div className="grid gap-4">
               <FormField
                 control={form.control}
-                name="email"
+                name="username"
                 render={({ field, formState: { errors } }) => (
                   <FormItem>
                     <div className="grid gap-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="username">Email</Label>
                       <Input
-                        id="email"
+                        id="username"
                         type="email"
-                        placeholder="m@example.com"
+                        placeholder="admin@railskylines.com"
                         required
                         {...field}
                       />
                       <FormMessage>
-                        {Boolean(errors.email?.message) &&
-                          errorMessageT(errors.email?.message as any)}
+                        {Boolean(errors.username?.message) &&
+                          errorMessageT(errors.username?.message as any)}
                       </FormMessage>
                     </div>
                   </FormItem>
@@ -121,10 +146,10 @@ export default function LoginForm() {
                 )}
               />
               <Button type="submit" className="w-full">
-                {/* {loginMutation.isPending && (
+                {loginMutation.isPending && (
                   <LoaderCircle className="w-5 h-5 animate-spin" />
                 )}
-                {t("title")} */}
+                {t("title")}
               </Button>
               <Link href={googleOauthUrl}>
                 <Button variant="outline" className="w-full" type="button">

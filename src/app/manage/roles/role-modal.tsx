@@ -472,7 +472,7 @@ export default function RoleModal({
                                     }
                                     ${
                                       method.method === "PUT"
-                                        ? "text-blue-400 font-medium"
+                                        ? "text-blue-300 font-medium"
                                         : ""
                                     }
                                     ${
