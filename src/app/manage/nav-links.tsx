@@ -18,7 +18,7 @@ export default function NavLinks() {
 
   return (
     <TooltipProvider>
-      <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
+      <aside className="fixed inset-y-0 left-0 z-10 hidden w-[70px] flex-col border-r bg-background sm:flex">
         <nav className="flex flex-col items-center gap-4 px-2 py-4">
           <Link
             href="#"
@@ -39,14 +39,14 @@ export default function NavLinks() {
                   <Link
                     href={Item.href}
                     className={cn(
-                      "flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-foreground md:h-8 md:w-8",
+                      "flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-foreground md:h-8 md:w-8 mt-2",
                       {
                         "bg-accent text-accent-foreground": isActive,
                         "text-muted-foreground": !isActive,
                       }
                     )}
                   >
-                    <Item.Icon className="h-5 w-5" />
+                    <Item.Icon className="h-7 w-7" />
                     <span className="sr-only">{Item.title}</span>
                   </Link>
                 </TooltipTrigger>

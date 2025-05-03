@@ -11,8 +11,10 @@ import {
   BellElectric,
   BadgeCent,
   Newspaper,
+  LockKeyholeOpen,
+  UserRoundPen,
+  UserCog,
 } from "lucide-react";
-
 const menuItems = [
   {
     title: "Dashboard",
@@ -60,6 +62,19 @@ const menuItems = [
     title: "Nhân viên",
     Icon: Users2,
     href: "/manage/accounts",
+    // roles: [Role.Admin],
+  },
+  {
+    title: "Vai Trò",
+    Icon: UserRoundPen,
+
+    href: "/manage/roles",
+    // roles: [Role.Admin],
+  },
+  {
+    title: "Quyền Hạn",
+    href: "/manage/permissions",
+    Icon: UserCog,
     // roles: [Role.Admin],
   },
 ];

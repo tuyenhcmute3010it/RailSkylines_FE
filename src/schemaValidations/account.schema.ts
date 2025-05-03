@@ -174,7 +174,7 @@ export const AccountSchema = z.object({
   avatar: z.string().url("Invalid URL").optional(),
   phoneNumber: z.string().optional(),
   citizenId: z.string().optional(),
-  role: z.string().optional(),
+  // role: z.string().optional(),
 });
 
 export type AccountType = z.TypeOf<typeof AccountSchema>;
@@ -191,7 +191,7 @@ export const CreateEmployeeAccountBody = z
     avatar: z.string().url("Invalid URL").optional(),
     phoneNumber: z.string().optional(),
     citizenId: z.string().optional(),
-    role: z.string().optional(),
+    // role: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -210,7 +210,7 @@ export const UpdateEmployeeAccountBody = z
     avatar: z.string().url("Invalid URL").optional(),
     phoneNumber: z.string().optional(),
     citizenId: z.string().optional(),
-    role: z.string().optional(),
+    // role: z.string().optional(),
     changePassword: z.boolean(),
     password: z
       .string()
