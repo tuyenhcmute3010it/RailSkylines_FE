@@ -126,16 +126,18 @@
     "PhoneNumber": "Phone Number",
     "CitizenId": "Citizen ID",
     "Role": "Role",
+    "NoRoleSelected": "NoRoleSelected",
 
     "NoResults": "No results found.",
     "Error": "Error",
     "Loading": "Loading...",
     "Submitting": "Submitting...",
-
+    "FailedToAddAccount": "FailedToAddAccount",
     "AccountAdded": "Account {email} was successfully added.",
     "AccountUpdated": "Account {email} was successfully updated.",
     "AccountDeleted": "Account {userId} was successfully deleted.",
-    "Error_Generic": "An error occurred. Please try again."
+    "Error_Generic": "An error occurred. Please try again.",
+    "SelectRole": "Selected Role"
   },
   "Pagination": {
     "Previous": "Previous",
@@ -381,5 +383,27 @@
     "ID": "ID",
     "Status": "Status",
     "Error": "Error"
+  },
+  "RoleDialog": {
+    "ChangeRole": "Change Role",
+    "ChooseRole": "Choose a Role",
+    "FilterRoleName": "Filter role name",
+    "Id": "ID",
+    "RoleName": "Role Name",
+    "Loading": "Loading...",
+    "Error": "Error",
+    "NoResults": "No results found",
+    "Previous": "Previous",
+    "Next": "Next",
+    "Page": "Page",
+    "Of": "of",
+    "RowsPerPage": "Rows per page",
+    "FilterStatus": "Filter status",
+    "Description": "Description",
+    "Status": "Status",
+    "Active": "Active",
+    "Inactive": "Inactive",
+    "NoDescription": "No description",
+    "All": "All"
   }
 }

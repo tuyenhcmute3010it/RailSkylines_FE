@@ -1,4 +1,3 @@
-// src/components/permission/add-permission.tsx
 "use client";
 import { Button } from "@/components/ui/button";
 import {

@@ -234,7 +234,10 @@ export default function RoleModal({
         const methodState = perm.methods.map((m) => ({
           id: m.id,
           method: m.method,
-          enabled: form.getValues("permissions").some((p) => p.id === m.id),
+          //   enabled: form.getValues("permissions").some((p) => p.id === m.id),
+          enabled: (form.getValues("permissions") ?? []).some(
+            (p) => p.id === m.id
+          ),
         }));
         updatedMethodStates.set(perm.module, methodState);
       }
@@ -305,7 +308,7 @@ export default function RoleModal({
         if (!value) reset();
       }}
     >
-      <DialogContent className="sm:max-w-[600px] max-h-screen overflow-auto">
+      <DialogContent className="sm:max-w-[800px] max-h-screen overflow-auto">
         <DialogHeader>
           <DialogTitle>{isEdit ? t("UpdateRole") : t("AddRole")}</DialogTitle>
           <DialogDescription>
@@ -337,7 +340,7 @@ export default function RoleModal({
                 </FormItem>
               )}
             />
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 ">
               <FormField
                 control={form.control}
                 name="description"
@@ -361,10 +364,11 @@ export default function RoleModal({
                 control={form.control}
                 name="active"
                 render={({ field }) => (
-                  <FormItem className="flex items-center gap-2">
+                  <FormItem className="flex items-center gap-2 w-[150px]">
                     <FormLabel>{t("Status")}</FormLabel>
                     <FormControl>
                       <Switch
+                        className="h-6 w-9"
                         checked={field.value}
                         onCheckedChange={field.onChange}
                       />
@@ -402,6 +406,7 @@ export default function RoleModal({
                       <div key={p.value} className="mt-2 p-2 border rounded">
                         <div className="flex items-center gap-2">
                           <Switch
+                            className="h-6 w-9"
                             checked={allEnabled}
                             onCheckedChange={(checked) =>
                               handleModuleToggle(p.module, checked)
@@ -416,6 +421,7 @@ export default function RoleModal({
                               className="flex items-center gap-2"
                             >
                               <Switch
+                                className="h-6 w-9"
                                 checked={method.enabled}
                                 onCheckedChange={(checked) =>
                                   handleMethodToggle(
@@ -426,11 +432,61 @@ export default function RoleModal({
                                 }
                               />
                               <span>
-                                {method.name} -{" "}
-                                <span className="text-orange-500">
-                                  {method.method}
+                                {
+                                  p.methods.find((m) => m.id === method.id)
+                                    ?.name
+                                }{" "}
+                                -{" "}
+                                <span
+                                  className={`
+                                    ${
+                                      method.method === "POST"
+                                        ? "text-orange-500 font-bold"
+                                        : ""
+                                    }
+                                    ${
+                                      method.method === "PUT"
+                                        ? "text-blue-500 font-bold"
+                                        : ""
+                                    }
+                                    ${
+                                      method.method === "DELETE"
+                                        ? "text-red-500 font-bold"
+                                        : ""
+                                    }
+                                    ${
+                                      method.method === "GET"
+                                        ? "text-green-500 font-bold"
+                                        : ""
+                                    }
+                                    `}
+                                >
+                                  {method.method}:
                                 </span>{" "}
-                                <span className="text-gray-500">
+                                <span
+                                  className={`text-gray-400 underline
+                                    ${
+                                      method.method === "POST"
+                                        ? "text-orange-400 font-medium"
+                                        : ""
+                                    }
+                                    ${
+                                      method.method === "PUT"
+                                        ? "text-blue-400 font-medium"
+                                        : ""
+                                    }
+                                    ${
+                                      method.method === "DELETE"
+                                        ? "text-red-400 font-medium"
+                                        : ""
+                                    }
+                                    ${
+                                      method.method === "GET"
+                                        ? "text-green-400 font-medium"
+                                        : ""
+                                    }
+                                    `}
+                                >
                                   {
                                     p.methods.find((m) => m.id === method.id)
                                       ?.apiPath

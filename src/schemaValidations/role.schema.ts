@@ -5,7 +5,6 @@ export const CreateRoleBody = z.object({
   description: z.string().optional(),
   active: z.boolean().default(true),
   permissions: z.array(z.object({ id: z.number() })).optional(), // Array of objects with id
-  //   permissions: z.array(z.number()).optional(), // Array of permission IDs
 });
 
 export const UpdateRoleBody = CreateRoleBody.partial().extend({
@@ -36,31 +35,25 @@ export const RoleSchema = z.object({
 });
 
 export const RoleListRes = z.object({
-  status: z.number(),
-  payload: z.object({
-    statusCode: z.number(),
-    error: z.string().nullable(),
-    message: z.string(),
-    data: z.object({
-      result: z.array(RoleSchema),
-      meta: z.object({
-        page: z.number(),
-        pageSize: z.number(),
-        pages: z.number(),
-        total: z.number(),
-      }),
+  statusCode: z.number(),
+  error: z.string().nullable(),
+  message: z.string(),
+  data: z.object({
+    result: z.array(RoleSchema),
+    meta: z.object({
+      page: z.number(),
+      pageSize: z.number(),
+      pages: z.number(),
+      total: z.number(),
     }),
   }),
 });
 
 export const RoleRes = z.object({
-  status: z.number(),
-  payload: z.object({
-    statusCode: z.number(),
-    error: z.string().nullable(),
-    message: z.string(),
-    data: RoleSchema,
-  }),
+  statusCode: z.number(),
+  error: z.string().nullable(),
+  message: z.string(),
+  data: RoleSchema,
 });
 
 export type RoleSchemaType = z.infer<typeof RoleSchema>;

@@ -31,12 +31,10 @@ export type PermissionSchemaType = z.TypeOf<typeof PermissionSchema>;
 // Schema for single permission response
 export const PermissionRes = z.object({
   status: z.number(),
-  payload: z.object({
-    statusCode: z.number(),
-    error: z.string().nullable(),
-    message: z.string(),
-    data: PermissionSchema,
-  }),
+  statusCode: z.number(),
+  error: z.string().nullable(),
+  message: z.string(),
+  data: PermissionSchema,
 });
 
 export type PermissionResType = z.TypeOf<typeof PermissionRes>;
