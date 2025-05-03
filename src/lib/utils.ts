@@ -247,3 +247,28 @@ export const htmlToTextForDescription = (html: string) => {
     },
   });
 };
+import { useAppContext } from "@/components/app-provider";
+import { Permission } from "@/types/jwt.types";
+
+export function usePermissions() {
+  const { permissions } = useAppContext();
+
+  const hasPermission = (permissionName: string): boolean => {
+    if (!permissions) return false;
+    return permissions.some((perm: Permission) => perm.name === permissionName);
+  };
+
+  const hasAnyPermission = (permissionNames: string[]): boolean => {
+    if (!permissions) return false;
+    return permissionNames.some((name) =>
+      permissions.some((perm: Permission) => perm.name === name)
+    );
+  };
+
+  const hasModulePermission = (module: Permission["module"]): boolean => {
+    if (!permissions) return false;
+    return permissions.some((perm: Permission) => perm.module === module);
+  };
+
+  return { hasPermission, hasAnyPermission, hasModulePermission };
+}

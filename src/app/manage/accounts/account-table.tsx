@@ -98,7 +98,6 @@ function AlertDialogDeleteAccount({
           description: t("AccountDeleted", { userId: employeeDelete.userId }),
         });
       } catch (error) {
-        console.log(">>>>>>>>> eror", error);
         handleErrorApi({ error });
       }
     }

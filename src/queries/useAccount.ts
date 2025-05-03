@@ -75,3 +75,10 @@ export const useDeleteAccountMutation = () => {
     },
   });
 };
+
+export const useAccountProfile = () => {
+  return useQuery({
+    queryKey: ["account-me"],
+    queryFn: () => accountApiRequest.me(),
+  });
+};

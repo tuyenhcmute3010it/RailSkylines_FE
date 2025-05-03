@@ -137,7 +137,12 @@
     "AccountUpdated": "Account {email} was successfully updated.",
     "AccountDeleted": "Account {userId} was successfully deleted.",
     "Error_Generic": "An error occurred. Please try again.",
-    "SelectRole": "Selected Role"
+    "InvalidFileType": "Please upload a valid image file",
+    "FileTooLarge": "File size must be less than 5MB",
+    "RoleRequired": "A role is required",
+    "ValidationError": "Form Validation Error",
+    "PleaseFixFormErrors": "Please fix the errors in the form",
+    "SelectRole": "Select a role"
   },
   "Pagination": {
     "Previous": "Previous",
@@ -405,5 +410,15 @@
     "Inactive": "Inactive",
     "NoDescription": "No description",
     "All": "All"
+  },
+  "DropdownAvatar": {
+    "Settings": "Setting",
+    "LoggedOut": "LoggedOut",
+    "UnknownUser": "UnknownUser",
+    "NoRole": "NoRole",
+    "Support": "Hỗ trợ",
+    "Logout": "Đăng xuất",
+    "LogoutFailed": "Đăng xuất thất bại. Vui lòng thử lại.",
+    "Error": "Lỗi"
   }
 }
