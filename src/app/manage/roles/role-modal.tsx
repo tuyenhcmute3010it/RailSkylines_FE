@@ -439,53 +439,53 @@ export default function RoleModal({
                                 -{" "}
                                 <span
                                   className={`
-                                    ${
-                                      method.method === "POST"
-                                        ? "text-orange-500 font-bold"
-                                        : ""
-                                    }
-                                    ${
-                                      method.method === "PUT"
-                                        ? "text-blue-500 font-bold"
-                                        : ""
-                                    }
-                                    ${
-                                      method.method === "DELETE"
-                                        ? "text-red-500 font-bold"
-                                        : ""
-                                    }
-                                    ${
-                                      method.method === "GET"
-                                        ? "text-green-500 font-bold"
-                                        : ""
-                                    }
-                                    `}
+                                      ${
+                                        method.method === "POST"
+                                          ? "text-orange-500 font-bold"
+                                          : ""
+                                      }
+                                      ${
+                                        method.method === "PUT"
+                                          ? "text-blue-500 font-bold"
+                                          : ""
+                                      }
+                                      ${
+                                        method.method === "DELETE"
+                                          ? "text-red-500 font-bold"
+                                          : ""
+                                      }
+                                      ${
+                                        method.method === "GET"
+                                          ? "text-green-500 font-bold"
+                                          : ""
+                                      }
+                                      `}
                                 >
                                   {method.method}:
                                 </span>{" "}
                                 <span
                                   className={`text-gray-400 underline
-                                    ${
-                                      method.method === "POST"
-                                        ? "text-orange-400 font-medium"
-                                        : ""
-                                    }
-                                    ${
-                                      method.method === "PUT"
-                                        ? "text-blue-300 font-medium"
-                                        : ""
-                                    }
-                                    ${
-                                      method.method === "DELETE"
-                                        ? "text-red-400 font-medium"
-                                        : ""
-                                    }
-                                    ${
-                                      method.method === "GET"
-                                        ? "text-green-400 font-medium"
-                                        : ""
-                                    }
-                                    `}
+                                      ${
+                                        method.method === "POST"
+                                          ? "text-orange-400 font-medium"
+                                          : ""
+                                      }
+                                      ${
+                                        method.method === "PUT"
+                                          ? "text-blue-300 font-medium"
+                                          : ""
+                                      }
+                                      ${
+                                        method.method === "DELETE"
+                                          ? "text-red-400 font-medium"
+                                          : ""
+                                      }
+                                      ${
+                                        method.method === "GET"
+                                          ? "text-green-400 font-medium"
+                                          : ""
+                                      }
+                                      `}
                                 >
                                   {
                                     p.methods.find((m) => m.id === method.id)

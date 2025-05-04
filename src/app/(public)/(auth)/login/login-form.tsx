@@ -270,7 +270,7 @@ export default function LoginForm() {
                       <Input
                         id="username"
                         type="email"
-                        placeholder="admin@railskylines.com"
+                        placeholder="example@railskylines.com"
                         required
                         {...field}
                       />

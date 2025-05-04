@@ -11,7 +11,7 @@ export type TicketSummarySchemaType = z.TypeOf<typeof TicketSummarySchema>;
 
 // Schema for creating a seat
 export const CreateSeatBody = z.object({
-  carriage: CarriageSchema, // Reference to Carriage
+  // carriage: CarriageSchema, // Reference to Carriage
   seatStatus: z.enum(SeatStatusValues).optional(), // Default to AVAILABLE
   price: z.number().min(0, "Price must be non-negative"),
   seatType: z.enum(SeatTypeValues).optional(), // Optional seat type
@@ -25,7 +25,7 @@ export const SeatSchema = z.object({
   seatStatus: z.enum(SeatStatusValues),
   price: z.number(),
   ticket: TicketSummarySchema.nullable(), // Ticket can be null if not assigned
-  carriage: CarriageSchema.nullable(),
+  // carriage: CarriageSchema.nullable(),
   seatType: z.enum(SeatTypeValues),
 });
 export type SeatSchemaType = z.TypeOf<typeof SeatSchema>;

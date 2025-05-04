@@ -420,5 +420,56 @@
     "Logout": "Đăng xuất",
     "LogoutFailed": "Đăng xuất thất bại. Vui lòng thử lại.",
     "Error": "Lỗi"
+  },
+  "trainTrip": {
+    "add": {
+      "title": "Add Train Trip",
+      "description": "Enter the details of the new train trip.",
+      "trainId": "Train ID",
+      "originStationName": "Origin Station",
+      "journeyStationNames": "Journey Stations (comma-separated)",
+      "departureTime": "Departure Time",
+      "arrivalTime": "Arrival Time",
+      "button": "Add Train Trip"
+    },
+    "edit": {
+      "title": "Update Train Trip",
+      "trainTripId": "Train Trip ID",
+      "button": "Save"
+    },
+    "table": {
+      "title": "Train Trips",
+      "columns": {
+        "trainTripId": "Train Trip ID",
+        "trainId": "Train ID",
+        "originStation": "Origin Station",
+        "departureTime": "Departure Time",
+        "actions": "Actions"
+      },
+      "filter": "Filter Origin Station...",
+      "noResults": "No results.",
+      "pagination": {
+        "showing": "Showing {0} of {1} train trips",
+        "page": "Page {0} of {1}",
+        "previous": "Previous",
+        "next": "Next",
+        "rowsPerPage": "Rows per page"
+      },
+      "delete": {
+        "title": "Delete Train Trip",
+        "description": "Are you sure you want to delete train trip <strong>{0}</strong>? This action cannot be undone.",
+        "cancel": "Cancel",
+        "continue": "Continue"
+      }
+    }
+  },
+  "TrainTrip": {
+    "Id": "ID",
+    "TrainId": "Train ID",
+    "OriginStation": "Origin Station",
+    "JourneyStations": "Journey Stations",
+    "DepartureTime": "Departure Time",
+    "ArrivalTime": "Arrival Time",
+    "Action": "Action "
   }
 }

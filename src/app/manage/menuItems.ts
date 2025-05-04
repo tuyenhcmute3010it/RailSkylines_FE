@@ -14,6 +14,7 @@ import {
   LockKeyholeOpen,
   UserRoundPen,
   UserCog,
+  TrainFrontTunnel,
 } from "lucide-react";
 const menuItems = [
   {
@@ -44,6 +45,12 @@ const menuItems = [
     title: "Ga",
     Icon: BellElectric,
     href: "/manage/stations",
+    // roles: [Role.Admin, Role.Staff],
+  },
+  {
+    title: "Train Trip",
+    Icon: TrainFrontTunnel,
+    href: "/manage/trainTrips",
     // roles: [Role.Admin, Role.Staff],
   },
   {
