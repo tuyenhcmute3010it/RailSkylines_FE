@@ -3,157 +3,119 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import SearchTicket from "../search-ticket";
 import { Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-const trains = [
-  {
-    id: "SE8",
-    name: "SE8",
-    departure: "27/3 06:32",
-    arrival: "27/3 21:48",
-    availableSeats: 137,
-    carriages: [
-      {
-        id: 1,
-        name: "Ngồi mềm điều hòa",
-        type: "seat",
-        basePrice: 500000, // Base price in VND
-        seats: Array.from({ length: 56 }, (_, i) => i + 1),
-        bookedSeats: [
-          1, 2, 3, 6, 7, 8, 9, 10, 14, 15, 16, 18, 19, 20, 21, 23, 24,
-        ],
-      },
-      {
-        id: 2,
-        name: " Ngồi cứng điều hòa",
-        type: "seat",
-        basePrice: 500000, // Base price in VND
-        seats: Array.from({ length: 56 }, (_, i) => i + 1),
-        bookedSeats: [4, 5, 11, 12, 17, 22, 25, 26, 30, 31],
-      },
-      {
-        id: 3,
-        name: " Ngồi cứng điều hòa",
-        type: "seat",
-        basePrice: 500000, // Base price in VND
-        seats: Array.from({ length: 56 }, (_, i) => i + 1),
-        bookedSeats: [4, 5, 11, 12, 17, 22, 25, 26, 30, 31],
-      },
-      {
-        id: 4,
-        name: " Ngồi cứng điều hòa",
-        type: "seat",
-        basePrice: 500000, // Base price in VND
-        seats: Array.from({ length: 56 }, (_, i) => i + 1),
-        bookedSeats: [4, 5, 11, 12, 17, 22, 25, 26, 30, 31],
-      },
-      {
-        id: 5,
-        name: " Ngồi cứng điều hòa",
-        type: "seat",
-        basePrice: 500000, // Base price in VND
-        seats: Array.from({ length: 56 }, (_, i) => i + 1),
-        bookedSeats: [4, 5, 11, 12, 17, 22, 25, 26, 30, 31],
-      },
-    ],
-  },
-  {
-    id: "SE22",
-    name: "SE22",
-    departure: "28/3 10:53",
-    arrival: "29/3 03:48",
-    availableSeats: 145,
-    carriages: [
-      {
-        id: 1,
-        name: "Giường nằm khoang 4",
-        basePrice: 900000, // Base price in VND
-        type: "4-bed",
-        seats: Array.from({ length: 28 }, (_, i) => i + 1),
-        bookedSeats: [1, 3, 5, 8, 10, 12, 15, 18, 22, 25],
-      },
-    ],
-  },
-  {
-    id: "SE3",
-    name: "SE3",
-    departure: "27/3 19:30",
-    arrival: "28/3 12:45",
-    availableSeats: 112,
-    carriages: [
-      {
-        id: 1,
-        name: "Giường nằm khoang 6",
-        basePrice: 700000, // Base price in VND
-        type: "6-bed",
-        seats: Array.from({ length: 42 }, (_, i) => i + 1),
-        bookedSeats: [2, 4, 7, 11, 14, 17, 19, 21, 26, 30, 35],
-      },
-      {
-        id: 2,
-        name: " Ngồi cứng điều hòa",
-        type: "seat",
-        basePrice: 500000, // Base price in VND
-        seats: Array.from({ length: 56 }, (_, i) => i + 1),
-        bookedSeats: [5, 9, 13, 22, 24, 28, 31, 37, 40],
-      },
-    ],
-  },
-  {
-    id: "TN1",
-    name: "TN1",
-    departure: "29/3 08:00",
-    arrival: "30/3 05:20",
-    availableSeats: 156,
-    carriages: [
-      {
-        id: 1,
-        name: "Ngồi mềm điều hòa",
-        basePrice: 500000, // Base price in VND
-        type: "seat",
-        seats: Array.from({ length: 56 }, (_, i) => i + 1),
-        bookedSeats: [1, 6, 9, 15, 19, 21, 29, 34, 40, 48, 53, 58, 60],
-      },
-      {
-        id: 2,
-        name: " Giường nằm khoang 4",
-        type: "4-bed",
-        basePrice: 1000000, // Base price in VND
-        seats: Array.from({ length: 28 }, (_, i) => i + 1),
-        bookedSeats: [2, 5, 10, 14, 18, 22, 27, 30],
-      },
-    ],
-  },
-  {
-    id: "SE7",
-    name: "SE7",
-    departure: "30/3 14:20",
-    arrival: "31/3 08:30",
-    availableSeats: 90,
-    carriages: [
-      {
-        id: 1,
-        name: "Giường nằm khoang 6",
-        basePrice: 600000, // Base price in VND
-        type: "6-bed",
-        seats: Array.from({ length: 42 }, (_, i) => i + 1),
-        bookedSeats: [3, 7, 12, 16, 20, 24, 29, 32, 38, 40],
-      },
-      {
-        id: 2,
-        name: " Ngồi cứng điều hòa",
-        basePrice: 500000, // Base price in VND
-        type: "seat",
-        seats: Array.from({ length: 56 }, (_, i) => i + 1),
-        bookedSeats: [5, 8, 15, 22, 28, 33, 39, 44, 51, 55],
-      },
-    ],
-  },
-];
+import { useRouter, useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import trainTripApiRequest from "@/queries/useTrainTrip";
+import TrainTripSkeleton from "@/components/TrainTripSkeleton";
 
-// ... (keep the trains array unchanged)
+// Define interfaces based on API schema
+interface Station {
+  stationId: number;
+  stationName: string;
+  position: number;
+}
+
+interface Train {
+  trainId: number;
+  trainName: string;
+  trainStatus: string;
+  carriages: Carriage[];
+}
+
+interface Route {
+  routeId: number;
+  originStation: Station;
+  journey: Station[];
+}
+
+interface Schedule {
+  scheduleId: number;
+  departure: {
+    clockTimeId: number;
+    date: string;
+    hour: number;
+    minute: number;
+  };
+  arrival: {
+    clockTimeId: number;
+    date: string;
+    hour: number;
+    minute: number;
+  };
+}
+
+interface Seat {
+  seatId: number;
+  seatNumber: number | null;
+  seatType: string;
+  seatStatus: string;
+  price: number;
+}
+
+interface Carriage {
+  carriageId: number;
+  carriageType: "fourBeds" | "sixBeds" | "seat";
+  price: number;
+  discount: number;
+  seats: Seat[];
+}
+
+interface FrontendCarriage {
+  id: number;
+  name: string;
+  type: "4-bed" | "6-bed" | "seat";
+  basePrice: number;
+  seats: number[];
+  bookedSeats: number[];
+  discount: number;
+  seatData: Seat[];
+}
+
+interface FrontendTrain {
+  id: string;
+  name: string;
+  departure: string;
+  arrival: string;
+  availableSeats: number;
+  carriages: FrontendCarriage[];
+  trainTripId: number;
+}
+export type TrainTrip = {
+  trainTripId: number;
+  train: { trainId: number; trainName: string; trainStatus: string };
+  route: {
+    routeId: number;
+    originStation: { stationId: number; stationName: string; position: number };
+    journey: { stationId: number; stationName: string; position: number }[];
+  };
+  schedule: {
+    scheduleId: number;
+    departure: {
+      clockTimeId: number;
+      date: string;
+      hour: number;
+      minute: number;
+    };
+    arrival: {
+      clockTimeId: number;
+      date: string;
+      hour: number;
+      minute: number;
+    };
+  };
+};
+
+export interface SearchData {
+  departureStation: string | null;
+  arrivalStation: string | null;
+  tripType: string | null;
+  departureDate: string | null;
+  returnDate: string | null;
+}
+
 interface CartItem {
   trainId: string;
   trainName: string;
@@ -163,24 +125,224 @@ interface CartItem {
   departure: string;
   arrival: string;
   timestamp: number;
-  price: number; // Added price field
+  price: number;
 }
 
-// ... (trains array remains unchanged)
+// Validate date and time inputs
+const isValidDateString = (dateStr: string): boolean => {
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(dateStr)) return false;
+  const date = new Date(dateStr);
+  return !isNaN(date.getTime());
+};
+
+const isValidTime = (hour: number, minute: number): boolean => {
+  return (
+    Number.isInteger(hour) ||
+    (Number.isInteger(Math.floor(hour)) &&
+      hour >= 0 &&
+      hour <= 23 &&
+      Number.isInteger(minute) &&
+      minute >= 0 &&
+      minute <= 59)
+  );
+};
+
+// Map API train trips to frontend format
+const mapTrainTripsToFrontend = (trainTrips: TrainTrip[]): FrontendTrain[] => {
+  const fallbackDateTime = new Date();
+  return trainTrips
+    .filter((trip) => {
+      if (!trip.schedule) {
+        console.warn(`TrainTrip ${trip.trainTripId} is missing schedule data`);
+        return false;
+      }
+      const { departure, arrival } = trip.schedule;
+      if (
+        !isValidDateString(departure.date.split("T")[0]) ||
+        !isValidDateString(arrival.date.split("T")[0]) ||
+        !isValidTime(departure.hour, departure.minute) ||
+        !isValidTime(arrival.hour, arrival.minute)
+      ) {
+        console.warn(`TrainTrip ${trip.trainTripId} has invalid schedule data`);
+        return false;
+      }
+      return true;
+    })
+    .map((trip) => {
+      const carriages = trip.train.carriages
+        .filter((carriage) => carriage.seats.length > 0)
+        .map((carriage) => {
+          const maxSeats =
+            carriage.carriageType === "fourBeds"
+              ? 28
+              : carriage.carriageType === "sixBeds"
+              ? 42
+              : 56;
+          const limitedSeats = carriage.seats.slice(0, maxSeats);
+
+          return {
+            id: carriage.carriageId,
+            name: `Carriage ${carriage.carriageId}`,
+            type:
+              carriage.carriageType === "fourBeds"
+                ? "4-bed"
+                : carriage.carriageType === "sixBeds"
+                ? "6-bed"
+                : "seat",
+            basePrice: carriage.price,
+            seats: limitedSeats.map((seat) => seat.seatId),
+            bookedSeats: limitedSeats
+              .filter((seat) => seat.seatStatus !== "available")
+              .map((seat) => seat.seatId),
+            discount: carriage.discount,
+            seatData: limitedSeats,
+          };
+        });
+
+      const totalAvailableSeats = carriages.reduce(
+        (sum, carriage) =>
+          sum + (carriage.seats.length - carriage.bookedSeats.length),
+        0
+      );
+
+      const departureDateTime = new Date(trip.schedule.departure.date);
+      const arrivalDateTime = new Date(trip.schedule.arrival.date);
+
+      return {
+        id: `${trip.train.trainName}-${trip.trainTripId}`,
+        name: trip.train.trainName,
+        departure: !isNaN(departureDateTime.getTime())
+          ? format(departureDateTime, "dd/MM HH:mm")
+          : format(fallbackDateTime, "dd/MM HH:mm"),
+        arrival: !isNaN(arrivalDateTime.getTime())
+          ? format(arrivalDateTime, "dd/MM HH:mm")
+          : format(fallbackDateTime, "dd/MM HH:mm"),
+        availableSeats: totalAvailableSeats,
+        carriages,
+        trainTripId: trip.trainTripId,
+      };
+    });
+};
+
+// Filter train trips based on search parameters
+const filterTrainTrips = (
+  trainTrips: TrainTrip[],
+  departureStation: string | null,
+  arrivalStation: string | null,
+  departureDate: string | null,
+  tripType: string | null,
+  returnDate: string | null
+): TrainTrip[] => {
+  if (!departureStation || !arrivalStation || !departureDate) {
+    console.log("Missing required parameters:", {
+      departureStation,
+      arrivalStation,
+      departureDate,
+    });
+    return [];
+  }
+
+  return trainTrips.filter((trip) => {
+    const allStations = [trip.route.originStation, ...trip.route.journey].map(
+      (station) => station.stationName.toLowerCase()
+    );
+    const departureIndex = allStations.indexOf(departureStation.toLowerCase());
+    const arrivalIndex = allStations.indexOf(arrivalStation.toLowerCase());
+
+    // Ensure both stations are found and departure comes before arrival
+    const stationMatch =
+      departureIndex !== -1 &&
+      arrivalIndex !== -1 &&
+      departureIndex < arrivalIndex;
+
+    // Date matching
+    const dateMatch =
+      trip.schedule?.departure.date.split("T")[0] ===
+      new Date(departureDate).toISOString().split("T")[0];
+
+    // Round-trip logic (placeholder for now)
+    let returnMatch = true;
+    if (tripType === "round-trip" && returnDate) {
+      // TODO: Implement round-trip filtering logic
+      returnMatch = true;
+    }
+
+    // Debugging log
+    console.log("Filtering trip:", {
+      trainTripId: trip.trainTripId,
+      allStations,
+      departureIndex,
+      arrivalIndex,
+      dateMatch,
+      stationMatch,
+      tripDate: trip.schedule?.departure.date.split("T")[0],
+      searchDate: new Date(departureDate).toISOString().split("T")[0],
+    });
+
+    return stationMatch && dateMatch && returnMatch;
+  });
+};
 
 export default function Search() {
-  const router = useRouter(); // Add this line
-  const [selectedTrain, setSelectedTrain] = useState<(typeof trains)[0] | null>(
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [selectedTrain, setSelectedTrain] = useState<FrontendTrain | null>(
     null
   );
-  const [selectedCoach, setSelectedCoach] = useState<
-    (typeof trains)[0]["carriages"][0] | null
-  >(null);
+  const [selectedCoach, setSelectedCoach] = useState<FrontendCarriage | null>(
+    null
+  );
   const [selectedSeatsByCoach, setSelectedSeatsByCoach] = useState<
     Record<string, number[]>
   >({});
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [timer, setTimer] = useState(600);
+
+  // Extract search parameters
+  const departureStation = searchParams.get("departureStation");
+  const arrivalStation = searchParams.get("arrivalStation");
+  const departureDate = searchParams.get("departureDate");
+  const tripType = searchParams.get("tripType");
+  const returnDate = searchParams.get("returnDate");
+
+  // Fetch train trips
+  const {
+    data: trainTripsData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: [
+      "trainTrips",
+      departureStation,
+      arrivalStation,
+      departureDate,
+      tripType,
+      returnDate,
+    ],
+    queryFn: () =>
+      trainTripApiRequest.list(1, 20, {
+        departureStation: departureStation || undefined,
+        arrivalStation: arrivalStation || undefined,
+        departureDate: departureDate || undefined,
+      }),
+    select: (response) => response.payload.data.result,
+    enabled: !!departureStation && !!arrivalStation && !!departureDate,
+  });
+
+  // Map train trips to frontend format
+  const trains = trainTripsData
+    ? mapTrainTripsToFrontend(
+        filterTrainTrips(
+          trainTripsData,
+          departureStation,
+          arrivalStation,
+          departureDate,
+          tripType,
+          returnDate
+        )
+      )
+    : [];
 
   // Handle train selection
   const handleTrainSelect = (trainId: string) => {
@@ -195,7 +357,9 @@ export default function Search() {
     const coach = selectedTrain.carriages.find((c) => c.id === coachId) || null;
     setSelectedCoach(coach);
   };
-  const MAX_TICKETS = 10; // Maximum allowed tickets
+
+  const MAX_TICKETS = 10;
+
   // Handle seat selection and add to cart
   const toggleSeatSelection = (seat: number) => {
     if (!selectedCoach || !selectedTrain) return;
@@ -203,27 +367,26 @@ export default function Search() {
 
     const coachKey = `${selectedTrain.id}-${selectedCoach.id}`;
     const currentSeats = selectedSeatsByCoach[coachKey] || [];
-
     const newSelectedSeats = currentSeats.includes(seat)
       ? currentSeats.filter((s) => s !== seat)
       : [...currentSeats, seat];
     const isDeselecting = currentSeats.includes(seat);
+
     if (!isDeselecting && cartItems.length >= MAX_TICKETS) {
       alert(`Bạn chỉ có thể đặt tối đa ${MAX_TICKETS} vé trong một lần đặt!`);
       return;
     }
+
     setSelectedSeatsByCoach((prev) => ({
       ...prev,
       [coachKey]: newSelectedSeats,
     }));
 
-    // Update cart
     if (!currentSeats.includes(seat)) {
-      const price = calculateSeatPrice(
-        selectedCoach.basePrice,
-        seat,
-        selectedCoach.type
-      );
+      const seatData = selectedCoach.seatData.find((s) => s.seatId === seat);
+      const price = seatData
+        ? seatData.price * (1 - selectedCoach.discount / 100)
+        : selectedCoach.basePrice;
       const newCartItem: CartItem = {
         trainId: selectedTrain.id,
         trainName: selectedTrain.name,
@@ -253,9 +416,7 @@ export default function Search() {
 
   // Remove individual ticket from cart
   const removeTicket = (item: CartItem) => {
-    const coachKey = `${item.trainId}-${
-      selectedTrain?.carriages.find((c) => c.name === item.coachName)?.id
-    }`;
+    const coachKey = `${item.trainId}-${item.coachId}`;
     setCartItems((prev) =>
       prev.filter(
         (cartItem) =>
@@ -272,7 +433,7 @@ export default function Search() {
         (seat) => seat !== item.seatNumber
       ),
     }));
-    if (cartItems.length === 1) setTimer(0); // Stop timer if last item is removed
+    if (cartItems.length === 1) setTimer(0);
   };
 
   // Clear all tickets from cart
@@ -315,44 +476,56 @@ export default function Search() {
     const coachKey = `${selectedTrain.id}-${selectedCoach.id}`;
     return selectedSeatsByCoach[coachKey] || [];
   };
+
+  // Format price in VND
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
     }).format(price);
   };
-  const calculateSeatPrice = (
-    basePrice: number,
-    seatNumber: number,
-    type: string
-  ) => {
-    if (type === "seat") return basePrice;
 
-    if (type === "6-bed") {
-      const positionInCompartment = (seatNumber + 1) % 6;
-      if (positionInCompartment >= 4) return basePrice * 0.9; // Tier 2: -10%
-      if (positionInCompartment >= 2) return basePrice * 0.8; // Tier 3: -20%
-      return basePrice; // Tier 1: full price
-    }
+  if (isLoading) {
+    return (
+      <div>
+        <TrainTripSkeleton />
+      </div>
+    );
+  }
 
-    if (type === "4-bed") {
-      const positionInCompartment = (seatNumber + 1) % 4;
-      if (positionInCompartment >= 2) return basePrice * 0.9; // Upper beds: -10%
-      return basePrice; // Lower beds: full price
-    }
+  if (error) {
+    return <div>Error loading train trips: {(error as Error).message}</div>;
+  }
 
-    return basePrice;
-  };
+  if (!departureStation || !arrivalStation || !departureDate) {
+    return (
+      <div>
+        Please provide all required search parameters (departure station,
+        arrival station, and departure date) to view available train trips. Use
+        the search form to select your journey details.
+      </div>
+    );
+  }
+
+  if (trains.length === 0) {
+    return (
+      <div>
+        No train trips available from {departureStation} to {arrivalStation} on{" "}
+        {departureDate}. This may be due to an incorrect date or unavailable
+        routes. Please try different search parameters or contact support.
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-4">
       <div className="col-span-3 border rounded-lg bg-white shadow-md p-4">
-        {/* ... (train and coach selection UI unchanged) */}
         <div>
           <h2 className="text-xl font-bold mb-4 text-center">Chọn tàu</h2>
           <div className="grid grid-cols-5 gap-4">
             {trains.map((train) => (
               <Card
-                key={train.id}
+                key={train.trainTripId}
                 className={`relative p-4 text-center cursor-pointer flex flex-col justify-center items-center h-[250px] w-[200px] bg-cover bg-center border-none ${
                   selectedTrain?.id === train.id
                     ? "bg-blue-500"
@@ -383,7 +556,12 @@ export default function Search() {
                     <p className="text-xs whitespace-nowrap">Chỗ Trống</p>
                   </div>
                   <div className="flex justify-between items-center">
-                    <p className="text-lg font-bold whitespace-nowrap">100</p>
+                    <p className="text-lg font-bold whitespace-nowrap">
+                      {train.carriages.reduce(
+                        (sum, c) => sum + c.seats.length,
+                        0
+                      )}
+                    </p>
                     <p className="text-lg font-bold whitespace-nowrap">
                       {train.availableSeats}
                     </p>
@@ -407,7 +585,7 @@ export default function Search() {
                 <Card
                   key={coach.id}
                   className={`relative p-4 text-center cursor-pointer bg-cover bg-center h-[70px] w-[100px] ${
-                    selectedCoach?.id === coach.id ? " bg-blue-500" : ""
+                    selectedCoach?.id === coach.id ? "bg-blue-500" : ""
                   }`}
                   style={{ backgroundImage: `url('/carriage.png')` }}
                   onClick={() => handleCoachSelect(coach.id)}
@@ -426,7 +604,77 @@ export default function Search() {
                 Toa Số {selectedCoach.id} : {selectedCoach.name}
               </h2>
 
-              {/* 4-bed layout with price tooltip */}
+              {/* Seat type rendering */}
+              <div className="grid grid-cols-2 gap-4">
+                {selectedCoach.type === "seat" &&
+                  Array.from(
+                    { length: selectedCoach.seats.length / 14 },
+                    (_, partIndex) => {
+                      const startIdx = partIndex * 14;
+                      return (
+                        <div
+                          key={partIndex}
+                          className="grid grid-cols-1 gap-2 border-x-4 border-blue-700 p-2 rounded-lg"
+                        >
+                          {Array.from({ length: 2 }, (_, rowIndex) => {
+                            const rowStart = startIdx + rowIndex * 7;
+                            return (
+                              <div
+                                key={rowIndex}
+                                className="grid grid-cols-7 gap-5"
+                              >
+                                {Array.from({ length: 7 }, (_, colIndex) => {
+                                  const seat =
+                                    selectedCoach.seats[rowStart + colIndex];
+                                  if (!seat) return null;
+                                  const seatData = selectedCoach.seatData.find(
+                                    (s) => s.seatId === seat
+                                  );
+                                  const price = seatData
+                                    ? seatData.price *
+                                      (1 - selectedCoach.discount / 100)
+                                    : selectedCoach.basePrice;
+                                  return (
+                                    <div key={seat} className="relative group">
+                                      <Card
+                                        className={`p-0 text-center cursor-pointer bg-cover bg-center h-[60px] w-[60px] flex items-center justify-center ${
+                                          selectedCoach.bookedSeats.includes(
+                                            seat
+                                          )
+                                            ? "bg-orange-600 text-white cursor-not-allowed"
+                                            : getCurrentSelectedSeats().includes(
+                                                seat
+                                              )
+                                            ? "bg-[#a6b727] text-white"
+                                            : "bg-transparent"
+                                        }`}
+                                        style={{
+                                          backgroundImage: `url('/seat.png')`,
+                                        }}
+                                        onClick={() =>
+                                          toggleSeatSelection(seat)
+                                        }
+                                      >
+                                        <h3 className="text-sm font-bold">
+                                          {seat}
+                                        </h3>
+                                      </Card>
+                                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 z-10">
+                                        {formatPrice(price)}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+                  )}
+              </div>
+
+              {/* 4-bed type rendering */}
               <div className="grid grid-cols-[repeat(7,minmax(0,1fr))] gap-4">
                 {selectedCoach.type === "4-bed" &&
                   Array.from(
@@ -453,11 +701,13 @@ export default function Search() {
                                 }`}
                               >
                                 {[seatT1, seatT2].map((seat) => {
-                                  const price = calculateSeatPrice(
-                                    selectedCoach.basePrice,
-                                    seat,
-                                    selectedCoach.type
+                                  const seatData = selectedCoach.seatData.find(
+                                    (s) => s.seatId === seat
                                   );
+                                  const price = seatData
+                                    ? seatData.price *
+                                      (1 - selectedCoach.discount / 100)
+                                    : selectedCoach.basePrice;
                                   return (
                                     <div key={seat} className="relative group">
                                       <Card
@@ -498,6 +748,7 @@ export default function Search() {
                   )}
               </div>
 
+              {/* 6-bed type rendering */}
               <div className="grid grid-cols-[repeat(7,minmax(0,1fr))] gap-4">
                 {selectedCoach.type === "6-bed" &&
                   Array.from(
@@ -524,11 +775,13 @@ export default function Search() {
                                 }`}
                               >
                                 {[seatT1, seatT2].map((seat) => {
-                                  const price = calculateSeatPrice(
-                                    selectedCoach.basePrice,
-                                    seat,
-                                    selectedCoach.type
+                                  const seatData = selectedCoach.seatData.find(
+                                    (s) => s.seatId === seat
                                   );
+                                  const price = seatData
+                                    ? seatData.price *
+                                      (1 - selectedCoach.discount / 100)
+                                    : selectedCoach.basePrice;
                                   return (
                                     <div key={seat} className="relative group">
                                       <Card
@@ -563,60 +816,6 @@ export default function Search() {
                               </div>
                             );
                           })}
-                        </div>
-                      );
-                    }
-                  )}
-              </div>
-
-              {/* Seat layout */}
-
-              <div className="grid grid-cols-2 gap-4">
-                {selectedCoach.type === "seat" &&
-                  Array.from(
-                    { length: selectedCoach.seats.length / 14 },
-                    (_, partIndex) => {
-                      const startIdx = partIndex * 14;
-                      return (
-                        <div
-                          key={partIndex}
-                          className="grid grid-cols-7 grid-rows-2 gap-2 border p-2 rounded-lg"
-                        >
-                          {selectedCoach.seats
-                            .slice(startIdx, startIdx + 14)
-                            .map((seat) => {
-                              const price = calculateSeatPrice(
-                                selectedCoach.basePrice,
-                                seat,
-                                selectedCoach.type
-                              );
-                              return (
-                                <div key={seat} className="relative group">
-                                  <Card
-                                    className={`p-2 text-center cursor-pointer bg-cover bg-center h-[70px] w-[60px] ${
-                                      selectedCoach.bookedSeats.includes(seat)
-                                        ? "bg-orange-600 text-white cursor-not-allowed"
-                                        : getCurrentSelectedSeats().includes(
-                                            seat
-                                          )
-                                        ? "bg-[#a6b727] text-white"
-                                        : "bg-transparent"
-                                    }`}
-                                    style={{
-                                      backgroundImage: `url('/seat.png')`,
-                                    }}
-                                    onClick={() => toggleSeatSelection(seat)}
-                                  >
-                                    <h3 className="text-sm font-bold mt-3 text-white">
-                                      {seat}
-                                    </h3>
-                                  </Card>
-                                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 z-10">
-                                    {formatPrice(price)}
-                                  </div>
-                                </div>
-                              );
-                            })}
                         </div>
                       );
                     }
@@ -647,31 +846,28 @@ export default function Search() {
                   <div>
                     <p className="font-semibold">{item.trainName}</p>
                     <p className="text-sm">
-                      <span className="font-bold ">Toa: {item.coachId} -</span>{" "}
+                      <span className="font-bold">Toa: {item.coachId} -</span>{" "}
                       {item.coachName}
                     </p>
                     <div className="flex gap-2">
                       <p className="text-sm">
-                        <span className="font-bold ">Ghế:</span>{" "}
+                        <span className="font-bold">Ghế:</span>{" "}
                         {item.seatNumber} -
                       </p>
-                      <p className="text-sm ">
-                        {" "}
+                      <p className="text-sm">
                         <span className="font-bold">Giá:</span>{" "}
                         <span className="text-red-500 font-bold text-md">
-                          {item.price} đ
+                          {formatPrice(item.price)}
                         </span>
                       </p>
                     </div>
-
                     <div className="flex gap-2">
                       <p className="text-sm">
-                        <span className="font-bold ">Khởi hành:</span>{" "}
+                        <span className="font-bold">Khởi hành:</span>{" "}
                         {item.departure} -
                       </p>
                       <p className="text-sm">
-                        {" "}
-                        <span className="font-bold ">Đến: </span> {item.arrival}
+                        <span className="font-bold">Đến:</span> {item.arrival}
                       </p>
                     </div>
                   </div>
@@ -693,13 +889,11 @@ export default function Search() {
                   onClick={() => {
                     const query = new URLSearchParams({
                       tickets: JSON.stringify(cartItems),
-                      timer: timer.toString(), // Pass the current timer value
+                      timer: timer.toString(),
                     }).toString();
-
                     router.push(`/payment?${query}`);
                     setCartItems([]);
                     setSelectedSeatsByCoach({});
-                    // setTimer(0);
                   }}
                 >
                   Xác nhận đặt vé

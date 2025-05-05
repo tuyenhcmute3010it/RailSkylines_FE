@@ -118,11 +118,13 @@ function DeleteTrainTripDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>{t("DeleteTrainTrip")}</AlertDialogTitle>
           <AlertDialogDescription>
-            {t("DeleteTrainTripDesc")}{" "}
+            {t("DeleteTrainTripDesc", {
+              id: trainTripDelete?.trainTripId,
+            })}{" "}
             <span className="bg-foreground text-primary-foreground rounded px-1">
               {trainTripDelete?.trainTripId}
-            </span>
-            ? {t("DeleteTrainTripDesc2")}
+            </span>{" "}
+            {t("DeleteTrainTripDesc2")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
