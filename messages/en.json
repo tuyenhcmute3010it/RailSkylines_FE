@@ -520,5 +520,12 @@
     "ReturnDate": "Return Date",
     "ReturnDatePlaceholder": "Select return date",
     "Search": "Search"
+  },
+  "NoResults": {
+    "title": "No Train Trips Found",
+    "message": "No train trips available from {departureStation} to {arrivalStation} on {departureDate}.",
+    "suggestion": "This may be due to an incorrect date or unavailable routes. Try different search parameters or contact support.",
+    "tryAgain": "Go to HomePage",
+    "unknown": "Unknown"
   }
 }

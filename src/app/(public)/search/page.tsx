@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import trainTripApiRequest from "@/queries/useTrainTrip";
 import TrainTripSkeleton from "@/components/TrainTripSkeleton";
+import NoResults from "@/components/no-Result";
 
 // Define interfaces based on API schema
 interface Station {
@@ -499,20 +500,36 @@ export default function Search() {
 
   if (!departureStation || !arrivalStation || !departureDate) {
     return (
-      <div>
-        Please provide all required search parameters (departure station,
-        arrival station, and departure date) to view available train trips. Use
-        the search form to select your journey details.
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="flex gap-8 p-6 bg-white rounded-2xl shadow-lg max-w-4xl w-full">
+          <div className="w-1/2 text-gray-700 text-base leading-relaxed">
+            Please provide all required search parameters (departure station,
+            arrival station, and departure date) to view available train trips.
+            Use the search form to select your journey details.
+          </div>
+          <div className="w-1/2">
+            <SearchTicket />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (trains.length === 0) {
     return (
-      <div>
-        No train trips available from {departureStation} to {arrivalStation} on{" "}
-        {departureDate}. This may be due to an incorrect date or unavailable
-        routes. Please try different search parameters or contact support.
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="flex gap-8 p-6 bg-white rounded-2xl shadow-lg max-w-4xl w-full">
+          <div className="w-1/2 text-gray-700 text-base leading-relaxed">
+            <NoResults
+              departureStation={departureStation}
+              arrivalStation={arrivalStation}
+              departureDate={departureDate}
+            />
+          </div>
+          <div className="w-1/2">
+            <SearchTicket />
+          </div>
+        </div>
       </div>
     );
   }
@@ -861,10 +878,10 @@ export default function Search() {
                         </span>
                       </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex-row gap-2">
                       <p className="text-sm">
                         <span className="font-bold">Khởi hành:</span>{" "}
-                        {item.departure} -
+                        {item.departure}
                       </p>
                       <p className="text-sm">
                         <span className="font-bold">Đến:</span> {item.arrival}

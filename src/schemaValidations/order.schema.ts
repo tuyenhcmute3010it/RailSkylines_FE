@@ -1,6 +1,6 @@
-import { DishStatusValues, OrderStatusValues } from "@/constants/type";
+// import { DishStatusValues, OrderStatusValues } from "@/constants/type";
 import { AccountSchema } from "@/schemaValidations/account.schema";
-import { TrainSchema } from "@/schemaValidations/table.schema";
+// import { TrainSchema } from "@/schemaValidations/table.schema";
 import z from "zod";
 
 const DishSnapshotSchema = z.object({
@@ -9,7 +9,7 @@ const DishSnapshotSchema = z.object({
   price: z.number(),
   image: z.string(),
   description: z.string(),
-  status: z.enum(DishStatusValues),
+  // status: z.enum(DishStatusValues),
   dishId: z.number().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -32,13 +32,13 @@ export const OrderSchema = z.object({
   quantity: z.number(),
   orderHandlerId: z.number().nullable(),
   orderHandler: AccountSchema.nullable(),
-  status: z.enum(OrderStatusValues),
+  // status: z.enum(OrderStatusValues),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
 
 export const UpdateOrderBody = z.object({
-  status: z.enum(OrderStatusValues),
+  // status: z.enum(OrderStatusValues),
   dishId: z.number(),
   quantity: z.number(),
 });
@@ -75,7 +75,7 @@ export type GetOrdersResType = z.TypeOf<typeof GetOrdersRes>;
 export const GetOrderDetailRes = z.object({
   message: z.string(),
   data: OrderSchema.extend({
-    table: TableSchema,
+    // table: TableSchema,
   }),
 });
 

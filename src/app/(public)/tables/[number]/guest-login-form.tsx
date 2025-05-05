@@ -12,7 +12,6 @@ import {
 } from "@/schemaValidations/guest.schema";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-import { useGuestLoginMutation } from "@/queries/useGuest";
 import { useAppContext } from "@/components/app-provider";
 import { handleErrorApi } from "@/lib/utils";
 
@@ -21,7 +20,6 @@ export default function GuestLoginForm() {
   const searchParams = useSearchParams();
   const params = useParams();
   const router = useRouter();
-  const loginMutation = useGuestLoginMutation();
   console.log(params, searchParams.get("token"));
   const tableNumber = Number(params.number);
   const token = searchParams.get("token");
@@ -40,20 +38,20 @@ export default function GuestLoginForm() {
     }
   }, [token, router]);
 
-  async function onSubmit(values: GuestLoginBodyType) {
-    if (loginMutation.isPending) return;
-    try {
-      const result = await loginMutation.mutateAsync(values);
-      setRole(result.payload.data.guest.role);
-      router.push("/guest/menu");
-    } catch (error) {
-      handleErrorApi({
-        error,
-        setError: form.setError,
-      });
-    }
-    console.log(values);
-  }
+  // async function onSubmit(values: GuestLoginBodyType) {
+  //   if (loginMutation.isPending) return;
+  //   try {
+  //     const result = await loginMutation.mutateAsync(values);
+  //     setRole(result.payload.data.guest.role);
+  //     router.push("/guest/menu");
+  //   } catch (error) {
+  //     handleErrorApi({
+  //       error,
+  //       setError: form.setError,
+  //     });
+  //   }
+  //   console.log(values);
+  // }
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
