@@ -45,9 +45,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import AddTrain from "./add-train";
 import EditTrain from "./edit-train";
-import { useGetTrainList } from "@/queries/useTrain";
+import { useGetTrainList, useDeleteTrainMutation } from "@/queries/useTrain";
 import { TrainListResType } from "@/schemaValidations/train.schema";
 import {
   DropdownMenu,
@@ -58,6 +59,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import TableSkeleton from "@/components/Skeleton";
+import { useToast } from "@/components/ui/use-toast";
 
 type TrainItem = TrainListResType["data"]["result"][0];
 const TrainTableContext = createContext<{
@@ -75,10 +77,38 @@ const TrainTableContext = createContext<{
 function DeleteTrainDialog({
   trainDelete,
   setTrainDelete,
+  onSuccess,
 }: {
   trainDelete: TrainItem | null;
   setTrainDelete: (value: TrainItem | null) => void;
+  onSuccess?: () => void; // Định nghĩa kiểu cho prop
 }) {
+  const t = useTranslations("ManageTrain");
+  const { toast } = useToast();
+  const deleteTrainMutation = useDeleteTrainMutation();
+
+  const handleDelete = async () => {
+    if (trainDelete) {
+      try {
+        await deleteTrainMutation.mutateAsync(trainDelete.trainId);
+        // toast({
+        //   title: t("DeleteSuccess"),
+        //   description: t("TrainDeleted", { trainId: trainDelete.trainId }),
+        // });
+        setTrainDelete(null);
+      } catch (error: any) {
+        onSuccess?.(); // <<< Gọi hàm callback nếu được truyền vào
+        const errorMessage = error?.message || t("Error_Generic");
+        // toast({
+        //   title: t("DeleteFailed"),
+        //   description: errorMessage,
+        //   variant: "destructive",
+        // });
+        // console.error("Delete error:", error);
+      }
+    }
+  };
+
   return (
     <AlertDialog
       open={Boolean(trainDelete)}
@@ -90,18 +120,20 @@ function DeleteTrainDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Train</AlertDialogTitle>
+          <AlertDialogTitle>{t("DeleteTrain")}</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete train{" "}
+            {t("DeleteTrainDes")}{" "}
             <span className="bg-foreground text-primary-foreground rounded px-1">
               {trainDelete?.trainName}
-            </span>
-            ? This action cannot be undone.
+            </span>{" "}
+            {t("DeleteTrainDes2")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction>Continue</AlertDialogAction>
+          <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete}>
+            {t("Continue")}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -111,6 +143,8 @@ function DeleteTrainDialog({
 const PAGE_SIZE = 10;
 
 export default function TrainTable() {
+  const t = useTranslations("ManageTrain");
+  const paginationT = useTranslations("Pagination");
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -134,7 +168,7 @@ export default function TrainTable() {
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Train Id
+          {t("TrainId")}
           <CaretSortIcon className="ml-2 h-4 w-4" />
         </Button>
       ),
@@ -146,7 +180,7 @@ export default function TrainTable() {
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Train Name
+          {t("TrainName")}
           <CaretSortIcon className="ml-2 h-4 w-4" />
         </Button>
       ),
@@ -163,11 +197,11 @@ export default function TrainTable() {
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Train Status
+          {t("TrainStatus")}
           <CaretSortIcon className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => row.original.trainStatus ?? "N/A",
+      cell: ({ row }) => row.original.trainStatus ?? t("N/A"),
       filterFn: (row, columnId, filterValue) => {
         const value = row.getValue(columnId);
         if (filterValue === "all" || filterValue === undefined) return true;
@@ -176,7 +210,7 @@ export default function TrainTable() {
     },
     {
       id: "actions",
-      header: "Action",
+      header: t("Action"),
       enableHiding: false,
       cell: function Actions({ row }) {
         const { setTrainIdEdit, setTrainDelete } =
@@ -189,15 +223,15 @@ export default function TrainTable() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuLabel>{t("Action")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => setTrainIdEdit(row.original.trainId)} // Fixed: use trainId
+                onClick={() => setTrainIdEdit(row.original.trainId)}
               >
-                Edit
+                {t("Edit")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setTrainDelete(row.original)}>
-                Delete
+                {t("Delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -256,18 +290,21 @@ export default function TrainTable() {
             setId={setTrainIdEdit}
             onSubmitSuccess={() => {
               setTrainIdEdit(undefined);
-              trainListQuery.refetch(); // Refresh table
+              trainListQuery.refetch();
             }}
           />
         )}
         <DeleteTrainDialog
           trainDelete={trainDelete}
           setTrainDelete={setTrainDelete}
+          onSuccess={trainListQuery.refetch} // <<< Thêm dòng này
         />
         {trainListQuery.isLoading ? (
           <TableSkeleton />
         ) : trainListQuery.error ? (
-          <div className="text-red-500">Error:</div>
+          <div className="text-red-500">
+            {t("Error")}: {trainListQuery.error.message}
+          </div>
         ) : (
           <>
             <div className="flex items-center py-4 gap-5">
@@ -283,17 +320,17 @@ export default function TrainTable() {
                     ?.setFilterValue(value === "all" ? undefined : value);
                 }}
               >
-                <SelectTrigger className="max-w-sm w-100">
-                  <SelectValue placeholder="Filter train status..." />
+                <SelectTrigger className="max-w-sm w-[150px]">
+                  <SelectValue placeholder={t("FilterTrainStatus")} />
                 </SelectTrigger>
-                <SelectContent className="max-w-sm w-100">
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectContent>
+                  <SelectItem value="all">{t("All")}</SelectItem>
+                  <SelectItem value="active">{t("Active")}</SelectItem>
+                  <SelectItem value="inactive">{t("Inactive")}</SelectItem>
                 </SelectContent>
               </Select>
               <Input
-                placeholder="Filter Train Name..."
+                placeholder={t("FilterTrainName")}
                 value={
                   (table.getColumn("trainName")?.getFilterValue() as string) ??
                   ""
@@ -303,7 +340,7 @@ export default function TrainTable() {
                     .getColumn("trainName")
                     ?.setFilterValue(event.target.value)
                 }
-                className="max-w-sm w-100"
+                className="max-w-sm w-[150px]"
               />
               <div className="ml-auto flex items-center gap-2">
                 <AddTrain />
@@ -347,7 +384,7 @@ export default function TrainTable() {
                         colSpan={columns.length}
                         className="h-24 text-center"
                       >
-                        No results.
+                        {t("NoResults")}
                       </TableCell>
                     </TableRow>
                   )}
@@ -356,8 +393,10 @@ export default function TrainTable() {
             </div>
             <div className="flex items-center justify-between py-4">
               <div className="text-xs text-muted-foreground">
-                Showing <strong>{table.getRowModel().rows.length}</strong> of{" "}
-                <strong>{totalItems}</strong> trains
+                {paginationT("Pagi1")}{" "}
+                <strong>{table.getRowModel().rows.length}</strong>{" "}
+                {paginationT("Pagi2")} <strong>{totalItems}</strong>{" "}
+                {paginationT("Pagi3")}
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -366,10 +405,10 @@ export default function TrainTable() {
                   onClick={() => goToPage(page - 1)}
                   disabled={page === 1}
                 >
-                  Previous
+                  {paginationT("Previous")}
                 </Button>
                 <span>
-                  Page {page} of {totalPages}
+                  {paginationT("Page")} {page} {paginationT("Of")} {totalPages}
                 </span>
                 <Button
                   variant="outline"
@@ -377,7 +416,7 @@ export default function TrainTable() {
                   onClick={() => goToPage(page + 1)}
                   disabled={page === totalPages}
                 >
-                  Next
+                  {paginationT("Next")}
                 </Button>
                 <Select
                   value={pageSize.toString()}
@@ -387,7 +426,7 @@ export default function TrainTable() {
                   }}
                 >
                   <SelectTrigger className="w-[100px]">
-                    <SelectValue placeholder="Rows per page" />
+                    <SelectValue placeholder={paginationT("RowsPerPage")} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="10">10</SelectItem>

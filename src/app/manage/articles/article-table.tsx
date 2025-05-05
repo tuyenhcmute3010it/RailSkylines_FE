@@ -1,5 +1,9 @@
 "use client";
-import { CaretSortIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
+import {
+  CaretSortIcon,
+  DotsHorizontalIcon,
+  PlusCircledIcon,
+} from "@radix-ui/react-icons";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -12,9 +16,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-
 import { Button } from "@/components/ui/button";
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,13 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  AccountListResType,
-  AccountType,
-} from "@/schemaValidations/account.schema";
-import AddEmployee from "@/app/manage/accounts/add-employee";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { createContext, useContext, useEffect, useState } from "react";
+import { useState, createContext, useContext, useEffect } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,137 +45,206 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useSearchParams } from "next/navigation";
-import AutoPagination from "@/components/auto-pagination";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import EditArticle from "./edit-article";
 import AddArticle from "./add-article";
 import {
-  ArticleListResType,
-  ArticleType,
-} from "@/schemaValidations/article.schema";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import TableSkeleton from "@/components/Skeleton";
+import {
+  useGetArticleList,
+  useDeleteArticleMutation,
+} from "@/queries/useArticle";
+import { ArticleSchemaType } from "@/schemaValidations/article.schema";
+import { useToast } from "@/components/ui/use-toast";
 
-// `${manageAccountT("Avatar")}
-type ArticleItem = ArticleListResType["data"][0];
-
-const AccountTableContext = createContext<{
-  setArticleIdEdit: (value: number) => void;
+const ArticleTableContext = createContext<{
+  setArticleIdEdit: (value: number | undefined) => void;
   articleIdEdit: number | undefined;
-  articleDelete: ArticleItem | null;
-  setArticleDelete: (value: ArticleItem | null) => void;
+  articleDelete: ArticleSchemaType | null;
+  setArticleDelete: (value: ArticleSchemaType | null) => void;
 }>({
-  setArticleIdEdit: (value: number | undefined) => {},
+  setArticleIdEdit: () => {},
   articleIdEdit: undefined,
   articleDelete: null,
-  setArticleDelete: (value: ArticleItem | null) => {},
+  setArticleDelete: () => {},
 });
 
-// Số lượng item trên 1 trang
+function DeleteArticleDialog({
+  articleDelete,
+  setArticleDelete,
+  onSuccess,
+}: {
+  articleDelete: ArticleSchemaType | null;
+  setArticleDelete: (value: ArticleSchemaType | null) => void;
+  onSuccess?: () => void; // Định nghĩa kiểu cho prop
+}) {
+  const t = useTranslations("ManageArticle");
+  const { toast } = useToast();
+  const deleteArticleMutation = useDeleteArticleMutation();
+
+  const handleDelete = async () => {
+    if (articleDelete) {
+      try {
+        await deleteArticleMutation.mutateAsync(articleDelete.articleId);
+
+        setArticleDelete(null);
+      } catch (error: any) {
+        onSuccess?.(); // <<< Gọi hàm callback nếu được truyền vào
+        let errorMessage = t("Error_Generic");
+        if (error.message.includes("not valid JSON")) {
+          errorMessage =
+            t("Error_ServerResponse") ||
+            "Server returned an invalid response. Please check your permissions or contact the administrator.";
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        // toast({
+        //   title: t("DeleteFailed"),
+        //   description: errorMessage,
+        //   variant: "destructive",
+        // });
+      }
+    }
+  };
+
+  return (
+    <AlertDialog
+      open={Boolean(articleDelete)}
+      onOpenChange={(value) => {
+        if (!value) {
+          setArticleDelete(null);
+        }
+      }}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t("Del")}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t("Deldes")}{" "}
+            <span className="bg-foreground text-primary-foreground rounded px-1">
+              {articleDelete?.title}
+            </span>{" "}
+            {t("DelDes2")}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete}>
+            {t("Continue")}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 const PAGE_SIZE = 10;
+
 export default function ArticleTable() {
-  const manageAccountT = useTranslations("ManageAccount");
+  const t = useTranslations("ManageArticle");
   const paginationT = useTranslations("Pagination");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const page = searchParams.get("page") ? Number(searchParams.get("page")) : 1;
+  const pageIndex = page - 1;
 
-  function AlertDialogDeleteAccount({
-    articleDelete,
-    setArticleDelete,
-  }: {
-    articleDelete: ArticleItem | null;
-    setArticleDelete: (value: ArticleItem | null) => void;
-  }) {
-    return (
-      <AlertDialog
-        open={Boolean(articleDelete)}
-        onOpenChange={(value) => {
-          if (!value) {
-            setArticleDelete(null);
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{manageAccountT("Del")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {manageAccountT("Deldes")}{" "}
-              <span className="bg-foreground text-primary-foreground rounded px-1">
-                {articleDelete?.title}
-              </span>{" "}
-              {manageAccountT("DelDes2")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel> {manageAccountT("Cancel")}</AlertDialogCancel>
-            <AlertDialogAction> {manageAccountT("Continue")}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    );
-  }
+  const [articleIdEdit, setArticleIdEdit] = useState<number | undefined>();
+  const [articleDelete, setArticleDelete] = useState<ArticleSchemaType | null>(
+    null
+  );
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
-  const columns: ColumnDef<ArticleType>[] = [
+  const articleListQuery = useGetArticleList(page, pageSize);
+  const data = articleListQuery.data?.payload.data.result ?? [];
+  const totalItems = articleListQuery.data?.payload.data.meta.total ?? 0;
+  const totalPages = Math.ceil(totalItems / pageSize);
+
+  const columns: ColumnDef<ArticleSchemaType>[] = [
     {
-      accessorKey: "id",
-      header: `${manageAccountT("ID")}`,
+      accessorKey: "articleId",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          {t("ID")}
+          <CaretSortIcon className="ml-2 h-4 w-4" />
+        </Button>
+      ),
     },
     {
       accessorKey: "title",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Title
-            <CaretSortIcon className="ml-2 h-4 w-4" />
-          </Button>
-        );
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          {t("Title")}
+          <CaretSortIcon className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      filterFn: (row, columnId, filterValue) => {
+        if (!filterValue) return true;
+        const value = row.getValue(columnId) as string;
+        return value.toLowerCase().includes(filterValue.toLowerCase());
       },
-      cell: ({ row }) => <div>{row.getValue("title")}</div>,
     },
     {
       accessorKey: "content",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Content
-            <CaretSortIcon className="ml-2 h-4 w-4" />
-          </Button>
+      header: t("Content"),
+      cell: ({ row }) => {
+        const content = row.getValue("content") as string;
+        return <div className="truncate max-w-xs">{content}</div>;
+      },
+    },
+    {
+      accessorKey: "thumbnail",
+      header: t("Thumbnail"),
+      cell: ({ row }) => {
+        const thumbnail = row.getValue("thumbnail") as string | undefined;
+        return thumbnail ? (
+          <img
+            src={thumbnail}
+            alt="Thumbnail"
+            className="h-10 w-10 object-cover"
+          />
+        ) : (
+          "-"
         );
       },
-      cell: ({ row }) => <div>{row.getValue("content")}</div>,
     },
     {
       id: "actions",
+      header: t("Action"),
       enableHiding: false,
       cell: function Actions({ row }) {
         const { setArticleIdEdit, setArticleDelete } =
-          useContext(AccountTableContext);
-        const openEditEmployee = () => {
-          setArticleIdEdit(row.original.id);
-        };
-
-        const openDeleteEmployee = () => {
-          setArticleDelete(row.original);
-        };
+          useContext(ArticleTableContext);
         return (
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
                 <DotsHorizontalIcon className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{manageAccountT("Action")}</DropdownMenuLabel>
+              <DropdownMenuLabel>{t("Action")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={openEditEmployee}>
-                {manageAccountT("Edit")}
+              <DropdownMenuItem
+                onClick={() => setArticleIdEdit(row.original.articleId)}
+              >
+                {t("Edit")}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={openDeleteEmployee}>
-                {manageAccountT("Delete")}
+              <DropdownMenuItem onClick={() => setArticleDelete(row.original)}>
+                {t("Delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -187,107 +252,11 @@ export default function ArticleTable() {
       },
     },
   ];
-  const searchParam = useSearchParams();
-  const page = searchParam.get("page") ? Number(searchParam.get("page")) : 1;
-  const pageIndex = page - 1;
-  // const params = Object.fromEntries(searchParam.entries())
-  const [articleIdEdit, setArticleIdEdit] = useState<number | undefined>();
-  const [articleDelete, setArticleDelete] = useState<ArticleItem | null>(null);
-  const data = [
-    {
-      id: 1,
-      title: "The Future of AI in Healthcare",
-      content:
-        "Artificial Intelligence is transforming healthcare by improving diagnostics and treatment.",
-    },
-    {
-      id: 2,
-      title: "10 Tips for a Healthier Lifestyle",
-      content:
-        "Maintain a balanced diet, exercise regularly, and prioritize mental well-being.",
-    },
-    {
-      id: 3,
-      title: "Understanding the Stock Market",
-      content:
-        "The stock market allows investors to buy and sell shares of publicly traded companies.",
-    },
-    {
-      id: 4,
-      title: "Exploring the Deep Ocean",
-      content:
-        "The deep ocean remains one of the least explored regions on Earth.",
-    },
-    {
-      id: 5,
-      title: "A Beginner's Guide to Web Development",
-      content:
-        "Learn HTML, CSS, and JavaScript to start your web development journey.",
-    },
-    {
-      id: 6,
-      title: "The Rise of Electric Vehicles",
-      content:
-        "Electric vehicles are becoming more popular due to their environmental benefits.",
-    },
-    {
-      id: 7,
-      title: "How to Invest in Real Estate",
-      content:
-        "Investing in real estate can be profitable with proper research and planning.",
-    },
-    {
-      id: 8,
-      title: "The Importance of Mental Health",
-      content:
-        "Mental health is crucial for overall well-being and should not be neglected.",
-    },
-    {
-      id: 9,
-      title: "Top 5 Programming Languages in 2024",
-      content:
-        "Python, JavaScript, and Rust continue to dominate the programming world.",
-    },
-    {
-      id: 10,
-      title: "The Evolution of Space Travel",
-      content:
-        "Space exploration has advanced significantly with reusable rockets and Mars missions.",
-    },
-    {
-      id: 9,
-      title: "Top 5 Programming Languages in 2024",
-      content:
-        "Python, JavaScript, and Rust continue to dominate the programming world.",
-    },
-    {
-      id: 10,
-      title: "The Evolution of Space Travel",
-      content:
-        "Space exploration has advanced significantly with reusable rockets and Mars missions.",
-    },
-    {
-      id: 9,
-      title: "Top 5 Programming Languages in 2024",
-      content:
-        "Python, JavaScript, and Rust continue to dominate the programming world.",
-    },
-    {
-      id: 10,
-      title: "The Evolution of Space Travel",
-      content:
-        "Space exploration has advanced significantly with reusable rockets and Mars missions.",
-    },
-  ];
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
-  const [pagination, setPagination] = useState({
-    pageIndex, // Gía trị mặc định ban đầu, không có ý nghĩa khi data được fetch bất đồng bộ
-    pageSize: PAGE_SIZE, //default page size
-  });
 
   const table = useReactTable({
     data,
@@ -300,26 +269,31 @@ export default function ArticleTable() {
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    onPaginationChange: setPagination,
-    autoResetPageIndex: false,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
-      pagination,
+      pagination: { pageIndex, pageSize },
     },
+    pageCount: totalPages,
+    manualPagination: true,
   });
 
   useEffect(() => {
-    table.setPagination({
-      pageIndex,
-      pageSize: PAGE_SIZE,
-    });
+    table.setPageIndex(pageIndex);
   }, [table, pageIndex]);
 
+  const goToPage = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("page", newPage.toString());
+      router.push(`${pathname}?${params.toString()}`);
+    }
+  };
+
   return (
-    <AccountTableContext.Provider
+    <ArticleTableContext.Provider
       value={{
         articleIdEdit,
         setArticleIdEdit,
@@ -328,108 +302,137 @@ export default function ArticleTable() {
       }}
     >
       <div className="w-full">
-        <EditArticle
-          id={articleIdEdit}
-          setId={setArticleIdEdit}
-          onSubmitSuccess={() => {}}
-        />
-        <AlertDialogDeleteAccount
+        {articleIdEdit !== undefined && (
+          <EditArticle
+            id={articleIdEdit}
+            setId={setArticleIdEdit}
+            onSubmitSuccess={() => {
+              setArticleIdEdit(undefined);
+              articleListQuery.refetch();
+            }}
+          />
+        )}
+        <DeleteArticleDialog
           articleDelete={articleDelete}
           setArticleDelete={setArticleDelete}
+          onSuccess={articleListQuery.refetch} // <<< Thêm dòng này
         />
-        <div className="flex items-center py-4 ">
-          <div className="flex gap-5 ">
-            <Input
-              placeholder="Filter Title"
-              value={
-                (table.getColumn("title")?.getFilterValue() as string) ?? ""
-              }
-              onChange={(event) =>
-                table.getColumn("title")?.setFilterValue(event.target.value)
-              }
-              className="w-72"
-            />
-            <Input
-              placeholder="Filter Content"
-              value={
-                (table.getColumn("content")?.getFilterValue() as string) ?? ""
-              }
-              onChange={(event) =>
-                table.getColumn("content")?.setFilterValue(event.target.value)
-              }
-              className="w-72"
-            />
+        {articleListQuery.isLoading ? (
+          <TableSkeleton />
+        ) : articleListQuery.error ? (
+          <div className="text-red-500">
+            {t("Error")}: {articleListQuery.error.message}
           </div>
-          <div className="ml-auto flex items-center gap-2">
-            <AddArticle />
-          </div>
-        </div>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
+        ) : (
+          <>
+            <div className="flex items-center py-4 gap-5">
+              <Input
+                placeholder={t("FilterTitle")}
+                value={
+                  (table.getColumn("title")?.getFilterValue() as string) ?? ""
+                }
+                onChange={(event) =>
+                  table.getColumn("title")?.setFilterValue(event.target.value)
+                }
+                className="max-w-sm w-[150px]"
+              />
+              <div className="ml-auto flex items-center gap-2">
+                <AddArticle />
+              </div>
+            </div>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow key={row.id}>
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id}>
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
                             )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center"
+                      >
+                        {t("NoResults")}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <div className="text-xs text-muted-foreground py-4 flex-1 ">
-            {paginationT("Pagi1")}{" "}
-            <strong>{table.getPaginationRowModel().rows.length}</strong>{" "}
-            {paginationT("Pagi2")} <strong>{data.length}</strong>{" "}
-            {paginationT("Pagi3")}
-          </div>
-          <div>
-            <AutoPagination
-              page={table.getState().pagination.pageIndex + 1}
-              pageSize={table.getPageCount()}
-              pathname="/manage/articles"
-            />
-          </div>
-        </div>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex items-center justify-between py-4">
+              <div className="text-xs text-muted-foreground">
+                {paginationT("Pagi1")}{" "}
+                <strong>{table.getRowModel().rows.length}</strong>{" "}
+                {paginationT("Pagi2")} <strong>{totalItems}</strong>{" "}
+                {paginationT("Pagi3")}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(page - 1)}
+                  disabled={page === 1}
+                >
+                  {paginationT("Previous")}
+                </Button>
+                <span>
+                  {paginationT("Page")} {page} {paginationT("Of")} {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(page + 1)}
+                  disabled={page === totalPages}
+                >
+                  {paginationT("Next")}
+                </Button>
+                <Select
+                  value={pageSize.toString()}
+                  onValueChange={(value) => {
+                    setPageSize(Number(value));
+                    goToPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue placeholder={paginationT("RowsPerPage")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </>
+        )}
       </div>
-    </AccountTableContext.Provider>
+    </ArticleTableContext.Provider>
   );
 }

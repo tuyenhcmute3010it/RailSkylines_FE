@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import SearchTicket from "../search-ticket";
 import { Trash2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import trainTripApiRequest from "@/queries/useTrainTrip";
+import { useUpdateSeatMutation } from "@/queries/useSeat"; // Import the seat mutation hook
 import TrainTripSkeleton from "@/components/TrainTripSkeleton";
 import NoResults from "@/components/no-Result";
 
@@ -52,7 +53,7 @@ interface Seat {
   seatId: number;
   seatNumber: number | null;
   seatType: string;
-  seatStatus: string;
+  seatStatus: string; // Updated to include "pending"
   price: number;
 }
 
@@ -71,6 +72,7 @@ interface FrontendCarriage {
   basePrice: number;
   seats: number[];
   bookedSeats: number[];
+  pendingSeats: number[]; // New field to track pending seats
   discount: number;
   seatData: Seat[];
 }
@@ -84,6 +86,7 @@ interface FrontendTrain {
   carriages: FrontendCarriage[];
   trainTripId: number;
 }
+
 export type TrainTrip = {
   trainTripId: number;
   train: { trainId: number; trainName: string; trainStatus: string };
@@ -194,8 +197,11 @@ const mapTrainTripsToFrontend = (trainTrips: TrainTrip[]): FrontendTrain[] => {
             basePrice: carriage.price,
             seats: limitedSeats.map((seat) => seat.seatId),
             bookedSeats: limitedSeats
-              .filter((seat) => seat.seatStatus !== "available")
+              .filter((seat) => seat.seatStatus === "booked")
               .map((seat) => seat.seatId),
+            pendingSeats: limitedSeats
+              .filter((seat) => seat.seatStatus === "pending")
+              .map((seat) => seat.seatId), // Track pending seats
             discount: carriage.discount,
             seatData: limitedSeats,
           };
@@ -203,7 +209,10 @@ const mapTrainTripsToFrontend = (trainTrips: TrainTrip[]): FrontendTrain[] => {
 
       const totalAvailableSeats = carriages.reduce(
         (sum, carriage) =>
-          sum + (carriage.seats.length - carriage.bookedSeats.length),
+          sum +
+          (carriage.seats.length -
+            carriage.bookedSeats.length -
+            carriage.pendingSeats.length),
         0
       );
 
@@ -269,18 +278,6 @@ const filterTrainTrips = (
       returnMatch = true;
     }
 
-    // Debugging log
-    console.log("Filtering trip:", {
-      trainTripId: trip.trainTripId,
-      allStations,
-      departureIndex,
-      arrivalIndex,
-      dateMatch,
-      stationMatch,
-      tripDate: trip.schedule?.departure.date.split("T")[0],
-      searchDate: new Date(departureDate).toISOString().split("T")[0],
-    });
-
     return stationMatch && dateMatch && returnMatch;
   });
 };
@@ -299,6 +296,7 @@ export default function Search() {
   >({});
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [timer, setTimer] = useState(600);
+  const [pendingSeats, setPendingSeats] = useState<Record<number, number>>({}); // Track seatId -> timestamp
 
   // Extract search parameters
   const departureStation = searchParams.get("departureStation");
@@ -345,6 +343,9 @@ export default function Search() {
       )
     : [];
 
+  // Use mutation for updating seat status
+  const updateSeatMutation = useUpdateSeatMutation();
+
   // Handle train selection
   const handleTrainSelect = (trainId: string) => {
     const train = trains.find((t) => t.id === trainId) || null;
@@ -362,9 +363,13 @@ export default function Search() {
   const MAX_TICKETS = 10;
 
   // Handle seat selection and add to cart
-  const toggleSeatSelection = (seat: number) => {
+  const toggleSeatSelection = async (seat: number) => {
     if (!selectedCoach || !selectedTrain) return;
-    if (selectedCoach.bookedSeats.includes(seat)) return;
+    if (
+      selectedCoach.bookedSeats.includes(seat) ||
+      selectedCoach.pendingSeats.includes(seat)
+    )
+      return;
 
     const coachKey = `${selectedTrain.id}-${selectedCoach.id}`;
     const currentSeats = selectedSeatsByCoach[coachKey] || [];
@@ -376,6 +381,30 @@ export default function Search() {
     if (!isDeselecting && cartItems.length >= MAX_TICKETS) {
       alert(`Bạn chỉ có thể đặt tối đa ${MAX_TICKETS} vé trong một lần đặt!`);
       return;
+    }
+
+    if (!isDeselecting) {
+      // Update seat status to pending in the backend
+      const seatData = selectedCoach.seatData.find((s) => s.seatId === seat);
+      if (seatData) {
+        try {
+          await updateSeatMutation.mutateAsync({
+            id: seatData.seatId,
+            seatStatus: "pending",
+            seatNumber: seatData.seatNumber,
+            seatType: seatData.seatType,
+            price: seatData.price,
+          });
+          // Add to pending seats with timestamp
+          setPendingSeats((prev) => ({
+            ...prev,
+            [seatData.seatId]: Date.now(),
+          }));
+        } catch (error) {
+          console.error("Failed to update seat status to pending:", error);
+          return;
+        }
+      }
     }
 
     setSelectedSeatsByCoach((prev) => ({
@@ -402,6 +431,26 @@ export default function Search() {
       setCartItems((prev) => [...prev, newCartItem]);
       setTimer(600);
     } else {
+      // If deselecting, revert seat to available
+      const seatData = selectedCoach.seatData.find((s) => s.seatId === seat);
+      if (seatData) {
+        try {
+          await updateSeatMutation.mutateAsync({
+            id: seatData.seatId,
+            seatStatus: "available",
+            seatNumber: seatData.seatNumber,
+            seatType: seatData.seatType,
+            price: seatData.price,
+          });
+          setPendingSeats((prev) => {
+            const newPending = { ...prev };
+            delete newPending[seatData.seatId];
+            return newPending;
+          });
+        } catch (error) {
+          console.error("Failed to revert seat to available:", error);
+        }
+      }
       setCartItems((prev) =>
         prev.filter(
           (item) =>
@@ -416,8 +465,29 @@ export default function Search() {
   };
 
   // Remove individual ticket from cart
-  const removeTicket = (item: CartItem) => {
+  const removeTicket = async (item: CartItem) => {
     const coachKey = `${item.trainId}-${item.coachId}`;
+    const seatData = selectedCoach?.seatData.find(
+      (s) => s.seatId === item.seatNumber
+    );
+    if (seatData) {
+      try {
+        await updateSeatMutation.mutateAsync({
+          id: seatData.seatId,
+          seatStatus: "available",
+          seatNumber: seatData.seatNumber,
+          seatType: seatData.seatType,
+          price: seatData.price,
+        });
+        setPendingSeats((prev) => {
+          const newPending = { ...prev };
+          delete newPending[seatData.seatId];
+          return newPending;
+        });
+      } catch (error) {
+        console.error("Failed to revert seat to available:", error);
+      }
+    }
     setCartItems((prev) =>
       prev.filter(
         (cartItem) =>
@@ -437,16 +507,60 @@ export default function Search() {
     if (cartItems.length === 1) setTimer(0);
   };
 
-  // Clear all tickets from cart
-  const clearCart = () => {
+  // Clear all tickets from cart and revert pending seats
+  const clearCart = async () => {
+    for (const seatId of Object.keys(pendingSeats).map(Number)) {
+      const seatData = selectedCoach?.seatData.find((s) => s.seatId === seatId);
+      if (seatData) {
+        try {
+          await updateSeatMutation.mutateAsync({
+            id: seatData.seatId,
+            seatStatus: "available",
+            seatNumber: seatData.seatNumber,
+            seatType: seatData.seatType,
+            price: seatData.price,
+          });
+        } catch (error) {
+          console.error("Failed to revert seat to available:", error);
+        }
+      }
+    }
     setCartItems([]);
     setSelectedSeatsByCoach({});
+    setPendingSeats({});
     setTimer(0);
   };
 
-  // Timer countdown
+  // Timer countdown and revert pending seats on timeout
   useEffect(() => {
-    if (cartItems.length === 0 || timer <= 0) return;
+    if (cartItems.length === 0 || timer <= 0) {
+      if (timer <= 0 && Object.keys(pendingSeats).length > 0) {
+        // Revert all pending seats to available
+        const revertSeats = async () => {
+          for (const seatId of Object.keys(pendingSeats).map(Number)) {
+            const seatData = selectedCoach?.seatData.find(
+              (s) => s.seatId === seatId
+            );
+            if (seatData) {
+              try {
+                await updateSeatMutation.mutateAsync({
+                  id: seatData.seatId,
+                  seatStatus: "available",
+                  seatNumber: seatData.seatNumber,
+                  seatType: seatData.seatType,
+                  price: seatData.price,
+                });
+              } catch (error) {
+                console.error("Failed to revert seat to available:", error);
+              }
+            }
+          }
+          setPendingSeats({});
+        };
+        revertSeats();
+      }
+      return;
+    }
 
     const interval = setInterval(() => {
       setTimer((prev) => {
@@ -460,7 +574,7 @@ export default function Search() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [cartItems, timer]);
+  }, [cartItems, timer, pendingSeats, selectedCoach, updateSeatMutation]);
 
   // Format time display
   const formatTime = (seconds: number) => {
@@ -659,6 +773,10 @@ export default function Search() {
                                             seat
                                           )
                                             ? "bg-orange-600 text-white cursor-not-allowed"
+                                            : selectedCoach.pendingSeats.includes(
+                                                seat
+                                              )
+                                            ? "bg-yellow-500 text-white cursor-not-allowed"
                                             : getCurrentSelectedSeats().includes(
                                                 seat
                                               )
@@ -733,6 +851,10 @@ export default function Search() {
                                             seat
                                           )
                                             ? "bg-orange-600 text-white cursor-not-allowed"
+                                            : selectedCoach.pendingSeats.includes(
+                                                seat
+                                              )
+                                            ? "bg-yellow-500 text-white cursor-not-allowed"
                                             : getCurrentSelectedSeats().includes(
                                                 seat
                                               )
@@ -807,6 +929,10 @@ export default function Search() {
                                             seat
                                           )
                                             ? "bg-orange-600 text-white cursor-not-allowed"
+                                            : selectedCoach.pendingSeats.includes(
+                                                seat
+                                              )
+                                            ? "bg-yellow-500 text-white cursor-not-allowed"
                                             : getCurrentSelectedSeats().includes(
                                                 seat
                                               )
@@ -911,6 +1037,7 @@ export default function Search() {
                     router.push(`/payment?${query}`);
                     setCartItems([]);
                     setSelectedSeatsByCoach({});
+                    setPendingSeats({});
                   }}
                 >
                   Xác nhận đặt vé

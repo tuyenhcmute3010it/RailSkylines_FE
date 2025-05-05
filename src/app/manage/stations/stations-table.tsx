@@ -1,5 +1,4 @@
 // "use client";
-
 // import {
 //   CaretSortIcon,
 //   DotsHorizontalIcon,
@@ -19,15 +18,6 @@
 // } from "@tanstack/react-table";
 // import { Button } from "@/components/ui/button";
 // import {
-//   Dialog,
-//   DialogContent,
-//   DialogDescription,
-//   DialogFooter,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogTrigger,
-// } from "@/components/ui/dialog";
-// import {
 //   DropdownMenu,
 //   DropdownMenuContent,
 //   DropdownMenuItem,
@@ -44,24 +34,7 @@
 //   TableHeader,
 //   TableRow,
 // } from "@/components/ui/table";
-// import { useForm } from "react-hook-form";
-// import {
-//   Form,
-//   FormControl,
-//   FormField,
-//   FormItem,
-//   FormLabel,
-//   FormMessage,
-// } from "@/components/ui/form";
 // import { useState, createContext, useContext, useEffect } from "react";
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from "@/components/ui/select";
-// import AutoPagination from "@/components/auto-pagination";
 // import {
 //   AlertDialog,
 //   AlertDialogAction,
@@ -72,59 +45,74 @@
 //   AlertDialogHeader,
 //   AlertDialogTitle,
 // } from "@/components/ui/alert-dialog";
-// import { useSearchParams } from "next/navigation";
+// import { useSearchParams, useRouter } from "next/navigation";
+// import { useTranslations } from "next-intl";
 // import EditStation from "./edit-station";
 // import AddStation from "./add-station";
+// import AutoPagination from "@/components/auto-pagination";
+// import TableSkeleton from "@/components/Skeleton";
+// import {
+//   useGetStationList,
+//   useDeleteStationMutation,
+// } from "@/queries/useStation";
+// import { StationSchemaType } from "@/schemaValidations/station.schema";
+// import { useToast } from "@/components/ui/use-toast";
 
-// // Định nghĩa type cho Station
-// type Station = {
-//   id: number;
-//   stationName: string;
-// };
-
-// const CarriageTableContext = createContext<{
-//   setCarriageIdEdit: (value: number) => void;
-//   carriageIdEdit: number | undefined;
-//   carriageDelete: Station | null;
-//   setCarriageDelete: (value: Station | null) => void;
+// const StationTableContext = createContext<{
+//   setStationIdEdit: (value: number | undefined) => void;
+//   stationIdEdit: number | undefined;
+//   stationDelete: StationSchemaType | null;
+//   setStationDelete: (value: StationSchemaType | null) => void;
 // }>({
-//   setCarriageIdEdit: (value: number | undefined) => {},
-//   carriageIdEdit: undefined,
-//   carriageDelete: null,
-//   setCarriageDelete: (value: Station | null) => {},
+//   setStationIdEdit: () => {},
+//   stationIdEdit: undefined,
+//   stationDelete: null,
+//   setStationDelete: () => {},
 // });
 
-// // Component xác nhận xóa
-// function DeleteCarriageDialog({
-//   carriageDelete,
-//   setCarriageDelete,
+// function DeleteStationDialog({
+//   stationDelete,
+//   setStationDelete,
+//   onDelete,
 // }: {
-//   carriageDelete: Station | null;
-//   setCarriageDelete: (value: Station | null) => void;
+//   stationDelete: StationSchemaType | null;
+//   setStationDelete: (value: StationSchemaType | null) => void;
+//   onDelete: (id: number) => Promise<void>;
 // }) {
+//   const t = useTranslations("ManageStation");
+
+//   const handleDelete = async () => {
+//     if (stationDelete) {
+//       await onDelete(stationDelete.stationId);
+//       setStationDelete(null);
+//     }
+//   };
+
 //   return (
 //     <AlertDialog
-//       open={Boolean(carriageDelete)}
+//       open={Boolean(stationDelete)}
 //       onOpenChange={(value) => {
 //         if (!value) {
-//           setCarriageDelete(null);
+//           setStationDelete(null);
 //         }
 //       }}
 //     >
 //       <AlertDialogContent>
 //         <AlertDialogHeader>
-//           <AlertDialogTitle>Delete Station</AlertDialogTitle>
+//           <AlertDialogTitle>{t("Del")}</AlertDialogTitle>
 //           <AlertDialogDescription>
-//             Are you sure you want to delete carriage{" "}
+//             {t("Deldes")}{" "}
 //             <span className="bg-foreground text-primary-foreground rounded px-1">
-//               {carriageDelete?.stationName}
-//             </span>
-//             ? This action cannot be undone.
+//               {stationDelete?.stationName}
+//             </span>{" "}
+//             {t("DelDes2")}
 //           </AlertDialogDescription>
 //         </AlertDialogHeader>
 //         <AlertDialogFooter>
-//           <AlertDialogCancel>Cancel</AlertDialogCancel>
-//           <AlertDialogAction>Continue</AlertDialogAction>
+//           <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
+//           <AlertDialogAction onClick={handleDelete}>
+//             {t("Continue")}
+//           </AlertDialogAction>
 //         </AlertDialogFooter>
 //       </AlertDialogContent>
 //     </AlertDialog>
@@ -134,61 +122,38 @@
 // const PAGE_SIZE = 10;
 
 // export default function StationTable() {
-//   const searchParam = useSearchParams();
-//   const page = searchParam.get("page") ? Number(searchParam.get("page")) : 1;
+//   const t = useTranslations("ManageStation");
+//   const paginationT = useTranslations("Pagination");
+//   const { toast } = useToast();
+//   const searchParams = useSearchParams();
+//   const router = useRouter();
+//   const page = searchParams.get("page") ? Number(searchParams.get("page")) : 1;
 //   const pageIndex = page - 1;
 
-//   const [carriageIdEdit, setCarriageIdEdit] = useState<number | undefined>();
-//   const [carriageDelete, setCarriageDelete] = useState<Station | null>(null);
+//   const [stationIdEdit, setStationIdEdit] = useState<number | undefined>();
+//   const [stationDelete, setStationDelete] = useState<StationSchemaType | null>(
+//     null
+//   );
 
-//   // Dữ liệu mẫu
-//   const data: Station[] = [
-//     {
-//       id: 1,
-//       stationName: "Ga Quảng Ngãi",
-//     },
-//     {
-//       id: 2,
-//       stationName: "Ga Dĩ An",
-//     },
-//     {
-//       id: 3,
-//       stationName: "Ga Hà Nội",
-//     },
-//     {
-//       id: 4,
-//       stationName: "Ga Sài Gòn",
-//     },
-//     {
-//       id: 5,
-//       stationName: "Ga Đà Nẵng",
-//     },
-//     {
-//       id: 6,
-//       stationName: "Ga Huế",
-//     },
-//     {
-//       id: 7,
-//       stationName: "Ga Nha Trang",
-//     },
-//     {
-//       id: 8,
-//       stationName: "Ga Vinh",
-//     },
-//     {
-//       id: 9,
-//       stationName: "Ga Đồng Hới",
-//     },
-//     {
-//       id: 10,
-//       stationName: "Ga Lào Cai",
-//     },
-//   ];
+//   // Fetch station list
+//   const stationListQuery = useGetStationList(page, PAGE_SIZE);
+//   const deleteStationMutation = useDeleteStationMutation();
+//   const data = stationListQuery.data?.payload?.data.result ?? [];
+//   const totalItems = stationListQuery.data?.payload.data.meta.total ?? 0;
+//   const totalPages = Math.ceil(totalItems / PAGE_SIZE);
 
-//   const columns: ColumnDef<Station>[] = [
+//   const columns: ColumnDef<StationSchemaType>[] = [
 //     {
-//       accessorKey: "id",
-//       header: "ID",
+//       accessorKey: "stationId",
+//       header: ({ column }) => (
+//         <Button
+//           variant="ghost"
+//           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+//         >
+//           {t("ID")}
+//           <CaretSortIcon className="ml-2 h-4 w-4" />
+//         </Button>
+//       ),
 //     },
 //     {
 //       accessorKey: "stationName",
@@ -197,17 +162,40 @@
 //           variant="ghost"
 //           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 //         >
-//           Station Name
+//           {t("StationName")}
 //           <CaretSortIcon className="ml-2 h-4 w-4" />
 //         </Button>
 //       ),
+//       filterFn: (row, columnId, filterValue) => {
+//         if (!filterValue) return true;
+//         const value = row.getValue(columnId) as string;
+//         return value.toLowerCase().includes(filterValue.toLowerCase());
+//       },
+//     },
+//     {
+//       accessorKey: "position",
+//       header: ({ column }) => (
+//         <Button
+//           variant="ghost"
+//           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+//         >
+//           {t("Position")}
+//           <CaretSortIcon className="ml-2 h-4 w-4" />
+//         </Button>
+//       ),
+//       filterFn: (row, columnId, filterValue) => {
+//         if (!filterValue) return true;
+//         const value = row.getValue(columnId) as number;
+//         return value >= Number(filterValue);
+//       },
 //     },
 //     {
 //       id: "actions",
+//       header: t("Action"),
 //       enableHiding: false,
 //       cell: function Actions({ row }) {
-//         const { setCarriageIdEdit, setCarriageDelete } =
-//           useContext(CarriageTableContext);
+//         const { setStationIdEdit, setStationDelete } =
+//           useContext(StationTableContext);
 //         return (
 //           <DropdownMenu modal={false}>
 //             <DropdownMenuTrigger asChild>
@@ -216,15 +204,15 @@
 //               </Button>
 //             </DropdownMenuTrigger>
 //             <DropdownMenuContent align="end">
-//               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+//               <DropdownMenuLabel>{t("Action")}</DropdownMenuLabel>
 //               <DropdownMenuSeparator />
 //               <DropdownMenuItem
-//                 onClick={() => setCarriageIdEdit(row.original.id)}
+//                 onClick={() => setStationIdEdit(row.original.stationId)}
 //               >
-//                 Edit
+//                 {t("Edit")}
 //               </DropdownMenuItem>
-//               <DropdownMenuItem onClick={() => setCarriageDelete(row.original)}>
-//                 Delete
+//               <DropdownMenuItem onClick={() => setStationDelete(row.original)}>
+//                 {t("Delete")}
 //               </DropdownMenuItem>
 //             </DropdownMenuContent>
 //           </DropdownMenu>
@@ -237,10 +225,6 @@
 //   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 //   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 //   const [rowSelection, setRowSelection] = useState({});
-//   const [pagination, setPagination] = useState({
-//     pageIndex,
-//     pageSize: PAGE_SIZE,
-//   });
 
 //   const table = useReactTable({
 //     data,
@@ -253,122 +237,175 @@
 //     getFilteredRowModel: getFilteredRowModel(),
 //     onColumnVisibilityChange: setColumnVisibility,
 //     onRowSelectionChange: setRowSelection,
-//     onPaginationChange: setPagination,
-//     autoResetPageIndex: false,
 //     state: {
 //       sorting,
 //       columnFilters,
 //       columnVisibility,
 //       rowSelection,
-//       pagination,
+//       pagination: { pageIndex, pageSize: PAGE_SIZE },
 //     },
+//     pageCount: totalPages,
+//     manualPagination: true,
 //   });
 
 //   useEffect(() => {
-//     table.setPagination({
-//       pageIndex,
-//       pageSize: PAGE_SIZE,
-//     });
+//     table.setPageIndex(pageIndex);
 //   }, [table, pageIndex]);
 
+//   const goToPage = (newPage: number) => {
+//     if (newPage >= 1 && newPage <= totalPages) {
+//       const params = new URLSearchParams(searchParams.toString());
+//       params.set("page", newPage.toString());
+//       router.push(`/manage/stations?${params.toString()}`);
+//     }
+//   };
+
+//   const handleDeleteStation = async (id: number) => {
+//     try {
+//       await deleteStationMutation.mutateAsync(id);
+//       toast({
+//         title: t("DeleteSuccess"),
+//         description: t("StationDeleted", { stationId: id }),
+//       });
+//     } catch (error) {
+//       toast({
+//         title: t("DeleteFailed"),
+//         description: t("Error_Generic"),
+//         variant: "destructive",
+//       });
+//     }
+//   };
+
 //   return (
-//     <CarriageTableContext.Provider
+//     <StationTableContext.Provider
 //       value={{
-//         carriageIdEdit,
-//         setCarriageIdEdit,
-//         carriageDelete,
-//         setCarriageDelete,
+//         stationIdEdit,
+//         setStationIdEdit,
+//         stationDelete,
+//         setStationDelete,
 //       }}
 //     >
 //       <div className="w-full">
-//         {/* Render EditCarriage chỉ khi carriageIdEdit có giá trị */}
-//         {carriageIdEdit !== undefined && (
+//         {stationIdEdit !== undefined && (
 //           <EditStation
-//             id={carriageIdEdit}
-//             setId={setCarriageIdEdit}
-//             onSubmitSuccess={() => setCarriageIdEdit(undefined)}
+//             id={stationIdEdit}
+//             setId={setStationIdEdit}
+//             onSubmitSuccess={() => {
+//               setStationIdEdit(undefined);
+//               stationListQuery.refetch();
+//             }}
 //           />
 //         )}
-//         <DeleteCarriageDialog
-//           carriageDelete={carriageDelete}
-//           setCarriageDelete={setCarriageDelete}
+//         <DeleteStationDialog
+//           stationDelete={stationDelete}
+//           setStationDelete={setStationDelete}
+//           onDelete={handleDeleteStation}
 //         />
-//         <div className="flex items-center py-4 gap-5">
-//           <Input
-//             placeholder="Filter station name..."
-//             value={
-//               (table.getColumn("stationName")?.getFilterValue() as string) ?? ""
-//             }
-//             onChange={(event) =>
-//               table.getColumn("stationName")?.setFilterValue(event.target.value)
-//             }
-//             className="max-w-sm w-100"
-//           />
-
-//           <div className="ml-auto flex items-center gap-2">
-//             <AddStation />
+//         {stationListQuery.isLoading ? (
+//           <TableSkeleton />
+//         ) : stationListQuery.error ? (
+//           <div className="text-red-500">
+//             {t("Error")}: {stationListQuery.error.message}
 //           </div>
-//         </div>
-//         <div className="rounded-md border">
-//           <Table>
-//             <TableHeader>
-//               {table.getHeaderGroups().map((headerGroup) => (
-//                 <TableRow key={headerGroup.id}>
-//                   {headerGroup.headers.map((header) => (
-//                     <TableHead key={header.id}>
-//                       {header.isPlaceholder
-//                         ? null
-//                         : flexRender(
-//                             header.column.columnDef.header,
-//                             header.getContext()
-//                           )}
-//                     </TableHead>
+//         ) : (
+//           <>
+//             <div className="flex items-center py-4 gap-5">
+//               <Input
+//                 placeholder={t("FilterStationName")}
+//                 value={
+//                   (table
+//                     .getColumn("stationName")
+//                     ?.getFilterValue() as string) ?? ""
+//                 }
+//                 onChange={(event) =>
+//                   table
+//                     .getColumn("stationName")
+//                     ?.setFilterValue(event.target.value)
+//                 }
+//                 className="max-w-sm w-[150px]"
+//               />
+//               <Input
+//                 type="number"
+//                 placeholder={t("FilterPosition")}
+//                 value={
+//                   (table.getColumn("position")?.getFilterValue() as string) ??
+//                   ""
+//                 }
+//                 onChange={(event) =>
+//                   table
+//                     .getColumn("position")
+//                     ?.setFilterValue(event.target.value)
+//                 }
+//                 className="max-w-sm w-[150px]"
+//               />
+//               <div className="ml-auto flex items-center gap-2">
+//                 <AddStation />
+//               </div>
+//             </div>
+//             <div className="rounded-md border">
+//               <Table>
+//                 <TableHeader>
+//                   {table.getHeaderGroups().map((headerGroup) => (
+//                     <TableRow key={headerGroup.id}>
+//                       {headerGroup.headers.map((header) => (
+//                         <TableHead key={header.id}>
+//                           {header.isPlaceholder
+//                             ? null
+//                             : flexRender(
+//                                 header.column.columnDef.header,
+//                                 header.getContext()
+//                               )}
+//                         </TableHead>
+//                       ))}
+//                     </TableRow>
 //                   ))}
-//                 </TableRow>
-//               ))}
-//             </TableHeader>
-//             <TableBody>
-//               {table.getRowModel().rows?.length ? (
-//                 table.getRowModel().rows.map((row) => (
-//                   <TableRow key={row.id}>
-//                     {row.getVisibleCells().map((cell) => (
-//                       <TableCell key={cell.id}>
-//                         {flexRender(
-//                           cell.column.columnDef.cell,
-//                           cell.getContext()
-//                         )}
+//                 </TableHeader>
+//                 <TableBody>
+//                   {table.getRowModel().rows?.length ? (
+//                     table.getRowModel().rows.map((row) => (
+//                       <TableRow key={row.id}>
+//                         {row.getVisibleCells().map((cell) => (
+//                           <TableCell key={cell.id}>
+//                             {flexRender(
+//                               cell.column.columnDef.cell,
+//                               cell.getContext()
+//                             )}
+//                           </TableCell>
+//                         ))}
+//                       </TableRow>
+//                     ))
+//                   ) : (
+//                     <TableRow>
+//                       <TableCell
+//                         colSpan={columns.length}
+//                         className="h-24 text-center"
+//                       >
+//                         {t("NoResults")}
 //                       </TableCell>
-//                     ))}
-//                   </TableRow>
-//                 ))
-//               ) : (
-//                 <TableRow>
-//                   <TableCell
-//                     colSpan={columns.length}
-//                     className="h-24 text-center"
-//                   >
-//                     No results.
-//                   </TableCell>
-//                 </TableRow>
-//               )}
-//             </TableBody>
-//           </Table>
-//         </div>
-//         <div className="flex items-center justify-between py-4 ">
-//           <div className="text-xs text-muted-foreground">
-//             Showing <strong>{table.getPaginationRowModel().rows.length}</strong>{" "}
-//             of <strong>{data.length}</strong> stations
-//           </div>
-//           <div>
-//             <AutoPagination
-//               page={table.getState().pagination.pageIndex + 1}
-//               pageSize={table.getPageCount()}
-//               pathname="/manage/stations"
-//             />
-//           </div>
-//         </div>
+//                     </TableRow>
+//                   )}
+//                 </TableBody>
+//               </Table>
+//             </div>
+//             <div className="flex items-center justify-between py-4">
+//               <div className="text-xs text-muted-foreground">
+//                 {paginationT("Pagi1")}{" "}
+//                 <strong>{table.getRowModel().rows.length}</strong>{" "}
+//                 {paginationT("Pagi2")} <strong>{totalItems}</strong>{" "}
+//                 {paginationT("Pagi3")}
+//               </div>
+//               <div>
+//                 <AutoPagination
+//                   page={table.getState().pagination.pageIndex + 1}
+//                   pageSize={table.getPageCount()}
+//                   pathname="/manage/stations"
+//                 />
+//               </div>
+//             </div>
+//           </>
+//         )}
 //       </div>
-//     </CarriageTableContext.Provider>
+//     </StationTableContext.Provider>
 //   );
 // }
 
@@ -419,11 +456,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import EditStation from "./edit-station";
 import AddStation from "./add-station";
-import AutoPagination from "@/components/auto-pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import TableSkeleton from "@/components/Skeleton";
 import {
   useGetStationList,
@@ -501,6 +544,7 @@ export default function StationTable() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
   const page = searchParams.get("page") ? Number(searchParams.get("page")) : 1;
   const pageIndex = page - 1;
 
@@ -508,13 +552,13 @@ export default function StationTable() {
   const [stationDelete, setStationDelete] = useState<StationSchemaType | null>(
     null
   );
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
-  // Fetch station list
-  const stationListQuery = useGetStationList(page, PAGE_SIZE);
+  const stationListQuery = useGetStationList(page, pageSize);
   const deleteStationMutation = useDeleteStationMutation();
   const data = stationListQuery.data?.payload?.data.result ?? [];
   const totalItems = stationListQuery.data?.payload.data.meta.total ?? 0;
-  const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+  const totalPages = Math.ceil(totalItems / pageSize);
 
   const columns: ColumnDef<StationSchemaType>[] = [
     {
@@ -616,7 +660,7 @@ export default function StationTable() {
       columnFilters,
       columnVisibility,
       rowSelection,
-      pagination: { pageIndex, pageSize: PAGE_SIZE },
+      pagination: { pageIndex, pageSize },
     },
     pageCount: totalPages,
     manualPagination: true,
@@ -630,23 +674,26 @@ export default function StationTable() {
     if (newPage >= 1 && newPage <= totalPages) {
       const params = new URLSearchParams(searchParams.toString());
       params.set("page", newPage.toString());
-      router.push(`/manage/stations?${params.toString()}`);
+      router.push(`${pathname}?${params.toString()}`);
     }
   };
 
   const handleDeleteStation = async (id: number) => {
     try {
       await deleteStationMutation.mutateAsync(id);
-      toast({
-        title: t("DeleteSuccess"),
-        description: t("StationDeleted", { stationId: id }),
-      });
-    } catch (error) {
-      toast({
-        title: t("DeleteFailed"),
-        description: t("Error_Generic"),
-        variant: "destructive",
-      });
+      // toast({
+      //   title: t("DeleteSuccess"),
+      //   description: t("StationDeleted", { stationId: id }),
+      // });
+      stationListQuery.refetch();
+    } catch (error: any) {
+      const errorMessage = error?.message || t("Error_Generic");
+      stationListQuery.refetch();
+      // toast({
+      //   title: t("DeleteFailed"),
+      //   description: errorMessage,
+      //   variant: "destructive",
+      // });
     }
   };
 
@@ -768,12 +815,42 @@ export default function StationTable() {
                 {paginationT("Pagi2")} <strong>{totalItems}</strong>{" "}
                 {paginationT("Pagi3")}
               </div>
-              <div>
-                <AutoPagination
-                  page={table.getState().pagination.pageIndex + 1}
-                  pageSize={table.getPageCount()}
-                  pathname="/manage/stations"
-                />
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(page - 1)}
+                  disabled={page === 1}
+                >
+                  {paginationT("Previous")}
+                </Button>
+                <span>
+                  {paginationT("Page")} {page} {paginationT("Of")} {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(page + 1)}
+                  disabled={page === totalPages}
+                >
+                  {paginationT("Next")}
+                </Button>
+                <Select
+                  value={pageSize.toString()}
+                  onValueChange={(value) => {
+                    setPageSize(Number(value));
+                    goToPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue placeholder={paginationT("RowsPerPage")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </>
