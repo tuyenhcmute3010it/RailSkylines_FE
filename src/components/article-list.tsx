@@ -14,7 +14,6 @@ export default function ArticleList() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-center">Tin 24h</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         {articleListQuery.isLoading ? (
           <ArticleListSkeleton />
@@ -28,17 +27,25 @@ export default function ArticleList() {
               key={article.articleId}
               className="flex flex-col items-start space-y-2"
             >
-              {article.thumbnail ? (
-                <img
-                  src={article.thumbnail}
-                  alt={article.title}
-                  className="w-full h-40 object-cover rounded-lg"
-                />
-              ) : (
-                <div className="w-full h-40 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <span className="text-gray-500">No Image</span>
-                </div>
-              )}
+              <Link
+                href={`/article/${generateSlugUrl({
+                  name: article.title,
+                  id: article.articleId,
+                })}`}
+                className="block"
+              >
+                {article.thumbnail ? (
+                  <img
+                    src={article.thumbnail}
+                    alt={article.title}
+                    className="w-80 h-40 object-cover rounded-lg"
+                  />
+                ) : (
+                  <div className="w-full h-40 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <span className="text-gray-500">No Image</span>
+                  </div>
+                )}
+              </Link>
               <Link
                 href={`/article/${generateSlugUrl({
                   name: article.title,
