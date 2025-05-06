@@ -1,4 +1,5 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,17 +12,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { LoginBody, LoginBodyType } from "@/schemaValidations/auth.schema";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "@/components/ui/use-toast";
 import { handleErrorApi } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { useAppContext } from "@/components/app-provider";
-import envConfig from "@/config";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { LoaderCircle } from "lucide-react";
-import { useLoginMutation } from "@/queries/useAuth";
+import envConfig from "@/config";
+import Link from "next/link";
+import {
+  RegisterBody,
+  RegisterBodyType,
+} from "@/schemaValidations/auth.schema";
+import { useRegisterMutation } from "@/queries/useAuth";
 
 const getOauthGoogleUrl = () => {
   const rootUrl = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -42,35 +46,31 @@ const getOauthGoogleUrl = () => {
 
 const googleOauthUrl = getOauthGoogleUrl();
 
-export default function LoginForm() {
-  const t = useTranslations("Login");
+export default function RegisterForm() {
+  const t = useTranslations("Register");
   const errorMessageT = useTranslations("ErrorMessage");
-  const loginMutation = useLoginMutation();
+  const registerMutation = useRegisterMutation();
   const router = useRouter();
-  const { setIsAuth, setRole, setPermissions } = useAppContext();
 
-  const form = useForm<LoginBodyType>({
-    resolver: zodResolver(LoginBody),
+  const form = useForm<RegisterBodyType>({
+    resolver: zodResolver(RegisterBody),
     defaultValues: {
       username: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
-  const onSubmit = async (data: LoginBodyType) => {
-    if (loginMutation.isPending) {
+  const onSubmit = async (data: RegisterBodyType) => {
+    if (registerMutation.isPending) {
       return;
     }
     try {
-      const result = await loginMutation.mutateAsync(data);
-      localStorage.setItem("accessToken", result.payload.data.access_token);
-      setIsAuth(true);
-      setRole(result.payload.data.user.role.name);
-      setPermissions(result.payload.data.user.role.permissions);
-      router.push("/");
+      const result = await registerMutation.mutateAsync(data);
       toast({
-        description: result.payload.message,
+        description: result.payload.message || t("RegisterSuccess"),
       });
+      router.push("/login"); // Redirect to login page after successful registration
     } catch (error: any) {
       handleErrorApi({
         error,
@@ -83,9 +83,7 @@ export default function LoginForm() {
     <Card className="mx-auto max-w-sm">
       <CardHeader>
         <CardTitle className="text-2xl">{t("title")}</CardTitle>
-        <CardDescription>
-          Nhập email và mật khẩu của bạn để đăng nhập vào hệ thống
-        </CardDescription>
+        <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -103,7 +101,7 @@ export default function LoginForm() {
                 render={({ field, formState: { errors } }) => (
                   <FormItem>
                     <div className="grid gap-2">
-                      <Label htmlFor="username">Email</Label>
+                      <Label htmlFor="username">{t("email")}</Label>
                       <Input
                         id="username"
                         type="email"
@@ -125,9 +123,7 @@ export default function LoginForm() {
                 render={({ field, formState: { errors } }) => (
                   <FormItem>
                     <div className="grid gap-2">
-                      <div className="flex items-center">
-                        <Label htmlFor="password">Password</Label>
-                      </div>
+                      <Label htmlFor="password">{t("password")}</Label>
                       <Input
                         id="password"
                         type="password"
@@ -142,24 +138,46 @@ export default function LoginForm() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field, formState: { errors } }) => (
+                  <FormItem>
+                    <div className="grid gap-2">
+                      <Label htmlFor="confirmPassword">
+                        {t("confirmPassword")}
+                      </Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        required
+                        {...field}
+                      />
+                      <FormMessage>
+                        {Boolean(errors.confirmPassword?.message) &&
+                          errorMessageT(errors.confirmPassword?.message as any)}
+                      </FormMessage>
+                    </div>
+                  </FormItem>
+                )}
+              />
               <Button type="submit" className="w-full">
-                {loginMutation.isPending && (
+                {registerMutation.isPending && (
                   <LoaderCircle className="w-5 h-5 animate-spin" />
                 )}
                 {t("title")}
               </Button>
-              <div className="text-center text-sm">
-                {t("noAlreadyHaveAccount")}{" "}
-                <Link href="/register" className="underline">
-                  {t("Register")}
-                </Link>
-              </div>
-
               <Link href={googleOauthUrl}>
                 <Button variant="outline" className="w-full" type="button">
-                  Đăng nhập bằng Google
+                  {t("googleSignUp")}
                 </Button>
               </Link>
+              <div className="text-center text-sm">
+                {t("alreadyHaveAccount")}{" "}
+                <Link href="/login" className="underline">
+                  {t("login")}
+                </Link>
+              </div>
             </div>
           </form>
         </Form>

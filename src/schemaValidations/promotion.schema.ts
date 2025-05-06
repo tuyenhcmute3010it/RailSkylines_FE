@@ -212,34 +212,17 @@ export const PromotionSchema = z.object({
 
 export type PromotionSchemaType = z.TypeOf<typeof PromotionSchema>;
 
-// Schema for single promotion response (BE returns ReqPromotionDTO directly)
-// Assuming a wrapper similar to PermissionRes for consistency if your http client adds it
-// If http.get<ReqPromotionDTO> is used directly, this wrapper isn't strictly from BE for single GET
-// but for mutations, the BE returns ReqPromotionDTO directly.
-// For now, let's assume mutations return the raw DTO and list wraps it.
 export const PromotionRes = z.object({
-  // This structure depends on how your `http` client wraps responses.
-  // If it's like the permission example where successful responses have a 'payload' or 'data'.
-  // The provided BE controller returns ResponseEntity<ReqPromotionDTO> directly.
-  // Let's assume your http client provides the data directly for single items.
-  // For consistency with the provided permission example, we can assume a light wrapper or direct data.
-  // Let's use a structure that can be adapted.
-  // If your http.post/put returns the data directly (ReqPromotionDTO), this specific Res type might only be for GET by ID
-  // or you might make your http client always return a consistent structure.
-
-  // For a GET by ID which returns ResponseEntity<ReqPromotionDTO>, the actual data is ReqPromotionDTO.
-  // Let's assume the `data` field holds the ReqPromotionDTO.
   data: PromotionSchema, // For single promotion
   message: z.string().optional(), // Optional message
-  // Add other fields like status, statusCode, error if your http client standardizes this
 });
 export type PromotionResType = z.TypeOf<typeof PromotionRes>; // More accurately ReqPromotionDTO
 
 // Schema for promotion list response (matches ResultPaginationDTO from BE)
 export const PromotionListRes = z.object({
-  // statusCode: z.number(), // These were in PermissionListRes, adapt if your BE sends them
-  // error: z.string().nullable(),
-  // message: z.string(),
+  statusCode: z.number(), // These were in PermissionListRes, adapt if your BE sends them
+  error: z.string().nullable(),
+  message: z.string(),
   meta: z.object({
     page: z.number(),
     pageSize: z.number(),

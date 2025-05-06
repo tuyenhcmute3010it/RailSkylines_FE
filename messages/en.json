@@ -3,11 +3,17 @@
     "title": "RailSkyLines !",
     "description": "Easy ticket booking, smooth journey!",
     "defaultTitle": "RailSkyLines !",
-    "diversity": "Variety of ticket types"
+    "diversity": "Variety of ticket types",
+    "Code": "Code of Promotion",
+    "Discount": "Discount",
+    "ValidUntil": "Date of Expired",
+    "ActivePromotions": "Active Promotions"
   },
   "Login": {
     "title": "Login",
-    "header": "Login | RailSkyLines "
+    "header": "Login | RailSkyLines ",
+    "Register": "Register",
+    "noAlreadyHaveAccount": "No Have Account"
   },
   "Footer": {
     "title": "RailSkyLines !",
@@ -60,7 +66,10 @@
   "ErrorMessage": {
     "invalidEmail": "Invalid Email",
     "required": "This field  is required",
-    "invalidPassword": "This Password must at lest 6 character"
+    "invalidPassword": "This Password must at lest 6 character",
+    "invalid_email": "Invalid email address",
+    "min_6_chars": "Password must be at least 6 characters",
+    "passwords_do_not_match": "Passwords do not match"
   },
   "NavItem": {
     "FindTicket": "Search Ticket",
@@ -629,5 +638,16 @@
     "inactive": "Inactive",
     "expired": "Expired",
     "Code": "Code"
+  },
+  "Register": {
+    "title": "Sign Up",
+    "description": "Enter your email and password to create an account",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "googleSignUp": "Sign up with Google",
+    "alreadyHaveAccount": "Already have an account?",
+    "login": "Log in",
+    "RegisterSuccess": "Registration successful! Please log in."
   }
 }
