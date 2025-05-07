@@ -69,7 +69,12 @@
     "invalidPassword": "This Password must at lest 6 character",
     "invalid_email": "Invalid email address",
     "min_6_chars": "Password must be at least 6 characters",
-    "passwords_do_not_match": "Passwords do not match"
+    "passwords_do_not_match": "Passwords do not match",
+    "Invalid email address": "Please enter a valid email address.",
+    "Password must be at least 8 characters": "Password must be at least 8 characters.",
+    "Passwords do not match": "Passwords do not match.",
+    "Full name is required": "Full name is required.",
+    "Verification code must be 6 characters": "Verification code must be exactly 6 characters."
   },
   "NavItem": {
     "FindTicket": "Search Ticket",
@@ -648,6 +653,25 @@
     "googleSignUp": "Sign up with Google",
     "alreadyHaveAccount": "Already have an account?",
     "login": "Log in",
-    "RegisterSuccess": "Registration successful! Please log in."
+    "RegisterSuccess": "Registration successful! Please log in.",
+    "fullName": "Full Name"
+  },
+
+  "VerifyEmail": {
+    "title": "Verify Email",
+    "description": "Enter the verification code sent to your email.",
+    "email": "Email",
+    "code": "Verification Code",
+    "verify": "Verify",
+    "resendCode": "Resend Code",
+    "backTo": "Back to",
+    "login": "Login",
+    "register": "Register",
+    "or": "or",
+    "VerifySuccess": "Email verified successfully!",
+    "VerifyError": "Verification failed. Please check the code and try again.",
+    "ResendSuccess": "New verification code sent!",
+    "ResendError": "Failed to resend code. Please try again.",
+    "MissingEmail": "No email provided. Please register or log in."
   }
 }

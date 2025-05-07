@@ -6,7 +6,12 @@ import {
   LogoutBodyType,
   RefreshTokenBodyType,
   RefreshTokenResType,
+  RegisterBodyType,
+  RegisterResType,
+  VerifyCodeBodyType,
+  VerifyEmailBodyType,
 } from "@/schemaValidations/auth.schema";
+const prefix = "/api/v1/auth";
 
 const authApiRequest = {
   login: (body: LoginBodyType) =>
@@ -54,6 +59,16 @@ const authApiRequest = {
       baseUrl: "http://localhost:8080",
       credentials: "include",
     }),
+  register: (body: RegisterBodyType) =>
+    http.post<RegisterResType>(`${prefix}/register`, {
+      email: body.email,
+      password: body.password,
+      fullName: body.fullName,
+    }),
+  verifyCode: (body: VerifyCodeBodyType) =>
+    http.post<{ message: string }>(`${prefix}/verify-code`, body),
+  resendCode: (body: VerifyEmailBodyType) =>
+    http.post<{ message: string }>(`${prefix}/verify-email`, body),
 };
 
 export default authApiRequest;

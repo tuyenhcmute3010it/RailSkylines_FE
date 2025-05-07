@@ -2,9 +2,10 @@ import z from "zod";
 
 export const RegisterBody = z
   .object({
-    username: z.string().email("Invalid email address"),
+    email: z.string().email("Invalid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(6, "Confirm password is required"),
+    fullName: z.string().min(1, "Full name is required"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -12,7 +13,6 @@ export const RegisterBody = z
   });
 
 export type RegisterBodyType = z.infer<typeof RegisterBody>;
-
 export const LoginBody = z
   .object({
     username: z.string().min(1, { message: "required" }).email({
@@ -98,3 +98,25 @@ export const LogoutBody = z
   .strict();
 
 export type LogoutBodyType = z.TypeOf<typeof LogoutBody>;
+
+export const VerifyCodeBody = z.object({
+  email: z.string().email("Invalid email address"),
+  code: z.string().length(6, "Verification code must be 6 characters"),
+});
+
+export const VerifyEmailBody = z.object({
+  email: z.string().email("Invalid email address"),
+});
+
+export type VerifyCodeBodyType = z.infer<typeof VerifyCodeBody>;
+export type VerifyEmailBodyType = z.infer<typeof VerifyEmailBody>;
+export interface RegisterResType {
+  userId: number;
+  email: string;
+  fullName: string;
+  citizenId: string | null;
+  phoneNumber: string | null;
+  avatar: string | null;
+  createdAt: string;
+  codeExpired: string;
+}
