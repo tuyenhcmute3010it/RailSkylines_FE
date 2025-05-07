@@ -1,6 +1,9 @@
 import authApiRequest from "@/apiRequests/auth";
 import http from "@/lib/http";
-import { RegisterBodyType } from "@/schemaValidations/auth.schema";
+import {
+  RegisterBodyType,
+  VerifyEmailBodyType,
+} from "@/schemaValidations/auth.schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useLoginMutation = () => {
@@ -20,14 +23,6 @@ export const useSetTokenToCookieMutation = () => {
     mutationFn: authApiRequest.setTokenToCookie,
   });
 };
-// export const useRegisterMutation = () => {
-//   return useMutation({
-//     mutationFn: async (body: RegisterBodyType) => {
-//       const response = await http.post("/api/v1/auth/register", body);
-//       return response;
-//     },
-//   });
-// };
 
 export const useRegisterMutation = () => {
   const queryClient = useQueryClient();
@@ -54,13 +49,59 @@ export const useVerifyCodeMutation = () => {
 };
 
 export const useResendCodeMutation = () => {
-  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: authApiRequest.resendCode,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["auth"],
+    mutationFn: async (body: VerifyEmailBodyType) => {
+      console.log(
+        "useResendCodeMutation: Starting mutation with payload:",
+        body
+      );
+
+      // Introduce a 5-second delay to simulate pending state
+
+      console.log("useResendCodeMutation: Delay completed, sending request...");
+      try {
+        const response = await authApiRequest.resendCode(body);
+        console.log("useResendCodeMutation: Raw response:", {
+          status: response.status,
+          headers: Object.fromEntries(response.headers.entries()),
+        });
+
+        // Check if response is JSON or plain text
+        const contentType = response.headers.get("content-type") || "";
+        let result: ResendCodeResponse;
+
+        if (contentType.includes("application/json")) {
+          result = await response.json();
+          console.log("useResendCodeMutation: Parsed JSON response:", result);
+        } else {
+          // Handle plain text response
+          const text = await response.text();
+          result = { message: text || "new verify code sent" };
+          console.log(
+            "useResendCodeMutation: Parsed plain text response:",
+            result
+          );
+        }
+
+        console.log("useResendCodeMutation: Processed response:", result);
+        return result;
+      } catch (error: any) {
+        console.error("useResendCodeMutation: Request failed:", {
+          error: error.message,
+          stack: error.stack,
+        });
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      console.log("useResendCodeMutation: Success:", data);
+    },
+    onError: (error: any) => {
+      console.error("useResendCodeMutation: Error after mutation:", {
+        error: error.message,
+        stack: error.stack,
       });
+      throw error;
     },
   });
 };

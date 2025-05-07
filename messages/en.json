@@ -7,13 +7,18 @@
     "Code": "Code of Promotion",
     "Discount": "Discount",
     "ValidUntil": "Date of Expired",
-    "ActivePromotions": "Active Promotions"
+    "ActivePromotions": "Active Promotions",
+    "NoPromotionsAvailable": "No Promotions Available"
   },
   "Login": {
     "title": "Login",
     "header": "Login | RailSkyLines ",
     "Register": "Register",
-    "noAlreadyHaveAccount": "No Have Account"
+    "noAlreadyHaveAccount": "No Have Account",
+    "description": "Description",
+    "googleLogin": "Login With Google",
+    "email": "Email",
+    "password": "Password"
   },
   "Footer": {
     "title": "RailSkyLines !",
