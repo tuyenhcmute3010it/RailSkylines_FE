@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "@/components/ui/use-toast";
+import { useCreateBookingMutation } from "@/queries/useBooking";
+import { CreateBookingBodyType } from "@/schemaValidations/booking.shema";
 
 interface CartItem {
   trainId: string;
@@ -46,7 +49,11 @@ export default function Payment() {
     string | null
   >(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const insuranceFee = 1000;
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+
+  const { mutate: createBooking, isPending: isLoading } =
+    useCreateBookingMutation();
 
   // Timer countdown and expiration check
   useEffect(() => {
@@ -58,7 +65,11 @@ export default function Payment() {
     const interval = setInterval(() => {
       setTimer((prev) => {
         if (prev <= 1) {
-          alert("Thời gian giữ vé đã hết. Vui lòng chọn lại vé.");
+          toast({
+            variant: "destructive",
+            title: "Lỗi",
+            description: "Thời gian giữ vé đã hết. Vui lòng chọn lại vé.",
+          });
           router.push("/search");
           return 0;
         }
@@ -74,7 +85,12 @@ export default function Payment() {
       });
 
       if (allExpired) {
-        alert("Tất cả vé đã hết thời gian tạm giữ. Vui lòng chọn lại vé.");
+        toast({
+          variant: "destructive",
+          title: "Lỗi",
+          description:
+            "Tất cả vé đã hết thời gian tạm giữ. Vui lòng chọn lại vé.",
+        });
         router.push("/search");
         clearInterval(interval);
       }
@@ -111,7 +127,7 @@ export default function Payment() {
 
   // Calculate total price
   const calculateTotal = () => {
-    return cartItems.reduce((sum, item) => sum + item.price + insuranceFee, 0);
+    return cartItems.reduce((sum, item) => sum + item.price, 0);
   };
 
   // Handle passenger info input
@@ -132,10 +148,107 @@ export default function Payment() {
     setCartItems(updatedItems);
     setPassengerInfo(updatedInfo);
     router.replace(
-      `/payment?tickets=${JSON.stringify(updatedItems)}&timer=${timer}`
+      `/payment?tickets=${encodeURIComponent(
+        JSON.stringify(updatedItems)
+      )}&timer=${timer}`
     );
   };
 
+  // Map frontend passengerType to backend CustomerObjectEnum
+  const mapPassengerTypeToCustomerObject = (
+    type: string
+  ): "ADULT" | "CHILD" | "STUDENT" => {
+    switch (type) {
+      case "adult":
+        return "ADULT";
+      case "child":
+        return "CHILD";
+      case "student":
+        return "STUDENT";
+      default:
+        return "ADULT";
+    }
+  };
+
+  const handlePayment = () => {
+    if (step === 3) {
+      const ticketsParam = JSON.stringify(
+        cartItems.map((item) => ({
+          seatNumber: item.seatNumber,
+          price: item.price,
+        }))
+      );
+
+      const bookingBody: CreateBookingBodyType = {
+        contactEmail,
+        contactPhone: contactPhone || undefined,
+        promotionIds: promoCode ? [parseInt(promoCode)] : undefined,
+        tickets: passengerInfo.map((info) => ({
+          name: info.fullName,
+          citizenId: info.idNumber,
+          customerObject: info.passengerType.toLowerCase(), // Ensure lowercase: adult, child, student
+        })),
+        paymentType:
+          selectedPaymentMethod === "vnpay_qr"
+            ? "VNPay"
+            : selectedPaymentMethod,
+      };
+
+      console.log(">>>>>>> Sending createBooking request:", {
+        bookingBody,
+        ticketsParam,
+      });
+
+      createBooking(
+        {
+          body: bookingBody,
+          ticketsParam,
+        },
+        {
+          onSuccess: (response) => {
+            console.log(">>>>>>> createBooking onSuccess response:", response);
+            if (response.payload.data) {
+              console.log(
+                ">>>>>>> Redirecting to VNPay URL:",
+                response.payload.data
+              );
+              window.location.href = response.payload.data;
+            } else {
+              console.log(">>>>>>> No data in response:", response);
+              toast({
+                variant: "destructive",
+                title: "Lỗi",
+                description: response.payload.message || "Không thể tạo đặt vé",
+              });
+            }
+          },
+          onError: (error: any) => {
+            console.log(">>>>>>> createBooking onError:", {
+              error,
+              status: error.status,
+              payload: error.payload,
+              message: error.message,
+            });
+            let errorMessage =
+              error.message || "Lỗi khi tạo đặt vé. Vui lòng thử lại.";
+            if (error.payload && typeof error.payload === "string") {
+              const match = error.payload.match(
+                /<p><b>Message<\/b> (.*?)<\/p>/
+              );
+              if (match && match[1]) {
+                errorMessage = match[1];
+              }
+            }
+            toast({
+              variant: "destructive",
+              title: "Lỗi",
+              description: errorMessage,
+            });
+          },
+        }
+      );
+    }
+  };
   // Step navigation
   const handleNextStep = () => {
     if (step === 1) {
@@ -143,34 +256,43 @@ export default function Payment() {
         (info) => info.fullName && info.idNumber
       );
       if (!isValid) {
-        alert("Vui lòng điền đầy đủ thông tin hành khách!");
+        toast({
+          variant: "destructive",
+          title: "Lỗi",
+          description: "Vui lòng điền đầy đủ thông tin hành khách!",
+        });
+        return;
+      }
+      if (!contactEmail) {
+        toast({
+          variant: "destructive",
+          title: "Lỗi",
+          description: "Vui lòng nhập email liên hệ!",
+        });
         return;
       }
       if (!selectedPaymentMethod) {
-        alert("Vui lòng chọn phương thức thanh toán!");
+        toast({
+          variant: "destructive",
+          title: "Lỗi",
+          description: "Vui lòng chọn phương thức thanh toán!",
+        });
         return;
       }
       if (!termsAccepted) {
-        alert("Vui lòng đồng ý với các điều khoản và quy định!");
+        toast({
+          variant: "destructive",
+          title: "Lỗi",
+          description: "Vui lòng đồng ý với các điều khoản và quy định!",
+        });
         return;
       }
     }
-    setStep((prev) => Math.min(prev + 1, 4));
+    setStep((prev) => Math.min(prev + 1, 3));
   };
 
   const handlePreviousStep = () => {
     setStep((prev) => Math.max(prev - 1, 1));
-  };
-
-  // Handle payment (mock)
-  const handlePayment = () => {
-    if (step === 3) {
-      setStep(4);
-      setTimeout(() => {
-        alert("Thanh toán thành công! Vé của bạn đã được xác nhận.");
-        router.push("/confirmation");
-      }, 1000);
-    }
   };
 
   const renderStepContent = () => {
@@ -179,6 +301,28 @@ export default function Payment() {
         return (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold">Thông tin giỏ vé</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="font-semibold">Email liên hệ</label>
+                <Input
+                  type="email"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  placeholder="Nhập email liên hệ"
+                  className="w-full mt-1"
+                />
+              </div>
+              <div>
+                <label className="font-semibold">Số điện thoại liên hệ</label>
+                <Input
+                  type="tel"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  placeholder="Nhập số điện thoại (tùy chọn)"
+                  className="w-full mt-1"
+                />
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
@@ -188,7 +332,6 @@ export default function Payment() {
                     <th className="p-2 border">Giá vé</th>
                     <th className="p-2 border">Giảm đối tượng</th>
                     <th className="p-2 border">Khuyến mại</th>
-                    <th className="p-2 border">Bảo hiểm</th>
                     <th className="p-2 border">Thành tiền (VNĐ)</th>
                     <th className="p-2 border"></th>
                   </tr>
@@ -276,17 +419,16 @@ export default function Payment() {
                         <td className="p-2 border">
                           Không có khuyến mại cho vé này
                         </td>
+
                         <td className="p-2 border">
-                          {formatPrice(insuranceFee)}
-                        </td>
-                        <td className="p-2 border">
-                          {formatPrice(item.price + insuranceFee)}
+                          {formatPrice(item.price)}
                         </td>
                         <td className="p-2 border">
                           <Button
                             variant="destructive"
                             size="sm"
                             onClick={() => removeTicket(index)}
+                            disabled={isExpired}
                           >
                             <Trash2 />
                           </Button>
@@ -396,7 +538,7 @@ export default function Payment() {
                   Tôi đã đọc kỹ và đồng ý tuân thủ tất cả các{" "}
                   <Link
                     href="/term-of-service"
-                    className=" text-md font-semibold text-blue-500 underline"
+                    className="text-md font-semibold text-blue-500 underline"
                     target="_blank"
                   >
                     quy định mua vé trực tuyến
@@ -404,7 +546,7 @@ export default function Payment() {
                   ,{" "}
                   <Link
                     href="/promotion"
-                    className=" text-md font-semibold text-blue-500 underline"
+                    className="text-md font-semibold text-blue-500 underline"
                     target="_blank"
                   >
                     chương trình khuyến mại
@@ -414,10 +556,11 @@ export default function Payment() {
                 </label>
               </div>
 
-              <div className="flex justify-end ">
+              <div className="flex justify-end">
                 <Button
                   className="bg-blue-600 hover:bg-blue-700"
                   onClick={handleNextStep}
+                  disabled={isLoading}
                 >
                   Tiếp tục
                 </Button>
@@ -431,6 +574,14 @@ export default function Payment() {
           <div className="space-y-6">
             <h2 className="text-xl font-semibold">Xác nhận thông tin</h2>
             <h3 className="text-lg font-semibold">Thông tin vé mua</h3>
+            <div className="space-y-4">
+              <p>
+                <strong>Email liên hệ:</strong> {contactEmail}
+              </p>
+              <p>
+                <strong>Số điện thoại:</strong> {contactPhone || "Không có"}
+              </p>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
@@ -486,16 +637,16 @@ export default function Payment() {
                           {formatPrice(item.price)}₫
                         </td>
                         <td className="p-2 border">
-                          {formatPrice(item.price + insuranceFee)}₫
+                          {formatPrice(item.price)}₫
                         </td>
                       </tr>
                     );
                   })}
                   <tr>
                     <td className="p-2 border-l border-t border-b"></td>
-                    <td className="p-2 p-2 border-y border-gray-300"></td>
-                    <td className="p-2 p-2 border-y border-gray-300"></td>
-                    <td className="p-2  font-semibold text-md border-y border-gray-300">
+                    <td className="p-2 border-y border-gray-300"></td>
+                    <td className="p-2 border-y border-gray-300"></td>
+                    <td className="p-2 font-semibold text-md border-y border-gray-300">
                       Tổng Tiền
                     </td>
                     <td className="p-2 border text-lg font-semibold">
@@ -518,6 +669,7 @@ export default function Payment() {
               <Button
                 className="bg-blue-600 hover:bg-blue-700"
                 onClick={handleNextStep}
+                disabled={isLoading}
               >
                 Đồng ý xác nhận
               </Button>
@@ -545,16 +697,18 @@ export default function Payment() {
             <p className="text-sm text-gray-600">
               Nhấn "Xác nhận thanh toán" để hoàn tất giao dịch.
             </p>
-          </div>
-        );
-
-      case 4: // Hoàn tất
-        return (
-          <div className="text-center space-y-4">
-            <h2 className="text-xl font-semibold">Hoàn tất thanh toán</h2>
-            <p className="text-sm text-gray-600">
-              Đang xử lý thanh toán. Vui lòng chờ trong giây lát...
-            </p>
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={handlePreviousStep}>
+                Quay lại
+              </Button>
+              <Button
+                className="bg-green-600 hover:bg-green-700"
+                onClick={handlePayment}
+                disabled={isLoading}
+              >
+                {isLoading ? "Đang xử lý..." : "Xác nhận thanh toán"}
+              </Button>
+            </div>
           </div>
         );
 
@@ -571,54 +725,24 @@ export default function Payment() {
 
       {/* Step Navigation */}
       <div className="flex justify-between mb-6">
-        {[
-          "Xác nhận thông tin",
-          "Xác nhận thông tin",
-          "Thanh toán",
-          "Hoàn tất",
-        ].map((label, index) => (
-          <div
-            key={index}
-            className={`flex-1 text-center p-2 ${
-              step === index + 1
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700"
-            }`}
-          >
-            {index + 1}. {label}
-          </div>
-        ))}
+        {["Xác nhận thông tin", "Xác nhận thông tin", "Thanh toán"].map(
+          (label, index) => (
+            <div
+              key={index}
+              className={`flex-1 text-center p-2 ${
+                step === index + 1
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              {index + 1}. {label}
+            </div>
+          )
+        )}
       </div>
 
       {cartItems.length > 0 ? (
-        <div className="grid gap-6">
-          {renderStepContent()}
-          {step > 2 && (
-            <div className="flex justify-between mt-4">
-              {step > 1 && step < 4 && (
-                <Button variant="outline" onClick={handlePreviousStep}>
-                  Quay lại
-                </Button>
-              )}
-              {step < 3 && (
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700"
-                  onClick={handleNextStep}
-                >
-                  Tiếp tục
-                </Button>
-              )}
-              {step === 3 && (
-                <Button
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={handlePayment}
-                >
-                  Xác nhận thanh toán
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
+        <div className="grid gap-6">{renderStepContent()}</div>
       ) : (
         <p className="text-center text-gray-500">
           Không có vé nào để thanh toán. Vui lòng quay lại trang chọn vé.

@@ -390,7 +390,7 @@ export default function Search() {
         try {
           await updateSeatMutation.mutateAsync({
             id: seatData.seatId,
-            seatStatus: "pending",
+            // seatStatus: "pending",
             seatNumber: seatData.seatNumber,
             seatType: seatData.seatType,
             price: seatData.price,
@@ -414,9 +414,7 @@ export default function Search() {
 
     if (!currentSeats.includes(seat)) {
       const seatData = selectedCoach.seatData.find((s) => s.seatId === seat);
-      const price = seatData
-        ? seatData.price * (1 - selectedCoach.discount / 100)
-        : selectedCoach.basePrice;
+      const price = seatData ? seatData.price : selectedCoach.basePrice;
       const newCartItem: CartItem = {
         trainId: selectedTrain.id,
         trainName: selectedTrain.name,
@@ -762,8 +760,7 @@ export default function Search() {
                                     (s) => s.seatId === seat
                                   );
                                   const price = seatData
-                                    ? seatData.price *
-                                      (1 - selectedCoach.discount / 100)
+                                    ? seatData.price
                                     : selectedCoach.basePrice;
                                   return (
                                     <div key={seat} className="relative group">
@@ -840,8 +837,7 @@ export default function Search() {
                                     (s) => s.seatId === seat
                                   );
                                   const price = seatData
-                                    ? seatData.price *
-                                      (1 - selectedCoach.discount / 100)
+                                    ? seatData.price
                                     : selectedCoach.basePrice;
                                   return (
                                     <div key={seat} className="relative group">
@@ -918,8 +914,7 @@ export default function Search() {
                                     (s) => s.seatId === seat
                                   );
                                   const price = seatData
-                                    ? seatData.price *
-                                      (1 - selectedCoach.discount / 100)
+                                    ? seatData.price
                                     : selectedCoach.basePrice;
                                   return (
                                     <div key={seat} className="relative group">
