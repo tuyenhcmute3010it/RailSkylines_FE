@@ -1,304 +1,3 @@
-// "use client";
-// import { useSearchParams, useRouter } from "next/navigation";
-// import { useEffect, useState } from "react";
-// import { Button } from "@/components/ui/button";
-// import { toast } from "@/components/ui/use-toast";
-// import { useQuery } from "@tanstack/react-query";
-// import Link from "next/link";
-// import bookingApiRequest from "@/apiRequests/booking";
-
-// interface Ticket {
-//   ticketId: number;
-//   customerObject: "adult" | "children" | "student";
-//   ticketCode: string;
-//   name: string;
-//   citizenId: string;
-//   price: number;
-//   startDay: string | null;
-//   ticketStatus: string;
-//   seat: {
-//     seatId: number;
-//     price: number;
-//     seatStatus: string;
-//   };
-//   trainTrip: {
-//     trainTripId: number;
-//     departure: string | null;
-//     arrival: string | null;
-//     train: {
-//       trainId: number;
-//       trainName: string;
-//     };
-//   };
-// }
-
-// interface Booking {
-//   bookingId: number;
-//   bookingCode: string;
-//   vnpTxnRef: string;
-//   transactionId: string;
-//   contactEmail: string;
-//   contactPhone?: string;
-//   totalPrice: number;
-//   paymentType: string;
-//   paymentStatus: string;
-//   date: string;
-//   payAt: string;
-//   tickets: Ticket[];
-//   promotions: { promotionId: number; discount: number }[];
-// }
-
-// interface BookingDetailType {
-//   bookingId: string;
-//   transactionId: string;
-//   contactEmail: string;
-//   contactPhone?: string;
-//   totalAmount: number;
-//   paymentType: string;
-//   paymentStatus: string;
-//   bookingDate: string;
-//   tickets: {
-//     ticketId: number;
-//     ticketCode: string; // Added
-//     name: string;
-//     citizenId: string;
-//     customerObject: "adult" | "children" | "student";
-//     trainId: string;
-//     trainName: string;
-//     coachName: string;
-//     seatNumber: number;
-//     departure: string | null;
-//     arrival: string | null;
-//     price: number;
-//   }[];
-//   promotionIds?: number[];
-// }
-
-// export default function BookingConfirmation() {
-//   const searchParams = useSearchParams();
-//   const router = useRouter();
-//   const bookingId = searchParams.get("bookingId");
-//   const [bookingDetails, setBookingDetails] =
-//     useState<BookingDetailType | null>(null);
-
-//   // Fetch booking details
-//   const { data, isLoading, error } = useQuery({
-//     queryKey: ["booking", bookingId],
-//     queryFn: () => bookingApiRequest.getBookingById(bookingId!),
-//     enabled: !!bookingId,
-//   });
-
-//   useEffect(() => {
-//     if (data) {
-//       const booking: Booking = data.payload.data.data; // Access nested data.data
-//       const mappedDetails: BookingDetailType = {
-//         bookingId: booking.vnpTxnRef,
-//         transactionId: booking.transactionId,
-//         contactEmail: booking.contactEmail,
-//         contactPhone: booking.contactPhone?.trim() || undefined,
-//         totalAmount: booking.totalPrice,
-//         paymentType: booking.paymentType,
-//         paymentStatus: booking.paymentStatus,
-//         bookingDate: booking.date,
-//         tickets: booking.tickets.map((ticket) => ({
-//           ticketId: ticket.ticketId,
-//           ticketCode: ticket.ticketCode, // Added
-//           name: ticket.name,
-//           citizenId: ticket.citizenId,
-//           customerObject: ticket.customerObject,
-//           trainId: ticket.trainTrip.train.trainId?.toString() || "",
-//           trainName: ticket.trainTrip.train.trainName,
-//           coachName: "Coach A", // Replace with actual coachName if available
-//           seatNumber: ticket.seat.seatId,
-//           departure: ticket.trainTrip.departure,
-//           arrival: ticket.trainTrip.arrival,
-//           price: ticket.price,
-//         })),
-//         promotionIds: booking.promotions?.map((p) => p.promotionId),
-//       };
-//       setBookingDetails(mappedDetails);
-//     }
-//     if (error) {
-//       toast({
-//         variant: "destructive",
-//         title: "Lỗi",
-//         description: "Không thể tải thông tin đặt vé. Vui lòng thử lại.",
-//       });
-//       router.push("/search");
-//     }
-//   }, [data, error, router]);
-
-//   // Format price
-//   const formatPrice = (price: number) => {
-//     return new Intl.NumberFormat("vi-VN", {
-//       style: "currency",
-//       currency: "VND",
-//     })
-//       .format(price)
-//       .replace("₫", "");
-//   };
-
-//   // Format date
-//   const formatDate = (dateStr: string) => {
-//     const date = new Date(dateStr);
-//     return date.toLocaleString("vi-VN", {
-//       day: "2-digit",
-//       month: "2-digit",
-//       year: "numeric",
-//       hour: "2-digit",
-//       minute: "2-digit",
-//     });
-//   };
-
-//   if (isLoading) {
-//     return (
-//       <div className="container mx-auto p-4 max-w-5xl text-center">
-//         <p className="text-lg">Đang tải thông tin đặt vé...</p>
-//       </div>
-//     );
-//   }
-
-//   if (!bookingDetails || !bookingId) {
-//     return (
-//       <div className="container mx-auto p-4 max-w-5xl text-center">
-//         <p className="text-lg text-red-500">Không tìm thấy thông tin đặt vé.</p>
-//         <Button
-//           className="mt-4 bg-blue-600 hover:bg-blue-700"
-//           onClick={() => router.push("/search")}
-//         >
-//           Quay lại tìm kiếm
-//         </Button>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="container mx-auto p-4 max-w-5xl">
-//       <h1 className="text-2xl font-bold mb-6 text-center">
-//         Xác Nhận Đặt Vé - Đường Sắt RailSkyLine
-//       </h1>
-//       <div className="space-y-6">
-//         <h2 className="text-xl font-semibold">Đặt Vé Thành Công</h2>
-//         <p className="text-lg text-green-600">
-//           Cảm ơn bạn đã đặt vé! Thanh toán đã hoàn tất.
-//         </p>
-//         <div className="space-y-4">
-//           <p>
-//             <strong>Mã đặt vé:</strong> {bookingDetails.bookingId}
-//           </p>
-//           <p>
-//             <strong>Mã giao dịch:</strong> {bookingDetails.transactionId}
-//           </p>
-//           <p>
-//             <strong>Email liên hệ:</strong> {bookingDetails.contactEmail}
-//           </p>
-//           <p>
-//             <strong>Số điện thoại:</strong>{" "}
-//             {bookingDetails.contactPhone || "Không có"}
-//           </p>
-//           <p>
-//             <strong>Ngày đặt vé:</strong>{" "}
-//             {formatDate(bookingDetails.bookingDate)}
-//           </p>
-//           <p>
-//             <strong>Tổng tiền:</strong>{" "}
-//             {formatPrice(bookingDetails.totalAmount)} VND
-//           </p>
-//           <p>
-//             <strong>Phương thức thanh toán:</strong>{" "}
-//             {bookingDetails.paymentType}
-//           </p>
-//         </div>
-
-//         {bookingDetails.tickets && bookingDetails.tickets.length > 0 ? (
-//           <>
-//             <h3 className="text-lg font-semibold">Thông tin vé đã đặt</h3>
-//             <div className="overflow-x-auto">
-//               <table className="w-full text-sm border-collapse">
-//                 <thead>
-//                   <tr className="bg-gray-100">
-//                     <th className="p-2 border">STT</th>
-//                     <th className="p-2 border">Thông tin vé</th>
-//                     <th className="p-2 border">Giá (VND)</th>
-//                     <th className="p-2 border">Thành tiền (VND)</th>
-//                   </tr>
-//                 </thead>
-//                 <tbody>
-//                   {bookingDetails.tickets.map((ticket, index) => (
-//                     <tr key={ticket.ticketId}>
-//                       <td className="p-2 border">{index + 1}</td>
-//                       <td className="p-2 border">
-//                         <div className="font-bold">Họ tên: {ticket.name}</div>
-//                         <div>Mã vé: {ticket.ticketCode}</div> {/* Added */}
-//                         <div>
-//                           Đối tượng:{" "}
-//                           {ticket.customerObject === "adult"
-//                             ? "Người lớn"
-//                             : ticket.customerObject === "children"
-//                             ? "Trẻ em"
-//                             : "Sinh viên"}
-//                         </div>
-//                         <div>Số giấy tờ: {ticket.citizenId}</div>
-//                         <div>
-//                           Hành trình: {ticket.trainName} từ{" "}
-//                           {ticket.departure || "N/A"} đến{" "}
-//                           {ticket.arrival || "N/A"}, Toa {ticket.coachName}, Ghế{" "}
-//                           {ticket.seatNumber}
-//                         </div>
-//                       </td>
-//                       <td className="p-2 border">
-//                         {formatPrice(ticket.price)}
-//                       </td>
-//                       <td className="p-2 border">
-//                         {formatPrice(ticket.price)}
-//                       </td>
-//                     </tr>
-//                   ))}
-//                   <tr>
-//                     <td className="p-2 border-l border-t border-b"></td>
-//                     <td className="p-2 border-y border-gray-300"></td>
-//                     <td className="p-2 font-semibold text-md border-y border-gray-300">
-//                       Tổng Tiền
-//                     </td>
-//                     <td className="p-2 border text-lg font-semibold">
-//                       {formatPrice(bookingDetails.totalAmount)} VND
-//                     </td>
-//                   </tr>
-//                 </tbody>
-//               </table>
-//             </div>
-//           </>
-//         ) : (
-//           <p className="text-sm text-gray-600">
-//             Không có thông tin vé chi tiết. Vui lòng liên hệ hỗ trợ để biết thêm
-//             chi tiết.
-//           </p>
-//         )}
-
-//         <p className="text-sm text-gray-600">
-//           Vui lòng lưu lại mã đặt vé ({bookingDetails.bookingId}) để tra cứu
-//           hoặc liên hệ hỗ trợ. Vé đã được gửi qua email{" "}
-//           {bookingDetails.contactEmail}.
-//         </p>
-
-//         <div className="flex justify-between">
-//           <Button
-//             className="bg-blue-600 hover:bg-blue-700"
-//             onClick={() => router.push("/search")}
-//           >
-//             Tìm vé mới
-//           </Button>
-//           <Link href="/booking-history">
-//             <Button className="bg-green-600 hover:bg-green-700">
-//               Xem lịch sử đặt vé
-//             </Button>
-//           </Link>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
 "use client";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
@@ -307,8 +6,10 @@ import { toast } from "@/components/ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import bookingApiRequest from "@/apiRequests/booking";
-import jsPDF from "jspdf";
 import QRCodeTicket from "@/components/QRCodeTicket";
+import QRCodeTicketForPdf from "@/components/QRCodeForPdf";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface Ticket {
   ticketId: number;
@@ -383,7 +84,25 @@ export default function BookingConfirmation() {
   const bookingId = searchParams.get("bookingId");
   const [bookingDetails, setBookingDetails] =
     useState<BookingDetailType | null>(null);
-  const qrCanvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
+  const qrCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const pdfTemplateRef = useRef<HTMLDivElement | null>(null);
+  const [logoLoaded, setLogoLoaded] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [currentTicket, setCurrentTicket] = useState<
+    BookingDetailType["tickets"][0] | null
+  >(null);
+
+  // Pre-load logo
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/logo.png";
+    img.crossOrigin = "anonymous";
+    img.onload = () => setLogoLoaded(true);
+    img.onerror = () => {
+      console.error("Failed to load logo");
+      setLogoLoaded(false);
+    };
+  }, []);
 
   // Fetch booking details
   const { data, isLoading, error } = useQuery({
@@ -425,8 +144,8 @@ export default function BookingConfirmation() {
     if (error) {
       toast({
         variant: "destructive",
-        title: "Lỗi",
-        description: "Không thể tải thông tin đặt vé. Vui lòng thử lại.",
+        title: "Error",
+        description: "Unable to load booking information. Please try again.",
       });
       router.push("/search");
     }
@@ -434,18 +153,18 @@ export default function BookingConfirmation() {
 
   // Format price
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("vi-VN", {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "VND",
     })
       .format(price)
-      .replace("₫", "");
+      .replace("VND", "");
   };
 
   // Format date
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleString("vi-VN", {
+    return date.toLocaleString("en-US", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -460,51 +179,73 @@ export default function BookingConfirmation() {
   };
 
   // Download ticket as PDF
-  const downloadTicketPDF = (ticket: BookingDetailType["tickets"][0]) => {
-    const pdf = new jsPDF();
-    pdf.setFontSize(16);
-    pdf.text("Vé Tàu - Đường Sắt RailSkyLine", 105, 20, { align: "center" });
-    pdf.setFontSize(12);
-    pdf.text(`Mã vé: ${ticket.ticketCode}`, 20, 40);
-    pdf.text(`Họ tên: ${ticket.name}`, 20, 50);
-    pdf.text(`Số giấy tờ: ${ticket.citizenId}`, 20, 60);
-    pdf.text(
-      `Đối tượng: ${
-        ticket.customerObject === "adult"
-          ? "Người lớn"
-          : ticket.customerObject === "children"
-          ? "Trẻ em"
-          : "Sinh viên"
-      }`,
-      20,
-      70
-    );
-    pdf.text(
-      `Hành trình: ${ticket.trainName} từ ${ticket.departure || "N/A"} đến ${
-        ticket.arrival || "N/A"
-      }`,
-      20,
-      80
-    );
-    pdf.text(`Toa: ${ticket.coachName}`, 20, 90);
-    pdf.text(`Ghế: ${ticket.seatNumber}`, 20, 100);
-    pdf.text(`Ngày khởi hành: ${formatNullableDate(ticket.startDay)}`, 20, 110);
-    pdf.text(`Giá vé: ${formatPrice(ticket.price)} VND`, 20, 120);
-
-    // Add QR code
-    const canvas = qrCanvasRefs.current.get(ticket.ticketId);
-    if (canvas) {
-      const qrImage = canvas.toDataURL("image/png");
-      pdf.addImage(qrImage, "PNG", 140, 40, 50, 50);
+  const downloadTicketPDF = async (ticket: BookingDetailType["tickets"][0]) => {
+    if (!pdfTemplateRef.current || !logoLoaded) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          "Failed to generate PDF. Please ensure the logo is loaded.",
+      });
+      return;
     }
 
+    setIsGeneratingPDF(true);
+    setCurrentTicket(ticket); // Set the current ticket to render its template
+
+    // Ensure QR code and content are rendered
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    // Temporarily make the template visible
+    pdfTemplateRef.current.className =
+      "p-6 bg-white border rounded shadow-lg w-[210mm] h-[400mm]";
+
+    // Use html2canvas to capture the styled HTML
+    const canvas = await html2canvas(pdfTemplateRef.current, {
+      scale: 2,
+      useCORS: true,
+      logging: true,
+    });
+    const imgData = canvas.toDataURL("image/png");
+
+    // Hide the template again
+    pdfTemplateRef.current.className =
+      "hidden p-6 bg-white border rounded shadow-lg w-[210mm] h-[400mm]";
+
+    // Validate imgData
+    if (!imgData.startsWith("data:image/png;base64,")) {
+      console.error("Invalid image data:", imgData);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to generate PDF due to invalid image data.",
+      });
+      setIsGeneratingPDF(false);
+      setCurrentTicket(null);
+      return;
+    }
+
+    // Create PDF with jsPDF
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: [210, 400], // Custom height to match template (400mm)
+    });
+
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
     pdf.save(`ticket_${ticket.ticketCode}.pdf`);
+
+    setIsGeneratingPDF(false);
+    setCurrentTicket(null);
   };
 
   if (isLoading) {
     return (
       <div className="container mx-auto p-4 max-w-5xl text-center">
-        <p className="text-lg">Đang tải thông tin đặt vé...</p>
+        <p className="text-lg">Loading booking information...</p>
       </div>
     );
   }
@@ -512,12 +253,12 @@ export default function BookingConfirmation() {
   if (!bookingDetails || !bookingId) {
     return (
       <div className="container mx-auto p-4 max-w-5xl text-center">
-        <p className="text-lg text-red-500">Không tìm thấy thông tin đặt vé.</p>
+        <p className="text-lg text-red-500">Booking information not found.</p>
         <Button
           className="mt-4 bg-blue-600 hover:bg-blue-700"
           onClick={() => router.push("/search")}
         >
-          Quay lại tìm kiếm
+          Back to Search
         </Button>
       </div>
     );
@@ -525,55 +266,237 @@ export default function BookingConfirmation() {
 
   return (
     <div className="container mx-auto p-4 max-w-5xl">
+      {/* Hidden PDF Template for the current ticket */}
+      <div
+        ref={pdfTemplateRef}
+        className="hidden p-6 bg-white border rounded shadow-lg w-[210mm] h-[400mm]"
+      >
+        {currentTicket && (
+          <div className="text-center">
+            {/* Header with Logo and Title */}
+            <div className="flex items-center justify-between mb-4">
+              <img
+                src="/logo.png"
+                alt="Logo"
+                className="w-12 h-12"
+                crossOrigin="anonymous"
+              />
+              <h1 className="text-2xl font-bold text-blue-600">THẺ LÊN TÀU</h1>
+              <div className="w-12 h-12"></div>
+            </div>
+
+            {/* Boarding Pass Info */}
+            <p className="text-sm mb-2">
+              Khách hàng quý khách hàng, xin trình bày thẻ này khi lên tàu. Nếu
+              quý khách không có thẻ này, vui lòng liên hệ nhân viên kiểm tra để
+              được hỗ trợ.
+            </p>
+
+            {/* Journey Information Box */}
+            <div className="border border-gray-300 p-4 mb-4 bg-gray-50">
+              <h2 className="text-lg font-semibold text-blue-600 mb-2">
+                Thông tin hành trình
+              </h2>
+              <p>
+                Ga đi - Ga đến:{" "}
+                <span className="text-green-600">
+                  {currentTicket.departure || "N/A"} -{" "}
+                  {currentTicket.arrival || "N/A"}
+                </span>
+              </p>
+              <p>
+                Tàu/Trains:{" "}
+                <span className="text-green-600">
+                  {currentTicket.trainName || "N/A"}
+                </span>
+              </p>
+              <p>
+                Ngày/Đi/Date:{" "}
+                <span className="text-green-600">
+                  {currentTicket.startDay
+                    ? new Date(currentTicket.startDay).toLocaleDateString(
+                        "vi-VN"
+                      )
+                    : "N/A"}
+                </span>
+              </p>
+              <p>
+                Giờ/Thời/Time:{" "}
+                <span className="text-green-600">
+                  {currentTicket.departure
+                    ? new Date(currentTicket.departure).toLocaleTimeString(
+                        "vi-VN",
+                        {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )
+                    : "N/A"}
+                </span>
+              </p>
+              <p>
+                Toa/Coach:{" "}
+                <span className="text-green-600">
+                  {currentTicket.coachName || "N/A"}
+                </span>
+              </p>
+              <p>
+                Chỗ/Seat:{" "}
+                <span className="text-green-600">
+                  {currentTicket.seatNumber
+                    ? `${currentTicket.seatNumber}`
+                    : "N/A"}
+                </span>
+              </p>
+            </div>
+
+            {/* Passenger Information Box */}
+            <div className="border border-gray-300 p-4 mb-4 bg-gray-50">
+              <h2 className="text-lg font-semibold text-blue-600 mb-2">
+                Thông tin hành khách
+              </h2>
+              <p>
+                Họ tên/Full Name:{" "}
+                <span className="text-green-600">
+                  {currentTicket.name || "N/A"}
+                </span>
+              </p>
+              <p>
+                CMND/Passport:{" "}
+                <span className="text-green-600">
+                  {currentTicket.citizenId || "N/A"}
+                </span>
+              </p>
+              <p>
+                Loại vé/Ticket:{" "}
+                <span className="text-green-600">
+                  {currentTicket.customerObject === "adult"
+                    ? "Người lớn"
+                    : currentTicket.customerObject === "children"
+                    ? "Trẻ em"
+                    : currentTicket.customerObject === "student"
+                    ? "Học sinh"
+                    : "N/A"}
+                </span>
+              </p>
+              <p>
+                Giá vé/Price:{" "}
+                <span className="text-green-600">
+                  {currentTicket.price
+                    ? `${formatPrice(currentTicket.price)} VND`
+                    : "N/A"}
+                </span>
+              </p>
+            </div>
+
+            {/* QR Code and Ticket Code */}
+            <div className="flex justify-between items-center mb-4">
+              <div className="text-center">
+                <QRCodeTicketForPdf
+                  ticketCode={currentTicket.ticketCode}
+                  ref={qrCanvasRef}
+                />
+                <p className="text-sm text-red-500 mt-2">
+                  Mã đặt chỗ: {currentTicket.ticketCode || "N/A"}
+                </p>
+                <p className="text-sm text-red-500">Đơn vị bán vé: WEB</p>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div className="text-xs text-red-500 mb-4">
+              <p>
+                - Chú ý: Quý khách vui lòng kiểm tra thông tin trên website:{" "}
+                <a href="http://hoadon.vtdshn.vn" className="underline">
+                  hoadon.vtdshn.vn
+                </a>
+                .
+              </p>
+              <p>
+                - Để cập nhật lịch trình, vui lòng kiểm tra website{" "}
+                <a href="http://dsvn.vn" className="underline">
+                  dsvn.vn
+                </a>{" "}
+                mục "Tra cứu lịch trình tàu".
+              </p>
+              <p>
+                - Để bảo vệ quyền lợi, vui lòng mang theo thẻ điện tử và CMND
+                khi lên tàu.
+              </p>
+            </div>
+
+            {/* Footer with Illustration */}
+            <div className="text-sm">
+              <p>
+                Được đánh giá - Nằm trong danh sách Lonely Planet bình chọn là
+                tuyến đường đẹp nhất, đáng trải nghiệm nhất{" "}
+                <span className="text-blue-600">Tàu hỏa Việt Nam</span>.
+              </p>
+              <p>
+                Ngày in/Printed date:{" "}
+                <span className="text-green-600">
+                  {new Date().toLocaleString("vi-VN", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+      {/* Main UI */}
       <h1 className="text-2xl font-bold mb-6 text-center">
-        Xác Nhận Đặt Vé - Đường Sắt RailSkyLine
+        Booking Confirmation - RailSkyLine
       </h1>
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold">Đặt Vé Thành Công</h2>
+        <h2 className="text-xl font-semibold">Booking Successful</h2>
         <p className="text-lg text-green-600">
-          Cảm ơn bạn đã đặt vé! Thanh toán đã hoàn tất.
+          Thank you for booking! Payment has been completed.
         </p>
         <div className="space-y-4">
           <p>
-            <strong>Mã đặt vé:</strong> {bookingDetails.bookingId}
+            <strong>Booking Code:</strong> {bookingDetails.bookingId}
           </p>
           <p>
-            <strong>Mã giao dịch:</strong> {bookingDetails.transactionId}
+            <strong>Transaction Code:</strong> {bookingDetails.transactionId}
           </p>
           <p>
-            <strong>Email liên hệ:</strong> {bookingDetails.contactEmail}
+            <strong>Contact Email:</strong> {bookingDetails.contactEmail}
           </p>
           <p>
-            <strong>Số điện thoại:</strong>{" "}
-            {bookingDetails.contactPhone || "Không có"}
+            <strong>Phone Number:</strong>{" "}
+            {bookingDetails.contactPhone || "Not provided"}
           </p>
           <p>
-            <strong>Ngày đặt vé:</strong>{" "}
+            <strong>Booking Date:</strong>{" "}
             {formatDate(bookingDetails.bookingDate)}
           </p>
           <p>
-            <strong>Tổng tiền:</strong>{" "}
+            <strong>Total Amount:</strong>{" "}
             {formatPrice(bookingDetails.totalAmount)} VND
           </p>
           <p>
-            <strong>Phương thức thanh toán:</strong>{" "}
-            {bookingDetails.paymentType}
+            <strong>Payment Method:</strong> {bookingDetails.paymentType}
           </p>
         </div>
 
         {bookingDetails.tickets && bookingDetails.tickets.length > 0 ? (
           <>
-            <h3 className="text-lg font-semibold">Thông tin vé đã đặt</h3>
+            <h3 className="text-lg font-semibold">Booked Ticket Information</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="p-2 border">STT</th>
-                    <th className="p-2 border">Thông tin vé</th>
-                    <th className="p-2 border">Mã QR</th>
-                    <th className="p-2 border">Giá (VND)</th>
-                    <th className="p-2 border">Thành tiền (VND)</th>
-                    <th className="p-2 border">Tải vé</th>
+                    <th className="p-2 border">No.</th>
+                    <th className="p-2 border">Ticket Information</th>
+                    <th className="p-2 border">QR Code</th>
+                    <th className="p-2 border">Price (VND)</th>
+                    <th className="p-2 border">Total (VND)</th>
+                    <th className="p-2 border">Download Ticket</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -581,30 +504,31 @@ export default function BookingConfirmation() {
                     <tr key={ticket.ticketId}>
                       <td className="p-2 border">{index + 1}</td>
                       <td className="p-2 border">
-                        <div className="font-bold">Họ tên: {ticket.name}</div>
-                        <div>Mã vé: {ticket.ticketCode}</div>
-                        <div>
-                          Đối tượng:{" "}
-                          {ticket.customerObject === "adult"
-                            ? "Người lớn"
-                            : ticket.customerObject === "children"
-                            ? "Trẻ em"
-                            : "Sinh viên"}
+                        <div className="font-bold">
+                          Full Name: {ticket.name}
                         </div>
-                        <div>Số giấy tờ: {ticket.citizenId}</div>
+                        <div>Ticket Code: {ticket.ticketCode}</div>
                         <div>
-                          Hành trình: {ticket.trainName} từ{" "}
-                          {ticket.departure || "N/A"} đến{" "}
-                          {ticket.arrival || "N/A"}, Toa {ticket.coachName}, Ghế{" "}
-                          {ticket.seatNumber}
+                          Passenger Type:{" "}
+                          {ticket.customerObject === "adult"
+                            ? "Adult"
+                            : ticket.customerObject === "children"
+                            ? "Child"
+                            : "Student"}
+                        </div>
+                        <div>ID Number: {ticket.citizenId}</div>
+                        <div>
+                          Journey: {ticket.trainName} from{" "}
+                          {ticket.departure || "N/A"} to{" "}
+                          {ticket.arrival || "N/A"}, Coach {ticket.coachName},
+                          Seat {ticket.seatNumber}
                         </div>
                       </td>
                       <td className="p-2 border text-center">
                         <QRCodeTicket
                           ticketCode={ticket.ticketCode}
                           ref={(el) => {
-                            if (el)
-                              qrCanvasRefs.current.set(ticket.ticketId, el);
+                            if (el) qrCanvasRef.current = el;
                           }}
                         />
                       </td>
@@ -618,8 +542,9 @@ export default function BookingConfirmation() {
                         <Button
                           className="bg-green-600 hover:bg-green-700"
                           onClick={() => downloadTicketPDF(ticket)}
+                          disabled={isGeneratingPDF}
                         >
-                          Tải PDF
+                          {isGeneratingPDF ? "Generating..." : "Download PDF"}
                         </Button>
                       </td>
                     </tr>
@@ -629,7 +554,7 @@ export default function BookingConfirmation() {
                     <td className="p-2 border-y border-gray-300"></td>
                     <td className="p-2 border-y border-gray-300"></td>
                     <td className="p-2 font-semibold text-md border-y border-gray-300">
-                      Tổng Tiền
+                      Total Amount
                     </td>
                     <td className="p-2 border text-lg font-semibold">
                       {formatPrice(bookingDetails.totalAmount)} VND
@@ -642,15 +567,15 @@ export default function BookingConfirmation() {
           </>
         ) : (
           <p className="text-sm text-gray-600">
-            Không có thông tin vé chi tiết. Vui lòng liên hệ hỗ trợ để biết thêm
-            chi tiết.
+            No detailed ticket information available. Please contact support for
+            more details.
           </p>
         )}
 
         <p className="text-sm text-gray-600">
-          Vui lòng lưu lại mã đặt vé ({bookingDetails.bookingId}) để tra cứu
-          hoặc liên hệ hỗ trợ. Vé đã được gửi qua email{" "}
-          {bookingDetails.contactEmail}.
+          Please save your booking code ({bookingDetails.bookingId}) for
+          reference or to contact support. The ticket has been sent to your
+          email {bookingDetails.contactEmail}.
         </p>
 
         <div className="flex justify-between">
@@ -658,11 +583,11 @@ export default function BookingConfirmation() {
             className="bg-blue-600 hover:bg-blue-700"
             onClick={() => router.push("/search")}
           >
-            Tìm vé mới
+            Search for New Tickets
           </Button>
           <Link href="/booking-history">
             <Button className="bg-green-600 hover:bg-green-700">
-              Xem lịch sử đặt vé
+              View Booking History
             </Button>
           </Link>
         </div>

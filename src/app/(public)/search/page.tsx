@@ -53,7 +53,7 @@ interface Seat {
   seatId: number;
   seatNumber: number | null;
   seatType: string;
-  seatStatus: string; // Updated to include "pending"
+  seatStatus: string;
   price: number;
 }
 
