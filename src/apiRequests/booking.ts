@@ -113,6 +113,8 @@ const bookingApiRequest = {
     }
   },
 
+  getBookingById: (bookingId: string) =>
+    http.get<BookingResType>(`${prefix}/${bookingId}`),
   getBookingHistory: () => http.get<BookingListResType>(`${prefix}/history`),
 };
 

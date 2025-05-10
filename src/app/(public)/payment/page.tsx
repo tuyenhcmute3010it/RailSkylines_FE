@@ -205,16 +205,34 @@ export default function Payment() {
           ticketsParam,
         },
         {
+          // onSuccess: (response) => {
+          //   console.log(">>>>>>> createBooking onSuccess response:", response);
+          //   if (response.payload.data) {
+          //     console.log(
+          //       ">>>>>>> Redirecting to VNPay URL:",
+          //       response.payload.data
+          //     );
+          //     window.location.href = response.payload.data;
+          //   } else {
+          //     console.log(">>>>>>> No data in response:", response);
+          //     toast({
+          //       variant: "destructive",
+          //       title: "Lỗi",
+          //       description: response.payload.message || "Không thể tạo đặt vé",
+          //     });
+          //   }
+          // },
           onSuccess: (response) => {
             console.log(">>>>>>> createBooking onSuccess response:", response);
             if (response.payload.data) {
               console.log(
                 ">>>>>>> Redirecting to VNPay URL:",
-                response.payload.data
+                response.payload.data.data
               );
-              window.location.href = response.payload.data;
+              window.location.href = response.payload.data.data;
             } else {
               console.log(">>>>>>> No data in response:", response);
+
               toast({
                 variant: "destructive",
                 title: "Lỗi",

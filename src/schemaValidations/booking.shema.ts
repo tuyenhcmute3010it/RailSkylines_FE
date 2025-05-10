@@ -80,5 +80,30 @@ export type BookingListResType = {
   statusCode: number;
   error: string | null;
   message: string;
-  data: any[];
+  // data: any[];
+  data: BookingDetailType[];
 };
+
+export interface BookingDetailType {
+  bookingId: string;
+  transactionId: string;
+  contactEmail: string;
+  contactPhone?: string;
+  totalAmount: number;
+  paymentType: string;
+  paymentStatus: string;
+  bookingDate: string;
+  tickets: {
+    name: string;
+    citizenId: string;
+    customerObject: "ADULT" | "CHILD" | "STUDENT";
+    trainId: string;
+    trainName: string;
+    coachName: string;
+    seatNumber: number;
+    departure: string;
+    arrival: string;
+    price: number;
+  }[];
+  promotionIds?: number[];
+}
