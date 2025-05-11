@@ -14,12 +14,20 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
+// Expanded color palette for more unique colors
 const colors = [
   "var(--color-chrome)",
   "var(--color-safari)",
   "var(--color-firefox)",
   "var(--color-edge)",
   "var(--color-other)",
+  "var(--color-blue)",
+  "var(--color-green)",
+  "var(--color-purple)",
+  "var(--color-orange)",
+  "var(--color-pink)",
+  "var(--color-teal)",
+  "var(--color-yellow)",
 ];
 
 const chartConfig = {
@@ -32,13 +40,23 @@ const chartConfig = {
 type TrainRanking = {
   name: string;
   successOrders: number;
-  fill: string;
+  fill?: string; // Optional, as we may ignore backend fill
+};
+
+// Simple hash function to map train names to color indices
+const getColorIndexForName = (name: string): number => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash) % colors.length;
 };
 
 export function DishBarChart({ chartData }: { chartData: TrainRanking[] }) {
-  const chartDataColors = chartData.map((data, index) => ({
+  // Assign a unique color to each train based on its name
+  const chartDataColors = chartData.map((data) => ({
     ...data,
-    fill: data.fill || colors[index % colors.length], // Use backend fill or fallback to colors array
+    fill: colors[getColorIndexForName(data.name)], // Use name-based color assignment
   }));
 
   return (

@@ -1,4 +1,5 @@
 "use client";
+
 import {
   CaretSortIcon,
   DotsHorizontalIcon,
@@ -63,6 +64,8 @@ import {
 } from "@/queries/useArticle";
 import { ArticleSchemaType } from "@/schemaValidations/article.schema";
 import { useToast } from "@/components/ui/use-toast";
+import { useAccountProfile } from "@/queries/useAccount";
+import { handleErrorApi } from "@/lib/utils";
 
 const ArticleTableContext = createContext<{
   setArticleIdEdit: (value: number | undefined) => void;
@@ -83,7 +86,7 @@ function DeleteArticleDialog({
 }: {
   articleDelete: ArticleSchemaType | null;
   setArticleDelete: (value: ArticleSchemaType | null) => void;
-  onSuccess?: () => void; // Định nghĩa kiểu cho prop
+  onSuccess?: () => void;
 }) {
   const t = useTranslations("ManageArticle");
   const { toast } = useToast();
@@ -93,23 +96,16 @@ function DeleteArticleDialog({
     if (articleDelete) {
       try {
         await deleteArticleMutation.mutateAsync(articleDelete.articleId);
-
+        toast({
+          title: t("DeleteSuccess"),
+          description: t("ArticleDeleted", {
+            articleId: articleDelete.articleId,
+          }),
+        });
         setArticleDelete(null);
-      } catch (error: any) {
-        onSuccess?.(); // <<< Gọi hàm callback nếu được truyền vào
-        let errorMessage = t("Error_Generic");
-        if (error.message.includes("not valid JSON")) {
-          errorMessage =
-            t("Error_ServerResponse") ||
-            "Server returned an invalid response. Please check your permissions or contact the administrator.";
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-        // toast({
-        //   title: t("DeleteFailed"),
-        //   description: errorMessage,
-        //   variant: "destructive",
-        // });
+        onSuccess?.();
+      } catch (error) {
+        handleErrorApi({ error });
       }
     }
   };
@@ -155,13 +151,41 @@ export default function ArticleTable() {
   const pathname = usePathname();
   const page = searchParams.get("page") ? Number(searchParams.get("page")) : 1;
   const pageIndex = page - 1;
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
   const [articleIdEdit, setArticleIdEdit] = useState<number | undefined>();
   const [articleDelete, setArticleDelete] = useState<ArticleSchemaType | null>(
     null
   );
-  const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
+  // Fetch user permissions
+  const {
+    data: accountData,
+    isLoading: isAccountLoading,
+    isError: isAccountError,
+  } = useAccountProfile();
+  const userPermissions = accountData?.data?.user?.role?.permissions as
+    | Array<{
+        id: number;
+        name: string;
+        apiPath: string;
+        method: string;
+        module: string;
+      }>
+    | undefined;
+
+  // Check permissions for ARTICLES module
+  const hasAddPermission = userPermissions?.some(
+    (p) => p.module === "ARTICLES" && p.method === "POST"
+  );
+  const hasEditPermission = userPermissions?.some(
+    (p) => p.module === "ARTICLES" && p.method === "PUT"
+  );
+  const hasDeletePermission = userPermissions?.some(
+    (p) => p.module === "ARTICLES" && p.method === "DELETE"
+  );
+
+  // Fetch article list
   const articleListQuery = useGetArticleList(page, pageSize);
   const data = articleListQuery.data?.payload.data.result ?? [];
   const totalItems = articleListQuery.data?.payload.data.meta.total ?? 0;
@@ -238,14 +262,20 @@ export default function ArticleTable() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t("Action")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setArticleIdEdit(row.original.articleId)}
-              >
-                {t("Edit")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setArticleDelete(row.original)}>
-                {t("Delete")}
-              </DropdownMenuItem>
+              {hasEditPermission && (
+                <DropdownMenuItem
+                  onClick={() => setArticleIdEdit(row.original.articleId)}
+                >
+                  {t("Edit")}
+                </DropdownMenuItem>
+              )}
+              {hasDeletePermission && (
+                <DropdownMenuItem
+                  onClick={() => setArticleDelete(row.original)}
+                >
+                  {t("Delete")}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -302,7 +332,7 @@ export default function ArticleTable() {
       }}
     >
       <div className="w-full">
-        {articleIdEdit !== undefined && (
+        {articleIdEdit !== undefined && hasEditPermission && (
           <EditArticle
             id={articleIdEdit}
             setId={setArticleIdEdit}
@@ -315,10 +345,12 @@ export default function ArticleTable() {
         <DeleteArticleDialog
           articleDelete={articleDelete}
           setArticleDelete={setArticleDelete}
-          onSuccess={articleListQuery.refetch} // <<< Thêm dòng này
+          onSuccess={articleListQuery.refetch}
         />
-        {articleListQuery.isLoading ? (
+        {isAccountLoading || articleListQuery.isLoading ? (
           <TableSkeleton />
+        ) : isAccountError ? (
+          <div className="text-red-500">Error loading user permissions</div>
         ) : articleListQuery.error ? (
           <div className="text-red-500">
             {t("Error")}: {articleListQuery.error.message}
@@ -337,7 +369,7 @@ export default function ArticleTable() {
                 className="max-w-sm w-[150px]"
               />
               <div className="ml-auto flex items-center gap-2">
-                <AddArticle />
+                {hasAddPermission && <AddArticle />}
               </div>
             </div>
             <div className="rounded-md border">

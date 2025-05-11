@@ -4,13 +4,24 @@ import Link from "next/link";
 import { generateSlugUrl } from "@/lib/utils";
 import { useGetArticleList } from "@/queries/useArticle";
 import ArticleListSkeleton from "./SkeletonTable";
+import { useAppContext } from "./app-provider";
 
 export default function ArticleList() {
+  const { isAuth } = useAppContext(); // Get isAuth from context
   const page = 1;
   const pageSize = 8;
 
   const articleListQuery = useGetArticleList(page, pageSize);
   const articles = articleListQuery.data?.payload.data.result ?? [];
+
+  // If not authenticated, show login message
+  if (!isAuth) {
+    return (
+      <div className="text-center text-gray-600">
+        Please login to see articles
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

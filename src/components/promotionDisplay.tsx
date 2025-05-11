@@ -5,15 +5,18 @@ import { useEffect, useState } from "react";
 import { PromotionSchemaType } from "@/schemaValidations/promotion.schema";
 import promotionsApiRequest from "@/apiRequests/promotion";
 import { AlertTriangle, Loader2 } from "lucide-react";
-import { PromotionListResType } from "@/schemaValidations/promotion.schema";
+import { useAppContext } from "./app-provider";
 
 const PromotionDisplay = () => {
   const t = useTranslations("HomePage");
+  const { isAuth } = useAppContext(); // Get isAuth from context
   const [promotions, setPromotions] = useState<PromotionSchemaType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
 
   useEffect(() => {
+    if (!isAuth) return; // Skip fetching if not authenticated
+
     const fetchPromotions = async () => {
       try {
         setIsLoading(true);
@@ -32,13 +35,24 @@ const PromotionDisplay = () => {
     };
 
     fetchPromotions();
-  }, []);
+  }, [isAuth]); // Add isAuth to dependency array to refetch if auth status changes
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString();
   };
 
+  // If not authenticated, show login message
+  if (!isAuth) {
+    return (
+      <div className="text-center text-gray-600">
+        {" "}
+        Please login to get promotion
+      </div>
+    );
+  }
+
+  // Show loading state
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-full">
@@ -47,6 +61,7 @@ const PromotionDisplay = () => {
     );
   }
 
+  // Show error state
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-red-600">
@@ -56,6 +71,7 @@ const PromotionDisplay = () => {
     );
   }
 
+  // Show promotions
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">{t("ActivePromotions")}</h3>

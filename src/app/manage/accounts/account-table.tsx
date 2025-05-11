@@ -1,4 +1,5 @@
 "use client";
+
 import { CaretSortIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
 import {
   ColumnDef,
@@ -53,6 +54,7 @@ import { useTranslations } from "next-intl";
 import {
   useDeleteAccountMutation,
   useGetAccountList,
+  useAccountProfile,
 } from "@/queries/useAccount";
 import { toast } from "@/components/ui/use-toast";
 import { handleErrorApi } from "@/lib/utils";
@@ -82,9 +84,11 @@ const AccountTableContext = createContext<{
 function AlertDialogDeleteAccount({
   employeeDelete,
   setEmployeeDelete,
+  onSuccess,
 }: {
   employeeDelete: AccountItem | null;
   setEmployeeDelete: (value: AccountItem | null) => void;
+  onSuccess?: () => void;
 }) {
   const t = useTranslations("ManageAccount");
   const { mutateAsync } = useDeleteAccountMutation();
@@ -95,8 +99,10 @@ function AlertDialogDeleteAccount({
         await mutateAsync(employeeDelete.userId);
         setEmployeeDelete(null);
         toast({
+          title: t("DeleteSuccess"),
           description: t("AccountDeleted", { userId: employeeDelete.userId }),
         });
+        onSuccess?.();
       } catch (error) {
         handleErrorApi({ error });
       }
@@ -150,6 +156,35 @@ export default function AccountTable() {
   const [employeeDelete, setEmployeeDelete] = useState<AccountItem | null>(
     null
   );
+
+  // Fetch user permissions
+  const {
+    data: accountData,
+    isLoading: isAccountLoading,
+    isError: isAccountError,
+  } = useAccountProfile();
+  const userPermissions = accountData?.data?.user?.role?.permissions as
+    | Array<{
+        id: number;
+        name: string;
+        apiPath: string;
+        method: string;
+        module: string;
+      }>
+    | undefined;
+
+  // Check permissions for ACCOUNTS module
+  const hasAddPermission = userPermissions?.some(
+    (p) => p.module === "USERS" && p.method === "POST"
+  );
+  const hasEditPermission = userPermissions?.some(
+    (p) => p.module === "USERS" && p.method === "PUT"
+  );
+  const hasDeletePermission = userPermissions?.some(
+    (p) => p.module === "USERS" && p.method === "DELETE"
+  );
+
+  // Fetch account list
   const accountListQuery = useGetAccountList(page, pageSize);
   const data = accountListQuery.data?.payload.data?.result ?? [];
   const totalItems = accountListQuery.data?.payload.data.meta.total ?? 0;
@@ -281,12 +316,16 @@ export default function AccountTable() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t("Action")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={openEditEmployee}>
-                {t("Edit")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={openDeleteEmployee}>
-                {t("Delete")}
-              </DropdownMenuItem>
+              {hasEditPermission && (
+                <DropdownMenuItem onClick={openEditEmployee}>
+                  {t("Edit")}
+                </DropdownMenuItem>
+              )}
+              {hasDeletePermission && (
+                <DropdownMenuItem onClick={openDeleteEmployee}>
+                  {t("Delete")}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -343,20 +382,25 @@ export default function AccountTable() {
       }}
     >
       <div className="w-full">
-        <EditEmployee
-          id={employeeIdEdit}
-          setId={setEmployeeIdEdit}
-          onSubmitSuccess={() => {
-            setEmployeeIdEdit(undefined);
-            accountListQuery.refetch();
-          }}
-        />
+        {employeeIdEdit !== undefined && hasEditPermission && (
+          <EditEmployee
+            id={employeeIdEdit}
+            setId={setEmployeeIdEdit}
+            onSubmitSuccess={() => {
+              setEmployeeIdEdit(undefined);
+              accountListQuery.refetch();
+            }}
+          />
+        )}
         <AlertDialogDeleteAccount
           employeeDelete={employeeDelete}
           setEmployeeDelete={setEmployeeDelete}
+          onSuccess={accountListQuery.refetch}
         />
-        {accountListQuery.isLoading ? (
+        {isAccountLoading || accountListQuery.isLoading ? (
           <TableSkeleton />
+        ) : isAccountError ? (
+          <div className="text-red-500">Error loading user permissions</div>
         ) : accountListQuery.error ? (
           <div className="text-red-500">
             {t("Error")}: {accountListQuery.error.message}
@@ -388,7 +432,7 @@ export default function AccountTable() {
                 className="max-w-sm w-[150px]"
               />
               <div className="ml-auto flex items-center gap-2">
-                <AddEmployee />
+                {hasAddPermission && <AddEmployee />}
               </div>
             </div>
             <div className="rounded-md border">

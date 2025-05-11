@@ -1,4 +1,5 @@
 "use client";
+
 import {
   CaretSortIcon,
   DotsHorizontalIcon,
@@ -60,10 +61,16 @@ import {
   CarriageListResType,
   CarriageSchemaType,
 } from "@/schemaValidations/carriage.schema";
-import { useGetCarriageList } from "@/queries/useCarriage";
+import {
+  useGetCarriageList,
+  useDeleteCarriageMutation,
+} from "@/queries/useCarriage";
 import { CarriageTypesValues } from "@/constants/type";
 import TableSkeleton from "@/components/Skeleton";
 import { CarriageIdForSeat } from "./seatForCarriage";
+import { useAccountProfile } from "@/queries/useAccount";
+import { toast } from "@/components/ui/use-toast";
+import { handleErrorApi } from "@/lib/utils";
 
 type CarriageItem = CarriageSchemaType;
 
@@ -86,11 +93,32 @@ const CarriageTableContext = createContext<{
 function DeleteCarriageDialog({
   carriageDelete,
   setCarriageDelete,
+  onSuccess,
 }: {
   carriageDelete: CarriageItem | null;
   setCarriageDelete: (value: CarriageItem | null) => void;
+  onSuccess?: () => void;
 }) {
   const t = useTranslations("ManageCarriage");
+  const deleteCarriageMutation = useDeleteCarriageMutation();
+
+  const handleDelete = async () => {
+    if (carriageDelete) {
+      try {
+        await deleteCarriageMutation.mutateAsync(carriageDelete.carriageId);
+        toast({
+          title: t("DeleteSuccess"),
+          description: t("CarriageDeleted", {
+            carriageId: carriageDelete.carriageId,
+          }),
+        });
+        setCarriageDelete(null);
+        onSuccess?.();
+      } catch (error) {
+        handleErrorApi({ error });
+      }
+    }
+  };
 
   return (
     <AlertDialog
@@ -114,7 +142,9 @@ function DeleteCarriageDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
-          <AlertDialogAction>{t("Continue")}</AlertDialogAction>
+          <AlertDialogAction onClick={handleDelete}>
+            {t("Continue")}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -140,6 +170,39 @@ export default function CarriageTable() {
     number | undefined
   >();
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
+
+  // Fetch user permissions
+  const {
+    data: accountData,
+    isLoading: isAccountLoading,
+    isError: isAccountError,
+  } = useAccountProfile();
+  const userPermissions = accountData?.data?.user?.role?.permissions as
+    | Array<{
+        id: number;
+        name: string;
+        apiPath: string;
+        method: string;
+        module: string;
+      }>
+    | undefined;
+
+  // Check permissions for CARRIAGES module
+  const hasAddPermission = userPermissions?.some(
+    (p) => p.module === "CARRIAGES" && p.method === "POST"
+  );
+  const hasEditPermission = userPermissions?.some(
+    (p) => p.module === "CARRIAGES" && p.method === "PUT"
+  );
+  const hasDeletePermission = userPermissions?.some(
+    (p) => p.module === "CARRIAGES" && p.method === "DELETE"
+  );
+  const hasViewSeatsPermission = userPermissions?.some(
+    (p) =>
+      p.module === "CARRIAGES" &&
+      p.method === "GET" &&
+      p.apiPath.includes("/seat/")
+  );
 
   // Fetch carriage list
   const carriageListQuery = useGetCarriageList(page, pageSize);
@@ -250,19 +313,27 @@ export default function CarriageTable() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t("Action")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setCarriageIdEdit(row.original.carriageId)}
-              >
-                {t("Edit")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setCarriageDelete(row.original)}>
-                {t("Delete")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setCarriageIdForSeats(row.original.carriageId)}
-              >
-                {t("ViewSeats")}
-              </DropdownMenuItem>
+              {hasEditPermission && (
+                <DropdownMenuItem
+                  onClick={() => setCarriageIdEdit(row.original.carriageId)}
+                >
+                  {t("Edit")}
+                </DropdownMenuItem>
+              )}
+              {hasDeletePermission && (
+                <DropdownMenuItem
+                  onClick={() => setCarriageDelete(row.original)}
+                >
+                  {t("Delete")}
+                </DropdownMenuItem>
+              )}
+              {hasViewSeatsPermission && (
+                <DropdownMenuItem
+                  onClick={() => setCarriageIdForSeats(row.original.carriageId)}
+                >
+                  {t("ViewSeats")}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -321,7 +392,7 @@ export default function CarriageTable() {
       }}
     >
       <div className="w-full">
-        {carriageIdEdit !== undefined && (
+        {carriageIdEdit !== undefined && hasEditPermission && (
           <EditCarriage
             id={carriageIdEdit}
             setId={setCarriageIdEdit}
@@ -331,7 +402,7 @@ export default function CarriageTable() {
             }}
           />
         )}
-        {carriageIdForSeats !== undefined && (
+        {carriageIdForSeats !== undefined && hasViewSeatsPermission && (
           <CarriageIdForSeat
             id={carriageIdForSeats}
             setId={setCarriageIdForSeats}
@@ -340,9 +411,12 @@ export default function CarriageTable() {
         <DeleteCarriageDialog
           carriageDelete={carriageDelete}
           setCarriageDelete={setCarriageDelete}
+          onSuccess={carriageListQuery.refetch}
         />
-        {carriageListQuery.isLoading ? (
+        {isAccountLoading || carriageListQuery.isLoading ? (
           <TableSkeleton />
+        ) : isAccountError ? (
+          <div className="text-red-500">Error loading user permissions</div>
         ) : carriageListQuery.error ? (
           <div className="text-red-500">
             {t("Error")}: {carriageListQuery.error.message}
@@ -417,7 +491,7 @@ export default function CarriageTable() {
                 </SelectContent>
               </Select>
               <div className="ml-auto flex items-center gap-2">
-                <AddCarriage />
+                {hasAddPermission && <AddCarriage />}
               </div>
             </div>
             <div className="rounded-md border">

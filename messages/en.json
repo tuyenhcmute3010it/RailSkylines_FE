@@ -678,5 +678,32 @@
     "ResendSuccess": "New verification code sent!",
     "ResendError": "Failed to resend code. Please try again.",
     "MissingEmail": "No email provided. Please register or log in."
+  },
+  "common": {
+    "BookingInfo": {
+      "title": "CHECK BOOKING INFORMATION",
+      "description": "To check information, please fill in the details below.",
+      "labels": {
+        "bookingId": "Booking Code *",
+        "phone": "Phone Number *",
+        "email": "Email *"
+      },
+      "placeholders": {
+        "bookingId": "Booking code when booking",
+        "phone": "Phone number when booking, leave blank if not entered",
+        "email": "Email when booking (leave blank if not entered)"
+      },
+      "button": {
+        "submit": "Search",
+        "loading": "Searching..."
+      },
+      "footer": "TICKET PRICING POLICY, EXCHANGE AND REFUND REGULATIONS, AND PROMOTION BENEFITS FOR TRAIN TICKETS",
+      "error": "Error: {{message}}",
+      "errorMessage": {
+        "required": "Please fill in all fields.",
+        "mismatch": "Phone or email does not match the booking record.",
+        "notFound": "Booking not found or invalid credentials."
+      }
+    }
   }
 }

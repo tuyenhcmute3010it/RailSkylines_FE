@@ -30,24 +30,9 @@ export default function NavItems({ className }: { className?: string }) {
   const router = useRouter();
   const logoutMutation = useLogoutMutation();
 
-  const handleLogout = async () => {
-    try {
-      await logoutMutation.mutateAsync({
-        refreshToken: "", // Refresh token is handled by cookie
-        accessToken: getAccessTokenFromLocalStorage() || "",
-      });
-      localStorage.removeItem("accessToken");
-      setIsAuth(false);
-      setRole(null);
-      router.push("/login");
-    } catch (error: any) {
-      handleErrorApi({ error });
-    }
-  };
-
   const menuItems = [
-    { title: t("FindTicket"), href: "/guest/menu" },
-    { title: t("BookingInfo"), href: "/guest/orders" },
+    { title: t("FindTicket"), href: "/search" },
+    { title: t("BookingInfo"), href: "/booking-info" },
     { title: t("ReturnTicket"), href: "/guest/return" },
     { title: t("Promotion"), href: "/promotion" },
     { title: t("Term&Conditions"), href: "/term-of-service" },
@@ -74,43 +59,6 @@ export default function NavItems({ className }: { className?: string }) {
         }
         return null;
       })}
-      {isAuth && (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <div
-              className={cn(
-                className,
-                "cursor-pointer text-red-500 hover:text-red-600 transition duration-200 font-medium"
-              )}
-            >
-              Đăng xuất
-            </div>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                Bạn có chắc chắn muốn đăng xuất?
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                Hành động này không thể hoàn tác. Bạn sẽ mất phiên đăng nhập
-                hiện tại.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Hủy</AlertDialogCancel>
-              {/* <AlertDialogAction onClick={handleLogout}>
-                Tiếp tục
-              </AlertDialogAction> */}
-              <AlertDialogAction
-                className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-md transition"
-                onClick={handleLogout}
-              >
-                Tiếp tục
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
     </>
   );
 }

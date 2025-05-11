@@ -1,4 +1,5 @@
 "use client";
+
 import {
   CaretSortIcon,
   DotsHorizontalIcon,
@@ -60,8 +61,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import TableSkeleton from "@/components/Skeleton";
 import { useToast } from "@/components/ui/use-toast";
+import { useAccountProfile } from "@/queries/useAccount"; // Import useAccountProfile
 
 type TrainItem = TrainListResType["data"]["result"][0];
+
 const TrainTableContext = createContext<{
   setTrainIdEdit: (value: number | undefined) => void;
   trainIdEdit: number | undefined;
@@ -81,7 +84,7 @@ function DeleteTrainDialog({
 }: {
   trainDelete: TrainItem | null;
   setTrainDelete: (value: TrainItem | null) => void;
-  onSuccess?: () => void; // Định nghĩa kiểu cho prop
+  onSuccess?: () => void;
 }) {
   const t = useTranslations("ManageTrain");
   const { toast } = useToast();
@@ -91,20 +94,19 @@ function DeleteTrainDialog({
     if (trainDelete) {
       try {
         await deleteTrainMutation.mutateAsync(trainDelete.trainId);
-        // toast({
-        //   title: t("DeleteSuccess"),
-        //   description: t("TrainDeleted", { trainId: trainDelete.trainId }),
-        // });
+        toast({
+          title: t("DeleteSuccess"),
+          description: t("TrainDeleted", { trainId: trainDelete.trainId }),
+        });
         setTrainDelete(null);
+        onSuccess?.();
       } catch (error: any) {
-        onSuccess?.(); // <<< Gọi hàm callback nếu được truyền vào
         const errorMessage = error?.message || t("Error_Generic");
-        // toast({
-        //   title: t("DeleteFailed"),
-        //   description: errorMessage,
-        //   variant: "destructive",
-        // });
-        // console.error("Delete error:", error);
+        toast({
+          title: t("DeleteFailed"),
+          description: errorMessage,
+          variant: "destructive",
+        });
       }
     }
   };
@@ -155,6 +157,34 @@ export default function TrainTable() {
   const [trainDelete, setTrainDelete] = useState<TrainItem | null>(null);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
+  // Fetch user permissions
+  const {
+    data: accountData,
+    isLoading: isAccountLoading,
+    isError: isAccountError,
+  } = useAccountProfile();
+  const userPermissions = accountData?.data?.user?.role?.permissions as
+    | Array<{
+        id: number;
+        name: string;
+        apiPath: string;
+        method: string;
+        module: string;
+      }>
+    | undefined;
+
+  // Check permissions for TRAINS module
+  const hasAddPermission = userPermissions?.some(
+    (p) => p.module === "TRAINS" && p.method === "POST"
+  );
+  const hasEditPermission = userPermissions?.some(
+    (p) => p.module === "TRAINS" && p.method === "PUT"
+  );
+  const hasDeletePermission = userPermissions?.some(
+    (p) => p.module === "TRAINS" && p.method === "DELETE"
+  );
+
+  // Fetch train list
   const trainListQuery = useGetTrainList(page, pageSize);
   const data = trainListQuery.data?.payload.data.result ?? [];
   const totalItems = trainListQuery.data?.payload.data.meta.total ?? 0;
@@ -225,14 +255,18 @@ export default function TrainTable() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t("Action")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setTrainIdEdit(row.original.trainId)}
-              >
-                {t("Edit")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTrainDelete(row.original)}>
-                {t("Delete")}
-              </DropdownMenuItem>
+              {hasEditPermission && (
+                <DropdownMenuItem
+                  onClick={() => setTrainIdEdit(row.original.trainId)}
+                >
+                  {t("Edit")}
+                </DropdownMenuItem>
+              )}
+              {hasDeletePermission && (
+                <DropdownMenuItem onClick={() => setTrainDelete(row.original)}>
+                  {t("Delete")}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -284,7 +318,7 @@ export default function TrainTable() {
       value={{ trainIdEdit, setTrainIdEdit, trainDelete, setTrainDelete }}
     >
       <div className="w-full">
-        {trainIdEdit !== undefined && (
+        {trainIdEdit !== undefined && hasEditPermission && (
           <EditTrain
             id={trainIdEdit}
             setId={setTrainIdEdit}
@@ -297,10 +331,12 @@ export default function TrainTable() {
         <DeleteTrainDialog
           trainDelete={trainDelete}
           setTrainDelete={setTrainDelete}
-          onSuccess={trainListQuery.refetch} // <<< Thêm dòng này
+          onSuccess={trainListQuery.refetch}
         />
-        {trainListQuery.isLoading ? (
+        {isAccountLoading || trainListQuery.isLoading ? (
           <TableSkeleton />
+        ) : isAccountError ? (
+          <div className="text-red-500">Error loading user permissions</div>
         ) : trainListQuery.error ? (
           <div className="text-red-500">
             {t("Error")}: {trainListQuery.error.message}
@@ -343,7 +379,7 @@ export default function TrainTable() {
                 className="max-w-sm w-[150px]"
               />
               <div className="ml-auto flex items-center gap-2">
-                <AddTrain />
+                {hasAddPermission && <AddTrain />}
               </div>
             </div>
             <div className="rounded-md border">

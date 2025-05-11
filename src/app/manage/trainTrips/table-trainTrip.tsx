@@ -1,4 +1,5 @@
 "use client";
+
 import {
   CaretSortIcon,
   DotsHorizontalIcon,
@@ -64,6 +65,7 @@ import AddTrainTrip from "./add-trainTrip";
 import { toast } from "@/components/ui/use-toast";
 import { handleErrorApi } from "@/lib/utils";
 import EditTrainTrip from "./edit-trainTrip";
+import { useAccountProfile } from "@/queries/useAccount"; // Import useAccountProfile
 
 type TrainTripItem = TrainTripListResType["data"]["result"][0];
 
@@ -82,9 +84,11 @@ const TrainTripTableContext = createContext<{
 function DeleteTrainTripDialog({
   trainTripDelete,
   setTrainTripDelete,
+  onSuccess,
 }: {
   trainTripDelete: TrainTripItem | null;
   setTrainTripDelete: (value: TrainTripItem | null) => void;
+  onSuccess?: () => void;
 }) {
   const t = useTranslations("TrainTrip");
   const deleteTrainTripMutation = useDeleteTrainTripMutation();
@@ -95,10 +99,12 @@ function DeleteTrainTripDialog({
         await deleteTrainTripMutation.mutateAsync(trainTripDelete.trainTripId);
         setTrainTripDelete(null);
         toast({
+          title: t("DeleteSuccess"),
           description: t("TrainTripDeleted", {
             id: trainTripDelete.trainTripId,
           }),
         });
+        onSuccess?.();
       } catch (error) {
         handleErrorApi({ error });
       }
@@ -154,6 +160,34 @@ export default function TrainTripTable() {
     null
   );
 
+  // Fetch user permissions
+  const {
+    data: accountData,
+    isLoading: isAccountLoading,
+    isError: isAccountError,
+  } = useAccountProfile();
+  const userPermissions = accountData?.data?.user?.role?.permissions as
+    | Array<{
+        id: number;
+        name: string;
+        apiPath: string;
+        method: string;
+        module: string;
+      }>
+    | undefined;
+
+  // Check permissions for TRAIN_TRIPS module
+  const hasAddPermission = userPermissions?.some(
+    (p) => p.module === "TRAIN_TRIPS" && p.method === "POST"
+  );
+  const hasEditPermission = userPermissions?.some(
+    (p) => p.module === "TRAIN_TRIPS" && p.method === "PUT"
+  );
+  const hasDeletePermission = userPermissions?.some(
+    (p) => p.module === "TRAIN_TRIPS" && p.method === "DELETE"
+  );
+
+  // Fetch train trip list
   const trainTripListQuery = useGetTrainTripList(page, pageSize);
   const data = trainTripListQuery.data?.payload.data.result ?? [];
   const totalItems = trainTripListQuery.data?.payload.data.meta.total ?? 0;
@@ -270,16 +304,20 @@ export default function TrainTripTable() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t("Action")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setTrainTripIdEdit(row.original.trainTripId)}
-              >
-                {t("Edit")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setTrainTripDelete(row.original)}
-              >
-                {t("Delete")}
-              </DropdownMenuItem>
+              {hasEditPermission && (
+                <DropdownMenuItem
+                  onClick={() => setTrainTripIdEdit(row.original.trainTripId)}
+                >
+                  {t("Edit")}
+                </DropdownMenuItem>
+              )}
+              {hasDeletePermission && (
+                <DropdownMenuItem
+                  onClick={() => setTrainTripDelete(row.original)}
+                >
+                  {t("Delete")}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -337,20 +375,25 @@ export default function TrainTripTable() {
       }}
     >
       <div className="w-full">
-        <EditTrainTrip
-          id={trainTripIdEdit}
-          setId={setTrainTripIdEdit}
-          onSubmitSuccess={() => {
-            setTrainTripIdEdit(undefined);
-            trainTripListQuery.refetch();
-          }}
-        />
+        {trainTripIdEdit !== undefined && hasEditPermission && (
+          <EditTrainTrip
+            id={trainTripIdEdit}
+            setId={setTrainTripIdEdit}
+            onSubmitSuccess={() => {
+              setTrainTripIdEdit(undefined);
+              trainTripListQuery.refetch();
+            }}
+          />
+        )}
         <DeleteTrainTripDialog
           trainTripDelete={trainTripDelete}
           setTrainTripDelete={setTrainTripDelete}
+          onSuccess={trainTripListQuery.refetch}
         />
-        {trainTripListQuery.isLoading ? (
+        {isAccountLoading || trainTripListQuery.isLoading ? (
           <TableSkeleton />
+        ) : isAccountError ? (
+          <div className="text-red-500">Error loading user permissions</div>
         ) : trainTripListQuery.error ? (
           <div className="text-red-500">
             {t("Error")}: {trainTripListQuery.error.message}
@@ -397,7 +440,7 @@ export default function TrainTripTable() {
                 className="w-72"
               />
               <div className="ml-auto flex items-center gap-2">
-                <AddTrainTrip />
+                {hasAddPermission && <AddTrainTrip />}
               </div>
             </div>
             <div className="rounded-md border">

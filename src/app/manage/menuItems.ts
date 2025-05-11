@@ -1,4 +1,6 @@
+"use client";
 import { Role } from "@/constants/type";
+import { useAccountProfile } from "@/queries/useAccount";
 import {
   Home,
   LineChart,
@@ -16,6 +18,7 @@ import {
   UserCog,
   TrainFrontTunnel,
 } from "lucide-react";
+
 const menuItems = [
   {
     title: "Dashboard",
