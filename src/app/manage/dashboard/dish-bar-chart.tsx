@@ -1,13 +1,9 @@
 "use client";
-
-import { TrendingUp } from "lucide-react";
 import { Bar, BarChart, XAxis, YAxis } from "recharts";
-
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -27,38 +23,24 @@ const colors = [
 ];
 
 const chartConfig = {
-  visitors: {
-    label: "Visitors",
-  },
-  chrome: {
-    label: "Chrome",
+  successOrders: {
+    label: "Đơn thanh toán",
     color: "hsl(var(--chart-1))",
   },
-  safari: {
-    label: "Safari",
-    color: "hsl(var(--chart-2))",
-  },
-  firefox: {
-    label: "Firefox",
-    color: "hsl(var(--chart-3))",
-  },
-  edge: {
-    label: "Edge",
-    color: "hsl(var(--chart-4))",
-  },
-  other: {
-    label: "Other",
-    color: "hsl(var(--chart-5))",
-  },
 } satisfies ChartConfig;
-const chartData = [
-  { name: "chrome", successOrders: 275, fill: "var(--color-chrome)" },
-  { name: "safari", successOrders: 200, fill: "var(--color-safari)" },
-  { name: "firefox", successOrders: 187, fill: "var(--color-firefox)" },
-  { name: "edge", successOrders: 173, fill: "var(--color-edge)" },
-  { name: "other", successOrders: 90, fill: "var(--color-other)" },
-];
-export function DishBarChart() {
+
+type TrainRanking = {
+  name: string;
+  successOrders: number;
+  fill: string;
+};
+
+export function DishBarChart({ chartData }: { chartData: TrainRanking[] }) {
+  const chartDataColors = chartData.map((data, index) => ({
+    ...data,
+    fill: data.fill || colors[index % colors.length], // Use backend fill or fallback to colors array
+  }));
+
   return (
     <Card>
       <CardHeader>
@@ -69,7 +51,7 @@ export function DishBarChart() {
         <ChartContainer config={chartConfig}>
           <BarChart
             accessibilityLayer
-            data={chartData}
+            data={chartDataColors}
             layout="vertical"
             margin={{
               left: 0,
@@ -81,31 +63,19 @@ export function DishBarChart() {
               tickLine={false}
               tickMargin={2}
               axisLine={false}
-              tickFormatter={(value) => {
-                return value;
-
-                // return chartConfig[value as keyof typeof chartConfig]?.label
-              }}
+              tickFormatter={(value) => value}
             />
             <XAxis dataKey="successOrders" type="number" hide />
             <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
             <Bar
               dataKey="successOrders"
-              name={"Đơn thanh toán"}
+              name="Đơn thanh toán"
               layout="vertical"
               radius={5}
             />
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        {/* <div className='flex gap-2 font-medium leading-none'>
-          Trending up by 5.2% this month <TrendingUp className='h-4 w-4' />
-        </div> */}
-        {/* <div className='leading-none text-muted-foreground'>
-          Showing total visitors for the last 6 months
-        </div> */}
-      </CardFooter>
     </Card>
   );
 }

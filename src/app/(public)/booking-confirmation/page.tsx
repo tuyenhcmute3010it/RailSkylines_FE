@@ -414,7 +414,7 @@ export default function BookingConfirmation() {
               </p>
               <p>
                 - Để cập nhật lịch trình, vui lòng kiểm tra website{" "}
-                <a href="http://dsvn.vn" className="underline">
+                <a href="http://railskylines.vn" className="underline">
                   dsvn.vn
                 </a>{" "}
                 mục "Tra cứu lịch trình tàu".
