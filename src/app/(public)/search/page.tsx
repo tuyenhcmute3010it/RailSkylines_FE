@@ -3328,6 +3328,8 @@ interface FrontendTrain {
   departureStationId: number;
   arrivalStation: string;
   arrivalStationId: number;
+  departurePosition: number;
+  arrivalPosition: number;
   availableSeats: number;
   carriages: FrontendCarriage[];
   trainTripId: number;
@@ -3335,27 +3337,9 @@ interface FrontendTrain {
 
 export type TrainTrip = {
   trainTripId: number;
-  train: { trainId: number; trainName: string; trainStatus: string };
-  route: {
-    routeId: number;
-    originStation: { stationId: number; stationName: string; position: number };
-    journey: { stationId: number; stationName: string; position: number }[];
-  };
-  schedule: {
-    scheduleId: number;
-    departure: {
-      clockTimeId: number;
-      date: string;
-      hour: number;
-      minute: number;
-    };
-    arrival: {
-      clockTimeId: number;
-      date: string;
-      hour: number;
-      minute: number;
-    };
-  };
+  train: Train;
+  route: Route;
+  schedule: Schedule;
 };
 
 export interface SearchData {
@@ -3473,7 +3457,6 @@ const mapTrainTripsToFrontend = (
       const departureDateTime = new Date(trip.schedule.departure.date);
       const arrivalDateTime = new Date(trip.schedule.arrival.date);
 
-      // Find station IDs and positions based on station names
       const allStations = [trip.route.originStation, ...trip.route.journey];
       const departureStationData = allStations.find(
         (station) =>
@@ -3531,18 +3514,15 @@ const filterTrainTrips = (
     const departureIndex = allStations.indexOf(departureStation.toLowerCase());
     const arrivalIndex = allStations.indexOf(arrivalStation.toLowerCase());
 
-    // Ensure both stations are found and departure comes before arrival
     const stationMatch =
       departureIndex !== -1 &&
       arrivalIndex !== -1 &&
       departureIndex < arrivalIndex;
 
-    // Date matching
     const dateMatch =
       trip.schedule?.departure.date.split("T")[0] ===
       new Date(departureDate).toISOString().split("T")[0];
 
-    // Round-trip logic (placeholder for now)
     let returnMatch = true;
     if (tripType === "round-trip" && returnDate) {
       // TODO: Implement round-trip filtering logic
@@ -3602,30 +3582,34 @@ export default function Search() {
   });
 
   // Fetch unavailable seats based on ticket data
-  const { data: unavailableSeatsData } = useQuery({
-    queryKey: [
-      "unavailableSeats",
-      selectedTrain?.trainTripId,
-      selectedTrain?.departurePosition,
-      selectedTrain?.arrivalPosition,
-    ],
-    queryFn: () =>
-      trainTripApiRequest.checkUnavailableSeats(
-        selectedTrain!.trainTripId,
-        selectedTrain!.departurePosition,
-        selectedTrain!.arrivalPosition
-      ),
-    enabled:
-      !!selectedTrain &&
-      !!selectedTrain.departurePosition &&
-      !!selectedTrain.arrivalPosition,
-  });
+  const { data: unavailableSeatsData, isError: unavailableSeatsError } =
+    useQuery({
+      queryKey: [
+        "unavailableSeats",
+        selectedTrain?.trainTripId,
+        selectedTrain?.departurePosition,
+        selectedTrain?.arrivalPosition,
+      ],
+      queryFn: () =>
+        trainTripApiRequest.checkUnavailableSeats(
+          selectedTrain!.trainTripId,
+          selectedTrain!.departurePosition,
+          selectedTrain!.arrivalPosition
+        ),
+      enabled:
+        !!selectedTrain &&
+        !!selectedTrain.departurePosition &&
+        !!selectedTrain.arrivalPosition,
+    });
 
   useEffect(() => {
     if (unavailableSeatsData) {
       setUnavailableSeats(unavailableSeatsData);
     }
-  }, [unavailableSeatsData]);
+    if (unavailableSeatsError) {
+      console.error("Failed to fetch unavailable seats");
+    }
+  }, [unavailableSeatsData, unavailableSeatsError]);
 
   // Map train trips to frontend format
   const trains = trainTripsData
@@ -3651,7 +3635,11 @@ export default function Search() {
     const train = trains.find((t) => t.id === trainId) || null;
     setSelectedTrain(train);
     setSelectedCoach(null);
-    setUnavailableSeats([]); // Reset unavailable seats when selecting a new train
+    setUnavailableSeats([]);
+    setSelectedSeatsByCoach({});
+    setCartItems([]);
+    setPendingSeats({});
+    setTimer(0);
   };
 
   // Handle coach selection
@@ -3666,6 +3654,11 @@ export default function Search() {
   // Handle seat selection and add to cart
   const toggleSeatSelection = async (seat: number) => {
     if (!selectedCoach || !selectedTrain) return;
+
+    const seatData = selectedCoach.seatData.find((s) => s.seatId === seat);
+    if (!seatData) return;
+
+    // Check if seat is already booked, pending, or unavailable
     if (
       selectedCoach.bookedSeats.includes(seat) ||
       selectedCoach.pendingSeats.includes(seat) ||
@@ -3679,47 +3672,46 @@ export default function Search() {
 
     const coachKey = `${selectedTrain.id}-${selectedCoach.id}`;
     const currentSeats = selectedSeatsByCoach[coachKey] || [];
-    const newSelectedSeats = currentSeats.includes(seat)
+    const isDeselecting = currentSeats.includes(seat);
+    const newSelectedSeats = isDeselecting
       ? currentSeats.filter((s) => s !== seat)
       : [...currentSeats, seat];
-    const isDeselecting = currentSeats.includes(seat);
 
     if (!isDeselecting && cartItems.length >= MAX_TICKETS) {
       alert(`Bạn chỉ có thể đặt tối đa ${MAX_TICKETS} vé trong một lần đặt!`);
       return;
     }
 
+    // Update seat status to pending in the backend
     if (!isDeselecting) {
-      // Update seat status to pending in the backend
-      const seatData = selectedCoach.seatData.find((s) => s.seatId === seat);
-      if (seatData) {
-        try {
-          await updateSeatMutation.mutateAsync({
-            id: seatData.seatId,
-            seatStatus: "pending",
-            seatNumber: seatData.seatNumber,
-            seatType: seatData.seatType,
-            price: seatData.price,
-          });
-          setPendingSeats((prev) => ({
-            ...prev,
-            [seatData.seatId]: Date.now(),
-          }));
-        } catch (error) {
-          console.error("Failed to update seat status to pending:", error);
-          return;
-        }
+      try {
+        await updateSeatMutation.mutateAsync({
+          id: seatData.seatId,
+          seatStatus: "pending",
+          seatNumber: seatData.seatNumber,
+          seatType: seatData.seatType,
+          price: seatData.price,
+        });
+        setPendingSeats((prev) => ({
+          ...prev,
+          [seatData.seatId]: Date.now(),
+        }));
+      } catch (error) {
+        console.error("Failed to update seat status to pending:", error);
+        alert("Không thể đặt ghế này. Vui lòng thử lại!");
+        return;
       }
     }
 
+    // Update selected seats
     setSelectedSeatsByCoach((prev) => ({
       ...prev,
       [coachKey]: newSelectedSeats,
     }));
 
-    if (!currentSeats.includes(seat)) {
-      const seatData = selectedCoach.seatData.find((s) => s.seatId === seat);
-      const price = seatData ? seatData.price : selectedCoach.basePrice;
+    if (!isDeselecting) {
+      // Add to cart
+      const price = seatData.price || selectedCoach.basePrice;
       const newCartItem: CartItem = {
         trainId: selectedTrain.id,
         trainName: selectedTrain.name,
@@ -3739,25 +3731,22 @@ export default function Search() {
       setCartItems((prev) => [...prev, newCartItem]);
       setTimer(600);
     } else {
-      // If deselecting, revert seat to available
-      const seatData = selectedCoach.seatData.find((s) => s.seatId === seat);
-      if (seatData) {
-        try {
-          await updateSeatMutation.mutateAsync({
-            id: seatData.seatId,
-            seatStatus: "available",
-            seatNumber: seatData.seatNumber,
-            seatType: seatData.seatType,
-            price: seatData.price,
-          });
-          setPendingSeats((prev) => {
-            const newPending = { ...prev };
-            delete newPending[seatData.seatId];
-            return newPending;
-          });
-        } catch (error) {
-          console.error("Failed to revert seat to available:", error);
-        }
+      // Revert seat to available
+      try {
+        await updateSeatMutation.mutateAsync({
+          id: seatData.seatId,
+          seatStatus: "available",
+          seatNumber: seatData.seatNumber,
+          seatType: seatData.seatType,
+          price: seatData.price,
+        });
+        setPendingSeats((prev) => {
+          const newPending = { ...prev };
+          delete newPending[seatData.seatId];
+          return newPending;
+        });
+      } catch (error) {
+        console.error("Failed to revert seat to available:", error);
       }
       setCartItems((prev) =>
         prev.filter(
@@ -3912,11 +3901,10 @@ export default function Search() {
     const seatData = selectedCoach!.seatData.find((s) => s.seatId === seat);
     const price = seatData ? seatData.price : selectedCoach!.basePrice;
     const isUnavailable = unavailableSeats.includes(seat);
-    if (isUnavailable) return null; // Hide unavailable seats
     return (
       <div key={seat} className="relative group">
         <Card
-          className={`p-0 text-center cursor-pointer bg-cover bg-center ${
+          className={`p-0 text-center bg-cover bg-center ${
             type === "seat" ? "h-[60px] w-[60px]" : "h-[50px] w-[50px]"
           } flex items-center justify-center ${
             selectedCoach!.bookedSeats.includes(seat)
@@ -3925,19 +3913,22 @@ export default function Search() {
               ? "bg-yellow-500 text-white cursor-not-allowed"
               : getCurrentSelectedSeats().includes(seat)
               ? "bg-[#a6b727] text-white"
-              : "bg-transparent"
+              : isUnavailable
+              ? "bg-gray-500 text-white cursor-not-allowed"
+              : "bg-transparent cursor-pointer"
           }`}
           style={{
             backgroundImage: `url('${
               type === "seat" ? "/seat.png" : "/bed.png"
             }')`,
           }}
-          onClick={() => toggleSeatSelection(seat)}
+          onClick={() => !isUnavailable && toggleSeatSelection(seat)}
         >
           <h3 className="text-sm font-bold">{seat}</h3>
         </Card>
         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 z-10">
           {formatPrice(price)}
+          {isUnavailable && " (Đã đặt)"}
         </div>
       </div>
     );
@@ -3960,9 +3951,9 @@ export default function Search() {
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="flex gap-8 p-6 bg-white rounded-2xl shadow-lg max-w-4xl w-full">
           <div className="w-1/2 text-gray-700 text-base leading-relaxed">
-            Please provide all required search parameters (departure station,
-            arrival station, and departure date) to view available train trips.
-            Use the search form to select your journey details.
+            Vui lòng cung cấp đầy đủ thông tin tìm kiếm (ga đi, ga đến và ngày
+            khởi hành) để xem các chuyến tàu có sẵn. Sử dụng biểu mẫu tìm kiếm
+            để chọn chi tiết hành trình của bạn.
           </div>
           <div className="w-1/2">
             <SearchTicket />
