@@ -21,6 +21,10 @@ const PromotionDisplay = () => {
       try {
         setIsLoading(true);
         const response = await promotionsApiRequest.listPromotions(1, 10); // Fetch first page, 10 items
+        console.error(">>>>>>>>>>>>>>>>>> response :", response);
+        // const promotionsData = (response?.payload?.data?.result || []).filter(
+        //   (promo: PromotionSchemaType) => promo.status === "active"
+        // );
         const promotionsData = (response?.payload?.data?.result || []).filter(
           (promo: PromotionSchemaType) => promo.status === "active"
         );
@@ -46,7 +50,6 @@ const PromotionDisplay = () => {
   if (!isAuth) {
     return (
       <div className="text-center text-gray-600">
-        {" "}
         Please login to get promotion
       </div>
     );

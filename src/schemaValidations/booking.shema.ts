@@ -57,17 +57,33 @@
 //   message: string;
 //   data: any[];
 // };
-export type CreateBookingBodyType = {
+// export type CreateBookingBodyType = {
+//   contactEmail: string;
+//   contactPhone?: string;
+//   promotionIds?: number[];
+//   tickets: {
+//     name: string;
+//     citizenId: string;
+//     customerObject: "adult" | "child" | "student"; // Lowercase
+//   }[];
+//   paymentType: string;
+// };
+export interface CreateBookingBodyType {
+  trainTripId: number;
   contactEmail: string;
   contactPhone?: string;
-  promotionIds?: number[];
+  promotionId?: number;
+  seatIds: number[]; // Required by backend
   tickets: {
     name: string;
     citizenId: string;
-    customerObject: "adult" | "child" | "student"; // Lowercase
+    customerObject: "ADULT" | "CHILD" | "STUDENT";
+    boardingStationId: number;
+    alightingStationId: number;
+    price: number;
   }[];
-  paymentType: string;
-};
+  paymentType: "VNPAY" | "INTERNATIONAL_CARD" | "DOMESTIC_CARD";
+}
 
 export type BookingResType = {
   statusCode: number;

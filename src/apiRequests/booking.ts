@@ -71,19 +71,138 @@ import {
 const prefix = "/api/v1/bookings";
 
 const bookingApiRequest = {
-  createBooking: async (body: CreateBookingBodyType, ticketsParam: string) => {
+  // createBooking: async (body: CreateBookingBodyType, ticketsParam: string) => {
+  //   const encodedTickets = encodeURIComponent(ticketsParam);
+  //   console.log(">>>>>>> Sending booking request:", {
+  //     url: `${prefix}?tickets=${encodedTickets}`,
+  //     body,
+  //     ticketsParam,
+  //     encodedTickets,
+  //   });
+  //   try {
+  //     const response = await http.post<BookingResType>(prefix, body, {
+  //       params: { tickets: ticketsParam },
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //     });
+  //     console.log(">>>>>>> Booking response:", {
+  //       status: response.status,
+  //       payload: response.payload,
+  //     });
+  //     return response;
+  //   } catch (error: any) {
+  //     console.log(">>>>>>> Booking request error:", {
+  //       error,
+  //       status: error.status,
+  //       payload: error.payload,
+  //       message: error.message,
+  //     });
+  //     let errorMessage = error.message || "Lỗi khi tạo đặt vé";
+  //     if (error.payload && typeof error.payload === "string") {
+  //       const match = error.payload.match(/<p><b>Message<\/b> (.*?)<\/p>/);
+  //       if (match && match[1]) {
+  //         errorMessage = match[1];
+  //       }
+  //     }
+  //     throw new HttpError({
+  //       status: error.status || 500,
+  //       payload: error.payload,
+  //       message: errorMessage,
+  //     });
+  //   }
+  // },
+
+  // createBooking: async ({
+  //   body,
+  //   ticketsParam,
+  //   trainTripId,
+  // }: {
+  //   body: CreateBookingBodyType;
+  //   ticketsParam: string;
+  //   trainTripId: number;
+  // }) => {
+  //   const encodedTickets = encodeURIComponent(ticketsParam);
+  //   const requestUrl = `${prefix}?tickets=${encodedTickets}&trainTripId=${trainTripId}`;
+  //   console.log(">>>>>>> Sending booking request:", {
+  //     url: requestUrl,
+  //     body,
+  //     ticketsParam,
+  //     encodedTickets,
+  //     trainTripId,
+  //   });
+  //   try {
+  //     const response = await http.post<BookingResType>(prefix, body, {
+  //       params: {
+  //         tickets: ticketsParam,
+  //         trainTripId,
+  //       },
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //     });
+  //     console.log(">>>>>>> Booking response:", {
+  //       status: response.status,
+  //       payload: response.payload,
+  //     });
+  //     return response;
+  //   } catch (error: any) {
+  //     console.error(">>>>>>> Booking request error:", {
+  //       error,
+  //       status: error.status,
+  //       payload: error.payload,
+  //       message: error.message,
+  //     });
+  //     let errorMessage = error.message || "Lỗi khi tạo đặt vé";
+  //     if (error.payload && typeof error.payload === "string") {
+  //       const match = error.payload.match(/<p><b>Message<\/b> (.*?)<\/p>/);
+  //       if (match && match[1]) {
+  //         errorMessage = match[1];
+  //       }
+  //     }
+  //     throw new HttpError({
+  //       status: error.status || 500,
+  //       payload: error.payload,
+  //       message: errorMessage,
+  //     });
+  //   }
+  // },
+  //
+  createBooking: async ({
+    body,
+    ticketsParam,
+    trainTripId,
+  }: {
+    body: CreateBookingBodyType;
+    ticketsParam: string;
+    trainTripId: number;
+  }) => {
+    if (!ticketsParam) {
+      throw new Error("ticketsParam is required");
+    }
+    try {
+      JSON.parse(ticketsParam); // Validate ticketsParam is valid JSON
+    } catch {
+      throw new Error("Invalid ticketsParam format");
+    }
     const encodedTickets = encodeURIComponent(ticketsParam);
+    const requestUrl = `${prefix}?tickets=${encodedTickets}&trainTripId=${trainTripId}`;
     console.log(">>>>>>> Sending booking request:", {
-      url: `${prefix}?tickets=${encodedTickets}`,
-      body,
+      url: requestUrl,
+      body: JSON.stringify(body, null, 2),
       ticketsParam,
       encodedTickets,
+      trainTripId,
     });
     try {
       const response = await http.post<BookingResType>(prefix, body, {
-        params: { tickets: ticketsParam }, // Use 'tickets'
+        params: {
+          tickets: ticketsParam,
+          trainTripId,
+        },
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
       });
       console.log(">>>>>>> Booking response:", {
@@ -92,7 +211,7 @@ const bookingApiRequest = {
       });
       return response;
     } catch (error: any) {
-      console.log(">>>>>>> Booking request error:", {
+      console.error(">>>>>>> Booking request error:", {
         error,
         status: error.status,
         payload: error.payload,
@@ -112,7 +231,6 @@ const bookingApiRequest = {
       });
     }
   },
-
   getBookingById: (bookingId: string) =>
     http.get<BookingResType>(`${prefix}/${bookingId}`),
   getBookingHistory: () => http.get<BookingListResType>(`${prefix}/history`),
