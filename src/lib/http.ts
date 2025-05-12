@@ -1,4 +1,4 @@
-// // lib/http.ts
+// // export default http;
 // import envConfig from "@/config";
 // import { normalizePath } from "@/lib/utils";
 // import { LoginResType } from "@/schemaValidations/auth.schema";
@@ -6,6 +6,7 @@
 
 // type CustomOptions = Omit<RequestInit, "method"> & {
 //   baseUrl?: string | undefined;
+//   params?: Record<string, string | number | boolean | undefined>;
 // };
 
 // const ENTITY_ERROR_STATUS = 422;
@@ -37,6 +38,7 @@
 //     this.payload = payload;
 //   }
 // }
+
 // export class EntityError extends HttpError {
 //   status: typeof ENTITY_ERROR_STATUS;
 //   payload: EntityErrorPayload;
@@ -112,7 +114,25 @@
 //       ? envConfig.NEXT_PUBLIC_API_ENDPOINT
 //       : options.baseUrl;
 
-//   const fullUrl = `${baseUrl}/${normalizePath(url)}`;
+//   let fullUrl = `${baseUrl}/${normalizePath(url)}`;
+//   if (options?.params) {
+//     const searchParams = new URLSearchParams();
+//     Object.entries(options.params).forEach(([key, value]) => {
+//       if (value !== undefined && value !== null) {
+//         searchParams.append(key, value.toString());
+//       }
+//     });
+//     const queryString = searchParams.toString();
+//     if (queryString) {
+//       fullUrl += `?${queryString}`;
+//     }
+//   }
+
+//   console.log(`>>>>>>> HTTP ${method} request:`, {
+//     url: fullUrl,
+//     body: body instanceof FormData ? "FormData" : body,
+//     headers: { ...baseHeaders, ...options?.headers },
+//   });
 
 //   try {
 //     const res = await fetch(fullUrl, {
@@ -128,14 +148,11 @@
 //     const contentType = res.headers.get("content-type") || "";
 //     let payload: any;
 
-//     // Check if the response is JSON
 //     if (contentType.includes("application/json")) {
 //       payload = await res.json();
 //     } else {
-//       // For non-JSON responses, return the raw text
 //       payload = await res.text();
 //       if (!res.ok) {
-//         // Throw an error with the text payload for non-OK responses
 //         throw new HttpError({
 //           status: res.status,
 //           payload,
@@ -265,6 +282,7 @@
 // };
 
 // export default http;
+
 import envConfig from "@/config";
 import { normalizePath } from "@/lib/utils";
 import { LoginResType } from "@/schemaValidations/auth.schema";
@@ -277,6 +295,7 @@ type CustomOptions = Omit<RequestInit, "method"> & {
 
 const ENTITY_ERROR_STATUS = 422;
 const AUTHENTICATION_ERROR_STATUS = 401;
+const FORBIDDEN_ERROR_STATUS = 403;
 const BAD_REQUEST_STATUS = 400;
 
 type EntityErrorPayload = {
@@ -285,6 +304,13 @@ type EntityErrorPayload = {
     field: string;
     message: string;
   }[];
+};
+
+type BadRequestErrorPayload = {
+  statusCode: number;
+  error: string;
+  message: string;
+  data: any;
 };
 
 export class HttpError extends Error {
@@ -321,13 +347,6 @@ export class EntityError extends HttpError {
   }
 }
 
-type BadRequestErrorPayload = {
-  statusCode: number;
-  error: string;
-  message: string;
-  data: any;
-};
-
 export class BadRequestError extends HttpError {
   status: typeof BAD_REQUEST_STATUS;
   payload: BadRequestErrorPayload;
@@ -339,6 +358,24 @@ export class BadRequestError extends HttpError {
     payload: BadRequestErrorPayload;
   }) {
     super({ status, payload, message: payload.error || "Lỗi yêu cầu" });
+    this.status = status;
+    this.payload = payload;
+  }
+}
+
+export class ForbiddenError extends HttpError {
+  status: typeof FORBIDDEN_ERROR_STATUS;
+  payload: any;
+  constructor({
+    status,
+    payload,
+    message = "Không có quyền truy cập",
+  }: {
+    status: typeof FORBIDDEN_ERROR_STATUS;
+    payload: any;
+    message?: string;
+  }) {
+    super({ status, payload, message });
     this.status = status;
     this.payload = payload;
   }
@@ -359,17 +396,17 @@ const request = async <Response>(
     body = JSON.stringify(options.body);
   }
 
-  const baseHeaders: {
-    [key: string]: string;
-  } =
+  const baseHeaders: { [key: string]: string } =
     body instanceof FormData
       ? {}
       : {
           "Content-Type": "application/json",
+          Accept: "application/json",
         };
 
+  let accessToken: string | null = null;
   if (isClient) {
-    const accessToken = localStorage.getItem("accessToken");
+    accessToken = localStorage.getItem("accessToken");
     if (accessToken) {
       baseHeaders.Authorization = `Bearer ${accessToken}`;
     }
@@ -398,6 +435,7 @@ const request = async <Response>(
     url: fullUrl,
     body: body instanceof FormData ? "FormData" : body,
     headers: { ...baseHeaders, ...options?.headers },
+    accessToken: accessToken ? `${accessToken.slice(0, 10)}...` : "No token",
   });
 
   try {
@@ -409,6 +447,7 @@ const request = async <Response>(
       } as any,
       body,
       method,
+      credentials: "include", // Support session-based auth if needed
     });
 
     const contentType = res.headers.get("content-type") || "";
@@ -418,11 +457,16 @@ const request = async <Response>(
       payload = await res.json();
     } else {
       payload = await res.text();
+      // Attempt to extract error message from HTML
+      const messageMatch = payload.match(/<p><b>Message<\/b> (.*?)<\/p>/);
+      const extractedMessage = messageMatch
+        ? messageMatch[1]
+        : payload.slice(0, 100) + "...";
       if (!res.ok) {
         throw new HttpError({
           status: res.status,
           payload,
-          message: `Non-JSON response: ${payload.slice(0, 100)}...`,
+          message: `Non-JSON response: ${extractedMessage}`,
         });
       }
     }
@@ -454,38 +498,61 @@ const request = async <Response>(
           }
         );
       } else if (res.status === AUTHENTICATION_ERROR_STATUS) {
-        if (isClient) {
-          if (!clientLogoutRequest) {
-            clientLogoutRequest = fetch("/api/auth/logout", {
-              method: "POST",
-              body: null,
-              headers: {
-                ...baseHeaders,
-              } as any,
-            });
-            try {
-              await clientLogoutRequest;
-            } catch (error) {
-              console.error("Logout error:", error);
-            } finally {
-              localStorage.removeItem("accessToken");
-              clientLogoutRequest = null;
-              location.href = `/login`;
-            }
+        if (isClient && !clientLogoutRequest) {
+          clientLogoutRequest = fetch("/api/auth/logout", {
+            method: "POST",
+            headers: {
+              ...baseHeaders,
+            } as any,
+          });
+          try {
+            await clientLogoutRequest;
+          } catch (error) {
+            console.error("Logout error:", error);
+          } finally {
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            clientLogoutRequest = null;
+            location.href = `/login`;
           }
-        } else {
-          const accessToken = (options?.headers as any)?.Authorization?.split(
+        } else if (!isClient) {
+          const token = (options?.headers as any)?.Authorization?.split(
             "Bearer "
           )[1];
-          redirect(`/logout?accessToken=${accessToken}`);
+          redirect(`/logout?accessToken=${token}`);
         }
+      } else if (res.status === FORBIDDEN_ERROR_STATUS) {
+        let message = "Không có quyền truy cập.";
+        if (
+          typeof payload === "string" &&
+          payload.includes("PermissionException")
+        ) {
+          message = "Bạn không có quyền truy cập endpoint này.";
+        } else if (
+          contentType.includes("application/json") &&
+          payload.message
+        ) {
+          message = payload.message;
+        }
+        throw new ForbiddenError({
+          status: FORBIDDEN_ERROR_STATUS,
+          payload,
+          message,
+        });
       } else {
+        let message = contentType.includes("application/json")
+          ? payload.message || "Lỗi HTTP"
+          : `Non-JSON response: ${payload.slice(0, 100)}...`;
+        if (
+          typeof payload === "string" &&
+          payload.includes("PermissionException")
+        ) {
+          message = "Bạn không có quyền truy cập endpoint này.";
+        }
         throw new HttpError({
           status: res.status,
           payload,
-          message: contentType.includes("application/json")
-            ? payload.message || "Lỗi HTTP"
-            : `Non-JSON response: ${payload.slice(0, 100)}...`,
+          message,
         });
       }
     }
@@ -504,6 +571,7 @@ const request = async <Response>(
         localStorage.setItem("refreshToken", refreshToken);
       } else if (["api/v1/auth/logout"].includes(normalizeUrl)) {
         localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
       }
     }
 
@@ -518,32 +586,101 @@ const request = async <Response>(
   }
 };
 
+// Token refresh logic
+const refreshToken = async () => {
+  const refreshToken = localStorage.getItem("refreshToken");
+  if (!refreshToken) {
+    throw new HttpError({
+      status: 401,
+      payload: null,
+      message: "No refresh token available",
+    });
+  }
+  try {
+    const response = await fetch(
+      `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/api/v1/auth/token`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refreshToken }),
+      }
+    );
+    if (!response.ok) {
+      throw new HttpError({
+        status: response.status,
+        payload: await response.text(),
+        message: "Failed to refresh token",
+      });
+    }
+    const { accessToken, refreshToken: newRefreshToken } =
+      await response.json();
+    localStorage.setItem("accessToken", accessToken);
+    localStorage.setItem("refreshToken", newRefreshToken);
+    return accessToken;
+  } catch (error) {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    location.href = "/login";
+    throw error;
+  }
+};
+
+// Wrapper for requests with token refresh
+const requestWithRefresh = async <Response>(
+  method: "GET" | "POST" | "PUT" | "DELETE",
+  url: string,
+  options?: CustomOptions | undefined
+): Promise<any> => {
+  try {
+    return await request<Response>(method, url, options);
+  } catch (error: any) {
+    if (error.status === AUTHENTICATION_ERROR_STATUS && isClient) {
+      try {
+        const newAccessToken = await refreshToken();
+        const newOptions = {
+          ...options,
+          headers: {
+            ...options?.headers,
+            Authorization: `Bearer ${newAccessToken}`,
+          },
+        };
+        return await request<Response>(method, url, newOptions);
+      } catch (refreshError) {
+        throw refreshError;
+      }
+    }
+    throw error;
+  }
+};
+
 const http = {
   get<Response>(
     url: string,
     options?: Omit<CustomOptions, "body"> | undefined
   ) {
-    return request<Response>("GET", url, options);
+    return requestWithRefresh<Response>("GET", url, options);
   },
   post<Response>(
     url: string,
     body: any,
     options?: Omit<CustomOptions, "body"> | undefined
   ) {
-    return request<Response>("POST", url, { ...options, body });
+    return requestWithRefresh<Response>("POST", url, { ...options, body });
   },
   put<Response>(
     url: string,
     body: any,
     options?: Omit<CustomOptions, "body"> | undefined
   ) {
-    return request<Response>("PUT", url, { ...options, body });
+    return requestWithRefresh<Response>("PUT", url, { ...options, body });
   },
   delete<Response>(
     url: string,
     options?: Omit<CustomOptions, "body"> | undefined
   ) {
-    return request<Response>("DELETE", url, { ...options });
+    return requestWithRefresh<Response>("DELETE", url, options);
   },
 };
 

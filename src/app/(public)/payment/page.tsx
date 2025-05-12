@@ -2501,16 +2501,16 @@ export default function Payment() {
 
   const mapPassengerTypeToCustomerObject = (
     type: string
-  ): "ADULT" | "CHILD" | "STUDENT" => {
+  ): "adult" | "CHILD" | "STUDENT" => {
     switch (type.toLowerCase()) {
       case "adult":
-        return "ADULT";
+        return "adult";
       case "children":
         return "CHILD";
       case "student":
         return "STUDENT";
       default:
-        return "ADULT";
+        return "adult";
     }
   };
   // const handlePayment = () => {
@@ -2638,18 +2638,18 @@ export default function Payment() {
       return;
     }
 
-    // Simplify ticketsParam to match Postman
+    const trainTripId = cartItems[0].trainTripId; // Use cartItems data
     const ticketsParam = JSON.stringify(
       cartItems.map((item) => ({
         seatNumber: item.seatNumber,
         price: item.price,
-        boardingStationId: item.departureStationId, // Use cartItems data
+        boardingStationId: item.departureStationId,
         alightingStationId: item.arrivalStationId,
       }))
     );
 
     const bookingBody: CreateBookingBodyType = {
-      trainTripId: 1, // Use trainTripId=1 for testing, or validate cartItems[0].trainTripId
+      trainTripId,
       contactEmail,
       contactPhone: contactPhone || undefined,
       promotionId: promoCode ? parseInt(promoCode) : undefined,
@@ -2662,12 +2662,7 @@ export default function Payment() {
         alightingStationId: cartItems[index].arrivalStationId,
         price: cartItems[index].price,
       })),
-      paymentType:
-        selectedPaymentMethod === "vnpay_qr"
-          ? "VNPAY"
-          : selectedPaymentMethod === "international_card"
-          ? "INTERNATIONAL_CARD"
-          : "DOMESTIC_CARD",
+      paymentType: "VNPAY", // Always VNPAY
     };
 
     // Validate bookingBody
@@ -2733,7 +2728,7 @@ export default function Payment() {
       {
         body: bookingBody,
         ticketsParam,
-        trainTripId: bookingBody.trainTripId,
+        trainTripId,
       },
       {
         onSuccess: (response) => {
@@ -2759,11 +2754,19 @@ export default function Payment() {
           });
           let errorMessage =
             error.message || "Lỗi khi tạo đặt vé. Vui lòng thử lại.";
-          if (error.payload && typeof error.payload === "string") {
+          if (error.status === 403) {
+            errorMessage = "Bạn không có quyền truy cập endpoint này.";
+          } else if (error.status === 401) {
+            errorMessage = "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.";
+            localStorage.removeItem("accessToken");
+            router.push("/login");
+          } else if (error.payload && typeof error.payload === "string") {
             const match = error.payload.match(/<p><b>Message<\/b> (.*?)<\/p>/);
             if (match && match[1]) {
               errorMessage = match[1];
             }
+          } else if (!error.payload) {
+            errorMessage = "Không nhận được phản hồi JSON từ server.";
           }
           toast({
             variant: "destructive",
