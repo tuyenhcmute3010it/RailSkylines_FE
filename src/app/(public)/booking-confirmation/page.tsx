@@ -10,7 +10,6 @@ import QRCodeTicket from "@/components/QRCodeTicket";
 import QRCodeTicketForPdf from "@/components/QRCodeForPdf";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-
 interface Ticket {
   ticketId: number;
   customerObject: "adult" | "children" | "student";
@@ -93,16 +92,6 @@ export default function BookingConfirmation() {
   >(null);
 
   // Pre-load logo
-  useEffect(() => {
-    const img = new Image();
-    img.src = "/logo.png";
-    img.crossOrigin = "anonymous";
-    img.onload = () => setLogoLoaded(true);
-    img.onerror = () => {
-      console.error("Failed to load logo");
-      setLogoLoaded(false);
-    };
-  }, []);
 
   // Fetch booking details
   const { data, isLoading, error } = useQuery({
@@ -275,12 +264,7 @@ export default function BookingConfirmation() {
           <div className="text-center">
             {/* Header with Logo and Title */}
             <div className="flex items-center justify-between mb-4">
-              <img
-                src="/logo.png"
-                alt="Logo"
-                className="w-12 h-12"
-                crossOrigin="anonymous"
-              />
+              <img src="/logo.png" alt="Logo" className="w-12 h-12" />
               <h1 className="text-2xl font-bold text-blue-600">THẺ LÊN TÀU</h1>
               <div className="w-12 h-12"></div>
             </div>

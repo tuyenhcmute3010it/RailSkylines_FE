@@ -33,7 +33,6 @@ export default function NavItems({ className }: { className?: string }) {
   const menuItems = [
     { title: t("FindTicket"), href: "/search" },
     { title: t("BookingInfo"), href: "/booking-info" },
-    { title: t("ReturnTicket"), href: "/guest/return" },
     { title: t("Promotion"), href: "/promotion" },
     { title: t("Term&Conditions"), href: "/term-of-service" },
     { title: t("Contact"), href: "/about" },

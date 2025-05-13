@@ -29,7 +29,7 @@ const menuItems = [
   {
     title: "Đơn hàng",
     Icon: ShoppingCart,
-    href: "/manage/orders",
+    href: "/manage/bookings",
     roles: [Role.Admin, Role.Staff],
   },
   {
@@ -77,7 +77,6 @@ const menuItems = [
   {
     title: "Vai Trò",
     Icon: UserRoundPen,
-
     href: "/manage/roles",
     // roles: [Role.Admin],
   },

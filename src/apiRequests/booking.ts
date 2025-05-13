@@ -2,7 +2,11 @@ import http, { HttpError } from "@/lib/http";
 import {
   BookingListResType,
   BookingResType,
+  BookingType,
   CreateBookingBodyType,
+  ResBookingHistoryDTOType,
+  ResTicketHistoryDTOType,
+  TicketType,
 } from "@/schemaValidations/booking.schema";
 
 const prefix = "/api/v1/bookings";
@@ -80,7 +84,23 @@ const bookingApiRequest = {
   },
   getBookingById: (bookingId: string) =>
     http.get<BookingResType>(`${prefix}/${bookingId}`),
-  getBookingHistory: () => http.get<BookingListResType>(`${prefix}/history`),
+
+  searchBooking: (bookingCode: string, vnpTxnRef: string) =>
+    http.get<BookingType>(
+      `/bookings/search?bookingCode=${bookingCode}&vnpTxnRef=${vnpTxnRef}`
+    ),
+  searchTicket: (ticketCode: string, citizenId: string) =>
+    http.get<TicketType>(
+      `/tickets/search?ticketCode=${ticketCode}&citizenId=${citizenId}`
+    ),
+  getTicketHistory: (email: string) =>
+    http.get<ResTicketHistoryDTOType[]>(`/tickets/history`, {
+      params: { email },
+    }),
+  getBookingHistory: (email: string) =>
+    http.get<ResBookingHistoryDTOType[]>(`/bookings/history`, {
+      params: { email },
+    }),
 };
 
 export default bookingApiRequest;

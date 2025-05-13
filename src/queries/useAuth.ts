@@ -2,6 +2,7 @@ import authApiRequest from "@/apiRequests/auth";
 import http from "@/lib/http";
 import {
   RegisterBodyType,
+  ResetPasswordBodyType,
   VerifyEmailBodyType,
 } from "@/schemaValidations/auth.schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -102,6 +103,14 @@ export const useResendCodeMutation = () => {
         stack: error.stack,
       });
       throw error;
+    },
+  });
+};
+export const useResetPasswordMutation = () => {
+  return useMutation({
+    mutationFn: async (body: ResetPasswordBodyType) => {
+      const response = await http.post("/api/v1/auth/change-password", body);
+      return response.data;
     },
   });
 };

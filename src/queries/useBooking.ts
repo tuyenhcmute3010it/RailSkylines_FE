@@ -22,9 +22,36 @@ export const useCreateBookingMutation = () => {
     },
   });
 };
-export const useGetBookingHistory = () => {
+export const useGetBookingHistoryQuery = (email: string) => {
   return useQuery({
-    queryKey: ["bookings", "history"],
-    queryFn: () => bookingApiRequest.getBookingHistory(),
+    queryKey: ["bookings", email],
+    queryFn: () => bookingApiRequest.getBookingHistory(email),
+    enabled: !!email,
+  });
+};
+export const useGetTicketHistoryQuery = (email: string) => {
+  return useQuery({
+    queryKey: ["tickets", email],
+    queryFn: () => bookingApiRequest.getTicketHistory(email),
+    enabled: !!email,
+  });
+};
+
+export const useSearchBookingQuery = (
+  bookingCode: string,
+  vnpTxnRef: string
+) => {
+  return useQuery({
+    queryKey: ["booking", bookingCode, vnpTxnRef],
+    queryFn: () => bookingApiRequest.searchBooking(bookingCode, vnpTxnRef),
+    enabled: !!bookingCode && !!vnpTxnRef,
+  });
+};
+
+export const useSearchTicketQuery = (ticketCode: string, citizenId: string) => {
+  return useQuery({
+    queryKey: ["ticket", ticketCode, citizenId],
+    queryFn: () => bookingApiRequest.searchTicket(ticketCode, citizenId),
+    enabled: !!ticketCode && !!citizenId,
   });
 };

@@ -2,12 +2,17 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Trash2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/components/ui/use-toast";
 import { useCreateBookingMutation } from "@/queries/useBooking";
 import { CreateBookingBodyType } from "@/schemaValidations/booking.schema";
+import { useQuery } from "@tanstack/react-query";
+import promotionsApiRequest from "@/apiRequests/promotion";
+import { PromotionSchemaType } from "@/schemaValidations/promotion.schema";
+import { useAppContext } from "@/components/app-provider";
+import { CustomerObjectEnum } from "@/schemaValidations/account.schema";
 
 interface CartItem {
   trainId: string;
@@ -34,6 +39,7 @@ interface PassengerInfo {
 export default function Payment() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { isAuth } = useAppContext();
   const tickets = searchParams.get("tickets");
   const timerParam = searchParams.get("timer");
 
@@ -50,6 +56,10 @@ export default function Payment() {
     }))
   );
   const [promoCode, setPromoCode] = useState("");
+  const [selectedPromotion, setSelectedPromotion] =
+    useState<PromotionSchemaType | null>(null);
+  const [suggestedPromotion, setSuggestedPromotion] =
+    useState<PromotionSchemaType | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
     string | null
   >(null);
@@ -59,6 +69,100 @@ export default function Payment() {
 
   const { mutate: createBooking, isPending: isLoading } =
     useCreateBookingMutation();
+
+  // Fetch promotions
+  const { data: promotionsData, isLoading: isPromotionsLoading } = useQuery({
+    queryKey: ["promotions"],
+    queryFn: async () => {
+      if (!isAuth) return { payload: { data: { result: [] } } };
+      const response = await promotionsApiRequest.listPromotions(1, 10);
+      return response;
+    },
+    select: (response) =>
+      (response?.payload?.data?.result || []).filter(
+        (promo: PromotionSchemaType) => promo.status === "active"
+      ),
+    enabled: isAuth,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Handle promo code input and suggestion
+  const handlePromoCodeChange = useCallback(
+    (value: string) => {
+      setPromoCode(value);
+      setSelectedPromotion(null);
+
+      if (value === "123123" && promotionsData) {
+        const matchingPromo = promotionsData.find(
+          (promo: PromotionSchemaType) => promo.promotionCode === "123123"
+        );
+        if (matchingPromo) {
+          setSuggestedPromotion(matchingPromo);
+        } else {
+          setSuggestedPromotion(null);
+        }
+      } else {
+        setSuggestedPromotion(null);
+      }
+    },
+    [promotionsData]
+  );
+
+  // Apply promotion
+  const applyPromotion = useCallback(() => {
+    if (!promoCode || !promotionsData) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Vui lòng nhập mã khuyến mại hợp lệ.",
+      });
+      return;
+    }
+
+    const promotion = promotionsData.find(
+      (promo: PromotionSchemaType) => promo.promotionCode === promoCode
+    );
+
+    if (!promotion) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Mã khuyến mại không hợp lệ hoặc đã hết hạn.",
+      });
+      return;
+    }
+
+    const now = new Date();
+    const validityDate = new Date(promotion.validity);
+    if (validityDate < now) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Mã khuyến mại đã hết hạn.",
+      });
+      return;
+    }
+
+    setSelectedPromotion(promotion);
+    setSuggestedPromotion(null);
+    toast({
+      title: "Thành công",
+      description: `Đã áp dụng khuyến mại: ${promotion.promotionName} (10% giảm).`,
+    });
+  }, [promoCode, promotionsData]);
+
+  // Select suggested promotion
+  const selectSuggestedPromotion = useCallback(() => {
+    if (suggestedPromotion) {
+      setPromoCode(suggestedPromotion.promotionCode);
+      setSelectedPromotion(suggestedPromotion);
+      setSuggestedPromotion(null);
+      toast({
+        title: "Thành công",
+        description: `Đã chọn khuyến mại: ${suggestedPromotion.promotionName}.`,
+      });
+    }
+  }, [suggestedPromotion]);
 
   // Timer countdown and expiration check
   useEffect(() => {
@@ -81,7 +185,6 @@ export default function Payment() {
         return prev - 1;
       });
 
-      // Check individual ticket expiration
       const allExpired = cartItems.every((item) => {
         const timeLeft = Math.floor(
           (item.timestamp + initialTimer * 1000 - Date.now()) / 1000
@@ -130,9 +233,23 @@ export default function Payment() {
       .padStart(2, "0")}`;
   };
 
-  // Calculate total price
+  // Calculate original total
   const calculateTotal = () => {
     return cartItems.reduce((sum, item) => sum + item.price, 0);
+  };
+
+  // Calculate display-only discount amount (10%)
+  const calculateDiscountAmount = () => {
+    if (!selectedPromotion) return 0;
+    const subtotal = calculateTotal();
+    return Math.round(subtotal * 0.1); // 10% discount for display
+  };
+
+  // Calculate display-only final total
+  const calculateFinalTotal = () => {
+    const subtotal = calculateTotal();
+    if (!selectedPromotion) return subtotal;
+    return Math.round(subtotal * 0.9); // 10% discount for display
   };
 
   // Handle passenger info input
@@ -161,16 +278,22 @@ export default function Payment() {
 
   const mapPassengerTypeToCustomerObject = (
     type: string
-  ): "adult" | "children" | "student" => {
+  ): CustomerObjectEnum => {
     switch (type.toLowerCase()) {
       case "adult":
-        return "adult";
-      case "children":
-        return "children";
+        return CustomerObjectEnum.adult;
+      case "child":
+        return CustomerObjectEnum.children;
       case "student":
-        return "student";
+        return CustomerObjectEnum.student;
+      case "elderly":
+        return CustomerObjectEnum.elderly;
+      case "veteran":
+        return CustomerObjectEnum.veteran;
+      case "disabled":
+        return CustomerObjectEnum.disabled;
       default:
-        return "adult";
+        return CustomerObjectEnum.adult; // mặc định nếu không khớp
     }
   };
 
@@ -186,7 +309,7 @@ export default function Payment() {
       return;
     }
 
-    const trainTripId = cartItems[0].trainTripId; // Use cartItems data
+    const trainTripId = cartItems[0].trainTripId;
     const ticketsParam = JSON.stringify(
       cartItems.map((item) => ({
         seatNumber: item.seatNumber,
@@ -200,7 +323,9 @@ export default function Payment() {
       trainTripId,
       contactEmail,
       contactPhone: contactPhone || undefined,
-      promotionId: promoCode ? parseInt(promoCode) : undefined,
+      promotionId: selectedPromotion
+        ? selectedPromotion.promotionId
+        : undefined,
       seatIds: cartItems.map((item) => item.seatNumber),
       tickets: passengerInfo.map((info, index) => ({
         name: info.fullName,
@@ -208,9 +333,14 @@ export default function Payment() {
         customerObject: mapPassengerTypeToCustomerObject(info.passengerType),
         boardingStationId: cartItems[index].departureStationId,
         alightingStationId: cartItems[index].arrivalStationId,
-        price: cartItems[index].price,
+        price: cartItems[index].price, // Original price
       })),
-      paymentType: "VNPAY",
+      paymentType:
+        selectedPaymentMethod === "vnpay_qr"
+          ? "VNPAY"
+          : selectedPaymentMethod === "international_card"
+          ? "INTERNATIONAL_CARD"
+          : "DOMESTIC_CARD",
     };
 
     // Validate bookingBody
@@ -325,6 +455,7 @@ export default function Payment() {
       }
     );
   };
+
   const handleNextStep = () => {
     if (step === 1) {
       const isValid = passengerInfo.every(
@@ -441,7 +572,7 @@ export default function Payment() {
                               handlePassengerInfoChange(
                                 index,
                                 "passengerType",
-                                e.target.value as "adult" | "child" | "student"
+                                e.target.value as CustomerObjectEnum
                               )
                             }
                             className="w-full p-2 border rounded mt-1"
@@ -450,6 +581,9 @@ export default function Payment() {
                             <option value="adult">Người lớn</option>
                             <option value="child">Trẻ em</option>
                             <option value="student">Sinh viên</option>
+                            <option value="elderly">Người cao tuổi</option>
+                            <option value="veteran">Cựu chiến binh</option>
+                            <option value="disabled">Người khuyết tật</option>
                           </select>
                           <div className="font-bold mt-1">Số giấy tờ</div>
                           <div>
@@ -469,7 +603,7 @@ export default function Payment() {
                             disabled={isExpired}
                           />
                         </td>
-                        <td className="p-2ய border">
+                        <td className="p-2 border">
                           {isExpired ? (
                             <div className="font-bold text-red-600">
                               Giữ trong: Hết hạn
@@ -496,7 +630,9 @@ export default function Payment() {
                         </td>
                         <td className="p-2 border">0</td>
                         <td className="p-2 border">
-                          Không có khuyến mại cho vé này
+                          {selectedPromotion
+                            ? `${selectedPromotion.promotionName} (10%)`
+                            : "Không có khuyến mại"}
                         </td>
                         <td className="p-2 border">
                           {formatPrice(item.price)}
@@ -518,20 +654,60 @@ export default function Payment() {
               </table>
             </div>
             <div className="flex justify-between items-center bg-[#d9edf7] p-2">
-              <div className="flex items-center space-x-2">
-                <Input
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  placeholder="Nhập mã giảm giá tại đây"
-                  className="w-64 border-2 border-blue-600 font-semibold focus:ring-2 focus:ring-blue-600 focus:border-blue-600 shadow-sm"
-                />
-                <Button className="bg-blue-600 hover:bg-blue-700">
+              <div className="flex items-center space-x-2 relative">
+                <div className="relative">
+                  <Input
+                    value={promoCode}
+                    onChange={(e) => handlePromoCodeChange(e.target.value)}
+                    placeholder="Nhập mã giảm giá tại đây"
+                    className="w-64 border-2 border-blue-600 font-semibold focus:ring-2 focus:ring-blue-600 focus:border-blue-600 shadow-sm"
+                    disabled={isPromotionsLoading}
+                  />
+                  {suggestedPromotion && (
+                    <div className="absolute top-full mt-2 w-64 bg-white border rounded-lg shadow-lg p-2 z-10">
+                      <p className="text-sm font-semibold">
+                        {suggestedPromotion.promotionName}
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        Mã: {suggestedPromotion.promotionCode}
+                      </p>
+                      <p className="text-xs text-gray-600">Giảm: 10%</p>
+                      <p className="text-xs text-gray-600">
+                        Hạn sử dụng:{" "}
+                        {new Date(
+                          suggestedPromotion.validity
+                        ).toLocaleDateString()}
+                      </p>
+                      <Button
+                        className="mt-2 w-full bg-blue-600 hover:bg-blue-700"
+                        onClick={selectSuggestedPromotion}
+                      >
+                        Chọn khuyến mại này
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={applyPromotion}
+                  disabled={isPromotionsLoading}
+                >
                   Áp dụng
                 </Button>
               </div>
-              <p className="text-lg font-semibold mr-5">
-                Tổng tiền: {formatPrice(calculateTotal())}
-              </p>
+              <div className="text-right mr-5">
+                {selectedPromotion && (
+                  <p className="text-sm">
+                    Giảm giá (10%):{" "}
+                    <span className="text-red-500">
+                      -{formatPrice(calculateDiscountAmount())}
+                    </span>
+                  </p>
+                )}
+                <p className="text-lg font-semibold">
+                  Tổng tiền: {formatPrice(calculateFinalTotal())}
+                </p>
+              </div>
             </div>
 
             {/* Payment Method Selection */}
@@ -659,6 +835,12 @@ export default function Payment() {
               <p>
                 <strong>Số điện thoại:</strong> {contactPhone || "Không có"}
               </p>
+              {selectedPromotion && (
+                <p>
+                  <strong>Khuyến mại:</strong> {selectedPromotion.promotionName}{" "}
+                  (10% giảm)
+                </p>
+              )}
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
@@ -732,7 +914,7 @@ export default function Payment() {
                       Tổng Tiền
                     </td>
                     <td className="p-2 border text-lg font-semibold">
-                      {formatPrice(calculateTotal())}₫
+                      {formatPrice(calculateFinalTotal())}₫
                     </td>
                   </tr>
                 </tbody>
@@ -773,8 +955,15 @@ export default function Payment() {
                   : "Thẻ ATM/Tài khoản nội địa"}
               </strong>
             </p>
+            {selectedPromotion && (
+              <p className="text-sm text-gray-600">
+                Khuyến mại áp dụng:{" "}
+                <strong>{selectedPromotion.promotionName}</strong> ( 10% giảm,
+                tiết kiệm {formatPrice(calculateDiscountAmount())})
+              </p>
+            )}
             <p className="text-lg font-semibold">
-              Tổng tiền: {formatPrice(calculateTotal())}
+              Tổng tiền: {formatPrice(calculateFinalTotal())}
             </p>
             <p className="text-sm text-gray-600">
               Nhấn "Xác nhận thanh toán" để hoàn tất giao dịch.

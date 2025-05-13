@@ -705,5 +705,46 @@
         "notFound": "Booking not found or invalid credentials."
       }
     }
+  },
+  "ResetPassword": {
+    "title": "Reset Password",
+    "description": "Enter your email, verification code, and new password to reset your account password.",
+    "email": "Email",
+    "verificationCode": "Verification Code",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "resetPassword": "Reset Password",
+    "resendCode": "Resend Code",
+    "backTo": "Back to",
+    "login": "Login",
+    "ResetSuccess": "Password reset successfully. Please log in with your new password.",
+    "ResetError": "Unable to reset password. Please try again.",
+    "EmailNotRegistered": "The email is not registered.",
+    "InvalidCode": "The verification code is invalid or has expired.",
+    "InvalidEmailFormat": "Invalid email format.",
+    "OTPNotVerified": "OTP has not been verified. Please verify the OTP first.",
+    "Unauthorized": "Unauthorized. Please log in again.",
+    "NetworkError": "Network error. Please try again.",
+    "NoEmailProvided": "No email provided. Please enter your email address.",
+    "InvalidEmail": "Invalid email format.",
+    "ResendSuccess": "Verification code has been resent successfully.",
+    "ResendError": "Unable to resend verification code.",
+    "UnauthorizedError": "Unauthorized. Please log in or register first.",
+    "InvalidResponseError": "Invalid response from the server. Please try again.",
+    "InternalError": "An internal error occurred. Please try again later."
+  },
+  "ResendCode": {
+    "title": "Resend Verification Code",
+    "description": "Enter your email to receive a new verification code.",
+    "email": "Email",
+    "submit": "Send Code",
+    "backTo": "Back to",
+    "login": "Login",
+    "ResendSuccess": "Verification code sent successfully.",
+    "ResendError": "Failed to send verification code.",
+    "EmailNotRegistered": "Email is not registered.",
+    "InvalidEmailFormat": "Invalid email format.",
+    "Unauthorized": "Unauthorized. Please try again.",
+    "NetworkError": "Network error. Please try again."
   }
 }

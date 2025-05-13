@@ -181,6 +181,11 @@ export default function LoginForm() {
                   {t("Register") || "Đăng ký"}
                 </Link>
               </div>
+              <div className="text-center text-sm">
+                <Link href="/resend-code" className="underline">
+                  {"Forgot Password"}
+                </Link>
+              </div>
               <Link href={googleOauthUrl}>
                 <Button variant="outline" className="w-full" type="button">
                   {t("googleLogin") || "Đăng nhập bằng Google"}

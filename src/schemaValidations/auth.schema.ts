@@ -120,3 +120,25 @@ export interface RegisterResType {
   createdAt: string;
   codeExpired: string;
 }
+export const ResetPasswordBody = z
+  .object({
+    email: z
+      .string()
+      .email("Invalid email format")
+      .nonempty("Email is required"),
+    verificationCode: z
+      .string()
+      .nonempty("Verification code is required")
+      .min(6, "Verification code must be at least 6 characters"),
+    newPassword: z
+      .string()
+      .nonempty("New password is required")
+      .min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().nonempty("Confirm password is required"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+export type ResetPasswordBodyType = z.infer<typeof ResetPasswordBody>;
