@@ -1,4 +1,5 @@
 import http from "@/lib/http";
+import envConfig from "@/config";
 import {
   LoginBodyType,
   LoginResType,
@@ -18,17 +19,17 @@ const getAuthToken = (): string | null => {
 const authApiRequest = {
   login: (body: LoginBodyType) =>
     http.post<LoginResType>("/api/v1/auth/login", body, {
-      baseUrl: "http://localhost:8080",
+      baseUrl: `${envConfig.NEXT_PUBLIC_API_ENDPOINT}`,
       credentials: "include", // Include cookies for refresh token
     }),
   sLogin: (body: LoginBodyType) =>
     http.post<LoginResType>("/api/v1/auth/login", body, {
-      baseUrl: "http://localhost:8080",
+      baseUrl: `${envConfig.NEXT_PUBLIC_API_ENDPOINT}`,
       credentials: "include",
     }), // Server-side login, same as login
   logout: (body: LogoutBodyType & { accessToken: string }) =>
     http.post<void>("/api/v1/auth/logout", null, {
-      baseUrl: "http://localhost:8080",
+      baseUrl: `${envConfig.NEXT_PUBLIC_API_ENDPOINT}`,
       credentials: "include",
       headers: {
         Authorization: `Bearer ${body.accessToken}`,
@@ -39,7 +40,7 @@ const authApiRequest = {
       "/api/v1/auth/logout",
       { refreshToken: body.refreshToken },
       {
-        baseUrl: "http://localhost:8080",
+        baseUrl: `${envConfig.NEXT_PUBLIC_API_ENDPOINT}`,
         credentials: "include",
         headers: {
           Authorization: `Bearer ${body.accessToken}`,
@@ -48,17 +49,17 @@ const authApiRequest = {
     ), // Server-side logout with refreshToken in body
   refreshToken: () =>
     http.post<RefreshTokenResType>("/api/v1/auth/refresh", null, {
-      baseUrl: "http://localhost:8080",
+      baseUrl: `${envConfig.NEXT_PUBLIC_API_ENDPOINT}`,
       credentials: "include",
     }),
   sRefreshToken: (body: RefreshTokenBodyType) =>
     http.post<RefreshTokenResType>("/api/v1/auth/refresh", body, {
-      baseUrl: "http://localhost:8080",
+      baseUrl: `${envConfig.NEXT_PUBLIC_API_ENDPOINT}`,
       credentials: "include",
     }), // Server-side refresh with explicit refreshToken
   setTokenToCookie: (body: { accessToken: string; refreshToken: string }) =>
     http.post("/api/v1/auth/token", body, {
-      baseUrl: "http://localhost:8080",
+      baseUrl: `${envConfig.NEXT_PUBLIC_API_ENDPOINT}`,
       credentials: "include",
     }),
   register: (body: RegisterBodyType) =>
@@ -77,7 +78,7 @@ const authApiRequest = {
       headers["Authorization"] = `Bearer ${token}`;
     }
     return http.post<VerifyCodeBodyType>(`${prefix}/verify-code`, body, {
-      baseUrl: "http://localhost:8080",
+      baseUrl: `${envConfig.NEXT_PUBLIC_API_ENDPOINT}`,
       headers,
       credentials: "include",
     });
@@ -89,7 +90,7 @@ const authApiRequest = {
       body
     );
     const response = await fetch(
-      `http://localhost:8080${prefix}/verify-email`,
+      `${envConfig.NEXT_PUBLIC_API_ENDPOINT}${prefix}/verify-email`,
       {
         method: "POST",
         headers: {
