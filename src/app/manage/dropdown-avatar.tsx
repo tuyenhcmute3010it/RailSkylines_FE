@@ -134,7 +134,7 @@ export default function DropdownAvatar() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/support" className="cursor-pointer">
+          <Link href="/booking-history" className="cursor-pointer">
             {t("Support")}
           </Link>
         </DropdownMenuItem>

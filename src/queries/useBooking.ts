@@ -22,13 +22,16 @@ export const useCreateBookingMutation = () => {
     },
   });
 };
-export const useGetBookingHistoryQuery = (email: string) => {
+
+export const useGetBookingHistoryQuery = () => {
   return useQuery({
-    queryKey: ["bookings", email],
-    queryFn: () => bookingApiRequest.getBookingHistory(email),
-    enabled: !!email,
+    queryKey: ["bookings"],
+    queryFn: () => bookingApiRequest.getBookingHistory(),
+    enabled: !!localStorage.getItem("accessToken"), // Only fetch if token exists
   });
 };
+
+// Other hooks (unchanged)
 export const useGetTicketHistoryQuery = (email: string) => {
   return useQuery({
     queryKey: ["tickets", email],

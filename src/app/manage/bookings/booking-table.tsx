@@ -14,14 +14,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -31,6 +23,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useState, createContext, useContext, useEffect } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -40,15 +40,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useState, createContext, useContext, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
@@ -57,14 +57,17 @@ import {
   ResBookingHistoryDTOType,
   ResTicketHistoryDTOType,
 } from "@/schemaValidations/booking.schema";
-import http from "@/lib/http"; // Your HTTP client
 import { useQuery } from "@tanstack/react-query";
+import http from "@/lib/http";
+import { useAccountProfile } from "@/queries/useAccount";
+
+type BookingItem = ResBookingHistoryDTOType;
 
 const BookingTableContext = createContext<{
   ticketView: ResTicketHistoryDTOType | null;
   setTicketView: (value: ResTicketHistoryDTOType | null) => void;
-  bookingView: ResBookingHistoryDTOType | null;
-  setBookingView: (value: ResBookingHistoryDTOType | null) => void;
+  bookingView: BookingItem | null;
+  setBookingView: (value: BookingItem | null) => void;
 }>({
   ticketView: null,
   setTicketView: () => {},
@@ -99,37 +102,7 @@ function ViewTicketDialog({
                 <strong>{t("TicketCode")}:</strong> {ticketView?.ticketCode}
               </p>
               <p>
-                <strong>{t("PassengerName")}:</strong> {ticketView?.name}
-              </p>
-              <p>
                 <strong>{t("CitizenId")}:</strong> {ticketView?.citizenId}
-              </p>
-              <p>
-                <strong>{t("Seat")}:</strong> {ticketView?.seatId}
-              </p>
-              <p>
-                <strong>{t("Carriage")}:</strong> {ticketView?.carriageName}
-              </p>
-              <p>
-                <strong>{t("Train")}:</strong> {ticketView?.trainName}
-              </p>
-              <p>
-                <strong>{t("BoardingStation")}:</strong>{" "}
-                {ticketView?.boardingStationName}
-              </p>
-              <p>
-                <strong>{t("AlightingStation")}:</strong>{" "}
-                {ticketView?.alightingStationName}
-              </p>
-              <p>
-                <strong>{t("StartDay")}:</strong>{" "}
-                {ticketView?.startDay
-                  ? format(new Date(ticketView.startDay), "dd/MM/yyyy")
-                  : "N/A"}
-              </p>
-              <p>
-                <strong>{t("Price")}:</strong>{" "}
-                {ticketView?.price.toLocaleString()} VND
               </p>
             </div>
           </AlertDialogDescription>
@@ -146,8 +119,8 @@ function ViewBookingDialog({
   bookingView,
   setBookingView,
 }: {
-  bookingView: ResBookingHistoryDTOType | null;
-  setBookingView: (value: ResBookingHistoryDTOType | null) => void;
+  bookingView: BookingItem | null;
+  setBookingView: (value: BookingItem | null) => void;
 }) {
   const t = useTranslations("Booking");
 
@@ -201,12 +174,20 @@ function ViewBookingDialog({
                 {bookingView?.contactPhone || "N/A"}
               </p>
               <p>
-                <strong>{t("PaymentType")}:</strong> {bookingView?.paymentType}
+                <strong>{t("PaymentType")}:</strong>{" "}
+                {bookingView?.paymentType || "N/A"}
               </p>
               <p>
                 <strong>{t("Tickets")}:</strong>{" "}
                 {bookingView?.tickets.length || 0} {t("TicketCount")}
               </p>
+              {bookingView?.promotion && (
+                <p>
+                  <strong>{t("Promotion")}:</strong>{" "}
+                  {bookingView.promotion.promotionName} (
+                  {bookingView.promotion.discount}% off)
+                </p>
+              )}
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -229,12 +210,19 @@ const useGetAllBookingsQuery = (page: number, pageSize: number) => {
         statusCode: number;
         error: string | null;
         message: string;
-        data: ResBookingHistoryDTOType[];
-        meta: { total: number };
-      }>(`/api/v1/bookings`, {
+        data: {
+          meta: {
+            page: number;
+            pageSize: number;
+            pages: number;
+            total: number;
+          };
+          result: ResBookingHistoryDTOType[];
+        };
+      }>("/api/v1/bookings", {
         params: { page, pageSize },
       });
-      return response.payload;
+      return response.payload.data;
     },
     enabled: true,
   });
@@ -253,19 +241,37 @@ export default function BookingTable() {
   const [ticketView, setTicketView] = useState<ResTicketHistoryDTOType | null>(
     null
   );
-  const [bookingView, setBookingView] =
-    useState<ResBookingHistoryDTOType | null>(null);
+  const [bookingView, setBookingView] = useState<BookingItem | null>(null);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
-  const { data, isLoading, isError, error, refetch } = useGetAllBookingsQuery(
-    page,
-    pageSize
+  // Fetch user permissions
+  const {
+    data: accountData,
+    isLoading: isAccountLoading,
+    isError: isAccountError,
+  } = useAccountProfile();
+  const userPermissions = accountData?.data?.user?.role?.permissions as
+    | Array<{
+        id: number;
+        name: string;
+        apiPath: string;
+        method: string;
+        module: string;
+      }>
+    | undefined;
+
+  // Check permission for viewing bookings
+  const hasViewPermission = userPermissions?.some(
+    (p) => p.module === "BOOKINGS" && p.method === "GET"
   );
-  const bookings = data?.data ?? [];
-  const totalItems = data?.meta?.total ?? 0;
+
+  // Fetch booking list
+  const bookingListQuery = useGetAllBookingsQuery(page, pageSize);
+  const data = bookingListQuery.data?.result ?? [];
+  const totalItems = bookingListQuery.data?.meta.total ?? 0;
   const totalPages = Math.ceil(totalItems / pageSize);
 
-  const columns: ColumnDef<ResBookingHistoryDTOType>[] = [
+  const columns: ColumnDef<BookingItem>[] = [
     {
       accessorKey: "bookingCode",
       header: ({ column }) => (
@@ -347,6 +353,11 @@ export default function BookingTable() {
           </span>
         );
       },
+      filterFn: (row, columnId, filterValue) => {
+        if (!filterValue || filterValue === "all") return true;
+        const value = row.getValue(columnId) as string;
+        return value === filterValue;
+      },
     },
     {
       accessorKey: "contactEmail",
@@ -361,7 +372,7 @@ export default function BookingTable() {
     },
     {
       id: "actions",
-      header: t("Actions"),
+      header: t("Action"),
       enableHiding: false,
       cell: function Actions({ row }) {
         const booking = row.original;
@@ -375,7 +386,7 @@ export default function BookingTable() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
+              <DropdownMenuLabel>{t("Action")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setBookingView(booking)}>
                 {t("ViewDetails")}
@@ -400,7 +411,7 @@ export default function BookingTable() {
   const [rowSelection, setRowSelection] = useState({});
 
   const table = useReactTable({
-    data: bookings,
+    data,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -451,11 +462,15 @@ export default function BookingTable() {
           bookingView={bookingView}
           setBookingView={setBookingView}
         />
-        {isLoading ? (
+        {isAccountLoading || bookingListQuery.isLoading ? (
           <TableSkeleton />
-        ) : isError ? (
+        ) : isAccountError ? (
+          <div className="text-red-500">{t("Error_LoadingPermissions")}</div>
+        ) : !hasViewPermission ? (
+          <div className="text-red-500">{t("NoViewPermission")}</div>
+        ) : bookingListQuery.error ? (
           <div className="text-red-500">
-            {t("Error")}: {error?.message || t("Error_Generic")}
+            {t("Error")}: {bookingListQuery.error.message}
           </div>
         ) : (
           <>
@@ -502,6 +517,27 @@ export default function BookingTable() {
                 }
                 className="max-w-sm w-[150px]"
               />
+              <Select
+                value={
+                  (table
+                    .getColumn("paymentStatus")
+                    ?.getFilterValue() as string) ?? "all"
+                }
+                onValueChange={(value) =>
+                  table
+                    .getColumn("paymentStatus")
+                    ?.setFilterValue(value === "all" ? undefined : value)
+                }
+              >
+                <SelectTrigger className="max-w-sm w-[150px]">
+                  <SelectValue placeholder={t("SelectStatus")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("All")}</SelectItem>
+                  <SelectItem value="success">{t("Success")}</SelectItem>
+                  <SelectItem value="failed">{t("Failed")}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="rounded-md border">
               <Table>

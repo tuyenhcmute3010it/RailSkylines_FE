@@ -97,10 +97,29 @@ const bookingApiRequest = {
     http.get<ResTicketHistoryDTOType[]>(`/tickets/history`, {
       params: { email },
     }),
-  getBookingHistory: (email: string) =>
-    http.get<ResBookingHistoryDTOType[]>(`/bookings/history`, {
-      params: { email },
-    }),
+  getBookingHistory: async () => {
+    try {
+      const response = await http.get<{
+        statusCode: number;
+        error: string | null;
+        message: string;
+        data: ResBookingHistoryDTOType[];
+      }>(`${prefix}/history`);
+      return response;
+    } catch (error: any) {
+      let errorMessage = error.message || "Failed to fetch booking history";
+      if (error.status === 401) {
+        errorMessage = "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.";
+      } else if (error.status === 403) {
+        errorMessage = "Bạn không có quyền truy cập endpoint này.";
+      }
+      throw new HttpError({
+        status: error.status || 500,
+        payload: error.payload,
+        message: errorMessage,
+      });
+    }
+  },
 };
 
 export default bookingApiRequest;
