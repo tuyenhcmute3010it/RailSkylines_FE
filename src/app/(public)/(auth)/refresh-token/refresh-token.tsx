@@ -31,6 +31,7 @@
 // }
 
 "use client";
+
 import { checkAndRefreshToken } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
@@ -57,3 +58,4 @@ export default function RefreshTokenPage() {
 
   return <div>Refreshing token...</div>;
 }
+export const runtime = "nodejs";

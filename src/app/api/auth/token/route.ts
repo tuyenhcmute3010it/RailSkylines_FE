@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { HttpError } from "@/lib/http";
+export const runtime = "nodejs";
 export async function POST(request: Request) {
   const body = (await request.json()) as {
     accessToken: string;

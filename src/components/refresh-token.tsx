@@ -2,14 +2,9 @@
 
 // import authApiRequest from "@/apiRequests/auth";
 // import socket from "@/lib/socket";
-import {
-  checkAndRefreshToken,
-  getAccessTokenFromLocalStorage,
-  getRefreshTokenFromLocalStorage,
-  setAccessTokenToLocalStorage,
-  setRefreshTokenToLocalStorage,
-} from "@/lib/utils";
+import { checkAndRefreshToken } from "@/lib/utils";
 import jwt from "jsonwebtoken";
+export const runtime = "nodejs";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
