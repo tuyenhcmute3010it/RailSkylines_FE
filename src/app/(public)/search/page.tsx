@@ -14,7 +14,7 @@ import TrainTripSkeleton from "@/components/TrainTripSkeleton";
 import NoResults from "@/components/no-Result";
 import { debounce } from "lodash";
 
-// Interfaces
+// Interfaces (unchanged)
 interface Station {
   stationId: number;
   stationName: string;
@@ -139,7 +139,7 @@ interface CartItem {
   price: number;
 }
 
-// Validate date and time
+// Validate date and time (unchanged)
 const isValidDateString = (dateStr: string): boolean => {
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   return dateRegex.test(dateStr) && !isNaN(new Date(dateStr).getTime());
@@ -156,7 +156,7 @@ const isValidTime = (hour: number, minute: number): boolean => {
   );
 };
 
-// Map API train trips
+// Map API train trips (unchanged)
 const mapTrainTripsToFrontend = (
   trainTrips: TrainTrip[],
   departureStation: string | null,
@@ -251,7 +251,7 @@ const mapTrainTripsToFrontend = (
     });
 };
 
-// Filter train trips
+// Filter train trips (unchanged)
 const filterTrainTrips = (
   trainTrips: TrainTrip[],
   departureStation: string | null,
@@ -390,7 +390,7 @@ export default function Search() {
 
   // Compute derived seat data
   const derivedSeatData = useMemo(() => {
-    if (!availableSeatsData || !selectedCoach) {
+    if (!selectedCoach) {
       return {
         filteredSeats: [],
         seatIds: [],
@@ -399,18 +399,27 @@ export default function Search() {
       };
     }
 
-    const filteredSeats = availableSeatsData.filter(
-      (seat: Seat) => seat?.carriage?.carriageId === selectedCoach.id
-    );
+    // Use selectedCoach.seatData as the source of truth for all seats
+    const filteredSeats = selectedCoach.seatData.map((seat) => {
+      const apiSeat = availableSeatsData?.find(
+        (apiSeat: Seat) => apiSeat.seatId === seat.seatId
+      );
+      return {
+        ...seat,
+        seatStatus: apiSeat ? apiSeat.seatStatus : "unavailable", // Mark as unavailable if not in API response
+        price: apiSeat ? apiSeat.price : seat.price, // Keep original price if not in API
+      };
+    });
+
     const seatIds = filteredSeats
-      .filter((seat: Seat) => seat.seatStatus === "available")
-      .map((seat: Seat) => seat.seatId);
+      .filter((seat) => seat.seatStatus === "available")
+      .map((seat) => seat.seatId);
     const bookedSeats = filteredSeats
-      .filter((seat: Seat) => seat.seatStatus === "unavailable")
-      .map((seat: Seat) => seat.seatId);
+      .filter((seat) => seat.seatStatus === "unavailable")
+      .map((seat) => seat.seatId);
     const pendingSeats = filteredSeats
-      .filter((seat: Seat) => seat.seatStatus === "pending")
-      .map((seat: Seat) => seat.seatId);
+      .filter((seat) => seat.seatStatus === "pending")
+      .map((seat) => seat.seatId);
 
     return {
       filteredSeats,
@@ -429,11 +438,11 @@ export default function Search() {
 
     setAvailableSeats(seatIds);
 
-    // Only update selectedCoach if seatData, seats, bookedSeats, or pendingSeats have changed
+    // Update selectedCoach with the full seat data
     setSelectedCoach((prev) => {
       if (!prev) return prev;
 
-      const updatedSeatData = filteredSeats.map((seat: Seat) => ({
+      const updatedSeatData = filteredSeats.map((seat) => ({
         ...seat,
         seatNumber: seat.seatId,
       }));
@@ -461,7 +470,7 @@ export default function Search() {
       return {
         ...prev,
         seatData: updatedSeatData,
-        seats: updatedSeatData.map((seat) => seat.seatId),
+        seats: updatedSeatData.map((seat) => seat.seatId), // Include all seats
         bookedSeats,
         pendingSeats,
       };
@@ -555,6 +564,13 @@ export default function Search() {
         return;
       }
 
+      // Validate trainTripId
+      if (!selectedTrain.trainTripId) {
+        console.error("Invalid trainTripId for selected train:", selectedTrain);
+        alert("Lỗi: Không thể xác định ID chuyến tàu. Vui lòng thử lại.");
+        return;
+      }
+
       if (!isDeselecting) {
         try {
           await updateSeatMutation.mutateAsync({
@@ -584,7 +600,7 @@ export default function Search() {
         const newCartItem: CartItem = {
           trainId: selectedTrain.id,
           trainName: selectedTrain.name,
-          trainTripId: setSelectedTrain.trainTripId,
+          trainTripId: selectedTrain.trainTripId,
           coachName: selectedCoach.name,
           coachId: selectedCoach.id,
           seatNumber: seat,
@@ -597,6 +613,7 @@ export default function Search() {
           timestamp: Date.now(),
           price,
         };
+        console.log("Adding cart item:", newCartItem);
         setCartItems((prev) => [...prev, newCartItem]);
         setTimer(600);
       } else {
@@ -1229,10 +1246,22 @@ export default function Search() {
                 <Button
                   className="mt-2 w-full"
                   onClick={() => {
+                    // Validate cart items
+                    const invalidItems = cartItems.filter(
+                      (item) => !item.trainTripId
+                    );
+                    if (invalidItems.length > 0) {
+                      console.error("Invalid cart items:", invalidItems);
+                      alert(
+                        "Lỗi: Một số vé không có ID chuyến tàu hợp lệ. Vui lòng thử lại."
+                      );
+                      return;
+                    }
                     const query = new URLSearchParams({
                       tickets: JSON.stringify(cartItems),
                       timer: timer.toString(),
                     }).toString();
+                    console.log("Navigating to payment with query:", query);
                     router.push(`/payment?${query}`);
                     setCartItems([]);
                     setSelectedSeatsByCoach({});
