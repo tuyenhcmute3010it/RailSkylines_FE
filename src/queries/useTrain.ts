@@ -33,7 +33,6 @@ export const useAddTrainMutation = () => {
     },
   });
 };
-console.log(">>>>>>>>>", trainsApiRequest.addTrain);
 
 export const useUpdateTrainMutation = () => {
   const queryClient = useQueryClient();

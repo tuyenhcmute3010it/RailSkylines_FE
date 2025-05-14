@@ -1,17 +1,17 @@
 import authApiRequest from "@/apiRequests/auth";
 import { LoginBodyType } from "@/schemaValidations/auth.schema";
 import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
+import { decodeJwt } from "jose"; // Sửa import
 import { HttpError } from "@/lib/http";
-export const runtime = "nodejs";
+
 export async function POST(request: Request) {
   const body = (await request.json()) as LoginBodyType;
   const cookieStore = cookies();
   try {
     const { payload } = await authApiRequest.sLogin(body);
     const { accessToken, refreshToken } = payload.data;
-    const decodedAccessToken = jwt.decode(accessToken) as { exp: number };
-    const decodedRefreshToken = jwt.decode(refreshToken) as { exp: number };
+    const decodedAccessToken = decodeJwt(accessToken) as { exp: number };
+    const decodedRefreshToken = decodeJwt(refreshToken) as { exp: number };
     (await cookieStore).set("accessToken", accessToken, {
       path: "/",
       httpOnly: true,
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       });
     } else {
       return Response.json(
-        { message: "Co Loi Xay Ra" },
+        { message: "Có Lỗi Xảy Ra" },
         {
           status: 500,
         }

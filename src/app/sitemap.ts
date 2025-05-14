@@ -1,5 +1,4 @@
 import envConfig from "@/config";
-import { generateSlugUrl } from "@/lib/utils";
 import type { MetadataRoute } from "next";
 
 const staticRoutes: MetadataRoute.Sitemap = [

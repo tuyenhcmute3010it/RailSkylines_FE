@@ -1,8 +1,8 @@
 import authApiRequest from "@/apiRequests/auth";
 import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
+import { decodeJwt } from "jose"; // Sửa import
 import { HttpError } from "@/lib/http";
-export const runtime = "nodejs";
+
 export async function POST(request: Request) {
   console.log(request);
   const cookieStore = cookies();
@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   if (!refreshToken) {
     return Response.json(
       {
-        message: "Cant not find refreshToken",
+        message: "Không tìm thấy refreshToken",
       },
       {
         status: 401,
@@ -22,10 +22,10 @@ export async function POST(request: Request) {
     const { payload } = await authApiRequest.sRefreshToken({
       refreshToken,
     });
-    const decodedAccessToken = jwt.decode(payload.data.accessToken) as {
+    const decodedAccessToken = decodeJwt(payload.data.accessToken) as {
       exp: number;
     };
-    const decodedRefreshToken = jwt.decode(payload.data.refreshToken) as {
+    const decodedRefreshToken = decodeJwt(payload.data.refreshToken) as {
       exp: number;
     };
 
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       });
     } else {
       return Response.json(
-        { message: error.message ?? "Co Loi Xay Ra" },
+        { message: error.message ?? "Có Lỗi Xảy Ra" },
         {
           status: 401,
         }
