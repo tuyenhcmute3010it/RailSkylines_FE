@@ -294,16 +294,7 @@ export default function BookingConfirmation() {
                   {currentTicket.trainName || "N/A"}
                 </span>
               </p>
-              <p>
-                Ngày/Đi/Date:{" "}
-                <span className="text-green-600">
-                  {currentTicket.startDay
-                    ? new Date(currentTicket.startDay).toLocaleDateString(
-                        "vi-VN"
-                      )
-                    : "N/A"}
-                </span>
-              </p>
+
               <p>
                 Giờ/Thời/Time:{" "}
                 <span className="text-green-600">
