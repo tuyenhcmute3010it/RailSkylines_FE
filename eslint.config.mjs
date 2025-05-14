@@ -11,14 +11,11 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
-<<<<<<< HEAD
-=======
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
     },
   },
->>>>>>> AdminLogic
 ];
 
 export default eslintConfig;

@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
-=======
 import { clsx, type ClassValue } from "clsx";
 import { UseFormSetError } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
@@ -255,9 +247,6 @@ export const htmlToTextForDescription = (html: string) => {
     },
   });
 };
-<<<<<<< HEAD
->>>>>>> AdminLogic
-=======
 import { useAppContext } from "@/components/app-provider";
 import { Permission } from "@/types/jwt.types";
 
@@ -283,4 +272,3 @@ export function usePermissions() {
 
   return { hasPermission, hasAnyPermission, hasModulePermission };
 }
->>>>>>> 4c08d807683244c1d067782a24c2cc24070d555b

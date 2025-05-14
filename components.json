@@ -4,11 +4,7 @@
   "rsc": true,
   "tsx": true,
   "tailwind": {
-<<<<<<< HEAD
-    "config": "",
-=======
     "config": "tailwind.config.ts",
->>>>>>> AdminLogic
     "css": "src/app/globals.css",
     "baseColor": "slate",
     "cssVariables": true,

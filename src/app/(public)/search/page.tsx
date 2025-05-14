@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback, useMemo } from "react";
+import envConfig from "@/config";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -372,7 +373,7 @@ export default function Search() {
     queryFn: async () => {
       if (!selectedTrain || !selectedCoach) return { data: [] };
       const response = await fetch(
-        `http://localhost:8080/api/v1/seats/available?trainTripId=${selectedTrain.trainTripId}&boardingStationId=${selectedTrain.departureStationId}&alightingStationId=${selectedTrain.arrivalStationId}`
+        `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/api/v1/seats/available?trainTripId=${selectedTrain.trainTripId}&boardingStationId=${selectedTrain.departureStationId}&alightingStationId=${selectedTrain.arrivalStationId}`
       );
       if (!response.ok) throw new Error("Failed to fetch available seats");
       const data = await response.json();
