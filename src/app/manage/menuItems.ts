@@ -1,4 +1,6 @@
+"use client";
 import { Role } from "@/constants/type";
+import { useAccountProfile } from "@/queries/useAccount";
 import {
   Home,
   LineChart,
@@ -14,7 +16,9 @@ import {
   LockKeyholeOpen,
   UserRoundPen,
   UserCog,
+  TrainFrontTunnel,
 } from "lucide-react";
+
 const menuItems = [
   {
     title: "Dashboard",
@@ -25,7 +29,7 @@ const menuItems = [
   {
     title: "Đơn hàng",
     Icon: ShoppingCart,
-    href: "/manage/orders",
+    href: "/manage/bookings",
     roles: [Role.Admin, Role.Staff],
   },
   {
@@ -44,6 +48,12 @@ const menuItems = [
     title: "Ga",
     Icon: BellElectric,
     href: "/manage/stations",
+    // roles: [Role.Admin, Role.Staff],
+  },
+  {
+    title: "Train Trip",
+    Icon: TrainFrontTunnel,
+    href: "/manage/trainTrips",
     // roles: [Role.Admin, Role.Staff],
   },
   {
@@ -67,7 +77,6 @@ const menuItems = [
   {
     title: "Vai Trò",
     Icon: UserRoundPen,
-
     href: "/manage/roles",
     // roles: [Role.Admin],
   },

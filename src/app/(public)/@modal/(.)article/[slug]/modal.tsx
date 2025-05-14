@@ -2,10 +2,11 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+
 export default function Modal({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [open, setOpen] = useState(true);
-  //   const
+
   return (
     <Dialog
       open={open}

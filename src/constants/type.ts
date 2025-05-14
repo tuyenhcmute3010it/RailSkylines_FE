@@ -73,12 +73,14 @@ export const SeatStatus = {
   Available: "available",
   Unavailable: "unavailable",
   Pending: "pending",
+  Booked: "booked",
 } as const;
 
 export const SeatStatusValues = [
   SeatStatus.Available,
   SeatStatus.Unavailable,
   SeatStatus.Pending,
+  SeatStatus.Booked,
 ] as const;
 
 export const SeatType = {

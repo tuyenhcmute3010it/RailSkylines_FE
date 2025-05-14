@@ -2,17 +2,30 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Trash2 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "@/components/ui/use-toast";
+import { useCreateBookingMutation } from "@/queries/useBooking";
+import { CreateBookingBodyType } from "@/schemaValidations/booking.schema";
+import { useQuery } from "@tanstack/react-query";
+import promotionsApiRequest from "@/apiRequests/promotion";
+import { PromotionSchemaType } from "@/schemaValidations/promotion.schema";
+import { useAppContext } from "@/components/app-provider";
+import { CustomerObjectEnum } from "@/schemaValidations/account.schema";
 
 interface CartItem {
   trainId: string;
   trainName: string;
+  trainTripId: number;
   coachName: string;
   seatNumber: number;
   departure: string;
   arrival: string;
+  departureStation: string;
+  departureStationId: number;
+  arrivalStation: string;
+  arrivalStationId: number;
   timestamp: number;
   price: number;
 }
@@ -26,6 +39,7 @@ interface PassengerInfo {
 export default function Payment() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { isAuth } = useAppContext();
   const tickets = searchParams.get("tickets");
   const timerParam = searchParams.get("timer");
 
@@ -42,11 +56,113 @@ export default function Payment() {
     }))
   );
   const [promoCode, setPromoCode] = useState("");
+  const [selectedPromotion, setSelectedPromotion] =
+    useState<PromotionSchemaType | null>(null);
+  const [suggestedPromotion, setSuggestedPromotion] =
+    useState<PromotionSchemaType | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
     string | null
   >(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const insuranceFee = 1000;
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+
+  const { mutate: createBooking, isPending: isLoading } =
+    useCreateBookingMutation();
+
+  // Fetch promotions
+  const { data: promotionsData, isLoading: isPromotionsLoading } = useQuery({
+    queryKey: ["promotions"],
+    queryFn: async () => {
+      if (!isAuth) return { payload: { data: { result: [] } } };
+      const response = await promotionsApiRequest.listPromotions(1, 10);
+      return response;
+    },
+    select: (response) =>
+      (response?.payload?.data?.result || []).filter(
+        (promo: PromotionSchemaType) => promo.status === "active"
+      ),
+    enabled: isAuth,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Handle promo code input and suggestion
+  const handlePromoCodeChange = useCallback(
+    (value: string) => {
+      setPromoCode(value);
+      setSelectedPromotion(null);
+
+      if (value === "123123" && promotionsData) {
+        const matchingPromo = promotionsData.find(
+          (promo: PromotionSchemaType) => promo.promotionCode === "123123"
+        );
+        if (matchingPromo) {
+          setSuggestedPromotion(matchingPromo);
+        } else {
+          setSuggestedPromotion(null);
+        }
+      } else {
+        setSuggestedPromotion(null);
+      }
+    },
+    [promotionsData]
+  );
+
+  // Apply promotion
+  const applyPromotion = useCallback(() => {
+    if (!promoCode || !promotionsData) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Vui lòng nhập mã khuyến mại hợp lệ.",
+      });
+      return;
+    }
+
+    const promotion = promotionsData.find(
+      (promo: PromotionSchemaType) => promo.promotionCode === promoCode
+    );
+
+    if (!promotion) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Mã khuyến mại không hợp lệ hoặc đã hết hạn.",
+      });
+      return;
+    }
+
+    const now = new Date();
+    const validityDate = new Date(promotion.validity);
+    if (validityDate < now) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Mã khuyến mại đã hết hạn.",
+      });
+      return;
+    }
+
+    setSelectedPromotion(promotion);
+    setSuggestedPromotion(null);
+    toast({
+      title: "Thành công",
+      description: `Đã áp dụng khuyến mại: ${promotion.promotionName} (10% giảm).`,
+    });
+  }, [promoCode, promotionsData]);
+
+  // Select suggested promotion
+  const selectSuggestedPromotion = useCallback(() => {
+    if (suggestedPromotion) {
+      setPromoCode(suggestedPromotion.promotionCode);
+      setSelectedPromotion(suggestedPromotion);
+      setSuggestedPromotion(null);
+      toast({
+        title: "Thành công",
+        description: `Đã chọn khuyến mại: ${suggestedPromotion.promotionName}.`,
+      });
+    }
+  }, [suggestedPromotion]);
 
   // Timer countdown and expiration check
   useEffect(() => {
@@ -58,14 +174,17 @@ export default function Payment() {
     const interval = setInterval(() => {
       setTimer((prev) => {
         if (prev <= 1) {
-          alert("Thời gian giữ vé đã hết. Vui lòng chọn lại vé.");
+          toast({
+            variant: "destructive",
+            title: "Lỗi",
+            description: "Thời gian giữ vé đã hết. Vui lòng chọn lại vé.",
+          });
           router.push("/search");
           return 0;
         }
         return prev - 1;
       });
 
-      // Check individual ticket expiration
       const allExpired = cartItems.every((item) => {
         const timeLeft = Math.floor(
           (item.timestamp + initialTimer * 1000 - Date.now()) / 1000
@@ -74,7 +193,12 @@ export default function Payment() {
       });
 
       if (allExpired) {
-        alert("Tất cả vé đã hết thời gian tạm giữ. Vui lòng chọn lại vé.");
+        toast({
+          variant: "destructive",
+          title: "Lỗi",
+          description:
+            "Tất cả vé đã hết thời gian tạm giữ. Vui lòng chọn lại vé.",
+        });
         router.push("/search");
         clearInterval(interval);
       }
@@ -109,9 +233,23 @@ export default function Payment() {
       .padStart(2, "0")}`;
   };
 
-  // Calculate total price
+  // Calculate original total
   const calculateTotal = () => {
-    return cartItems.reduce((sum, item) => sum + item.price + insuranceFee, 0);
+    return cartItems.reduce((sum, item) => sum + item.price, 0);
+  };
+
+  // Calculate display-only discount amount (10%)
+  const calculateDiscountAmount = () => {
+    if (!selectedPromotion) return 0;
+    const subtotal = calculateTotal();
+    return Math.round(subtotal * 0.1); // 10% discount for display
+  };
+
+  // Calculate display-only final total
+  const calculateFinalTotal = () => {
+    const subtotal = calculateTotal();
+    if (!selectedPromotion) return subtotal;
+    return Math.round(subtotal * 0.9); // 10% discount for display
   };
 
   // Handle passenger info input
@@ -132,45 +270,235 @@ export default function Payment() {
     setCartItems(updatedItems);
     setPassengerInfo(updatedInfo);
     router.replace(
-      `/payment?tickets=${JSON.stringify(updatedItems)}&timer=${timer}`
+      `/payment?tickets=${encodeURIComponent(
+        JSON.stringify(updatedItems)
+      )}&timer=${timer}`
     );
   };
 
-  // Step navigation
+  const mapPassengerTypeToCustomerObject = (
+    type: string
+  ): CustomerObjectEnum => {
+    switch (type.toLowerCase()) {
+      case "adult":
+        return CustomerObjectEnum.adult;
+      case "child":
+        return CustomerObjectEnum.children;
+      case "student":
+        return CustomerObjectEnum.student;
+      case "elderly":
+        return CustomerObjectEnum.elderly;
+      case "veteran":
+        return CustomerObjectEnum.veteran;
+      case "disabled":
+        return CustomerObjectEnum.disabled;
+      default:
+        return CustomerObjectEnum.adult; // mặc định nếu không khớp
+    }
+  };
+
+  const handlePayment = () => {
+    if (step !== 3) return;
+
+    if (!cartItems.length) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không có vé nào để thanh toán.",
+      });
+      return;
+    }
+
+    const trainTripId = cartItems[0].trainTripId;
+    const ticketsParam = JSON.stringify(
+      cartItems.map((item) => ({
+        seatNumber: item.seatNumber,
+        price: item.price,
+        boardingStationId: item.departureStationId,
+        alightingStationId: item.arrivalStationId,
+      }))
+    );
+
+    const bookingBody: CreateBookingBodyType = {
+      trainTripId,
+      contactEmail,
+      contactPhone: contactPhone || undefined,
+      promotionId: selectedPromotion
+        ? selectedPromotion.promotionId
+        : undefined,
+      seatIds: cartItems.map((item) => item.seatNumber),
+      tickets: passengerInfo.map((info, index) => ({
+        name: info.fullName,
+        citizenId: info.idNumber,
+        customerObject: mapPassengerTypeToCustomerObject(info.passengerType),
+        boardingStationId: cartItems[index].departureStationId,
+        alightingStationId: cartItems[index].arrivalStationId,
+        price: cartItems[index].price, // Original price
+      })),
+      paymentType:
+        selectedPaymentMethod === "vnpay_qr"
+          ? "VNPAY"
+          : selectedPaymentMethod === "international_card"
+          ? "INTERNATIONAL_CARD"
+          : "DOMESTIC_CARD",
+    };
+
+    // Validate bookingBody
+    if (
+      !bookingBody.contactEmail ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(bookingBody.contactEmail)
+    ) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Email liên hệ không hợp lệ.",
+      });
+      return;
+    }
+    if (
+      !bookingBody.tickets.every(
+        (t) => t.name && t.citizenId.match(/^\d{9,12}$/) && t.price > 0
+      )
+    ) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description:
+          "Thông tin hành khách, số giấy tờ (9-12 chữ số), hoặc giá vé không hợp lệ.",
+      });
+      return;
+    }
+    if (
+      !bookingBody.seatIds.length ||
+      bookingBody.seatIds.some((id) => id <= 0)
+    ) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Danh sách ghế không hợp lệ.",
+      });
+      return;
+    }
+    if (!bookingBody.trainTripId) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "ID chuyến tàu không hợp lệ.",
+      });
+      return;
+    }
+    if (!ticketsParam) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Dữ liệu vé không hợp lệ.",
+      });
+      return;
+    }
+
+    console.log(">>>>>>> Sending createBooking request:", {
+      bookingBody: JSON.stringify(bookingBody, null, 2),
+      ticketsParam,
+      trainTripId: bookingBody.trainTripId,
+    });
+
+    createBooking(
+      {
+        body: bookingBody,
+        ticketsParam,
+        trainTripId,
+      },
+      {
+        onSuccess: (response) => {
+          console.log(">>>>>>> createBooking onSuccess response:", response);
+          if (response) {
+            console.log(">>>>>>> Payment URL:", response.payload.data.data);
+            window.location.href = response.payload.data.data;
+          } else {
+            console.log(">>>>>>> No payment URL in response:", response);
+            toast({
+              variant: "destructive",
+              title: "Lỗi",
+              description: response.message || "Không thể tạo đặt vé",
+            });
+          }
+        },
+        onError: (error: any) => {
+          console.error(">>>>>>> createBooking onError:", {
+            error,
+            status: error.status,
+            payload: error.payload,
+            message: error.message,
+          });
+          let errorMessage =
+            error.message || "Lỗi khi tạo đặt vé. Vui lòng thử lại.";
+          if (error.status === 403) {
+            errorMessage = "Bạn không có quyền truy cập endpoint này.";
+          } else if (error.status === 401) {
+            errorMessage = "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.";
+            localStorage.removeItem("accessToken");
+            router.push("/login");
+          } else if (error.payload && typeof error.payload === "string") {
+            const match = error.payload.match(/<p><b>Message<\/b> (.*?)<\/p>/);
+            if (match && match[1]) {
+              errorMessage = match[1];
+            }
+          } else if (!error.payload) {
+            errorMessage = "Không nhận được phản hồi JSON từ server.";
+          }
+          toast({
+            variant: "destructive",
+            title: "Lỗi",
+            description: errorMessage,
+          });
+        },
+      }
+    );
+  };
+
   const handleNextStep = () => {
     if (step === 1) {
       const isValid = passengerInfo.every(
         (info) => info.fullName && info.idNumber
       );
       if (!isValid) {
-        alert("Vui lòng điền đầy đủ thông tin hành khách!");
+        toast({
+          variant: "destructive",
+          title: "Lỗi",
+          description: "Vui lòng điền đầy đủ thông tin hành khách!",
+        });
+        return;
+      }
+      if (!contactEmail) {
+        toast({
+          variant: "destructive",
+          title: "Lỗi",
+          description: "Vui lòng nhập email liên hệ!",
+        });
         return;
       }
       if (!selectedPaymentMethod) {
-        alert("Vui lòng chọn phương thức thanh toán!");
+        toast({
+          variant: "destructive",
+          title: "Lỗi",
+          description: "Vui lòng chọn phương thức thanh toán!",
+        });
         return;
       }
       if (!termsAccepted) {
-        alert("Vui lòng đồng ý với các điều khoản và quy định!");
+        toast({
+          variant: "destructive",
+          title: "Lỗi",
+          description: "Vui lòng đồng ý với các điều khoản và quy định!",
+        });
         return;
       }
     }
-    setStep((prev) => Math.min(prev + 1, 4));
+    setStep((prev) => Math.min(prev + 1, 3));
   };
 
   const handlePreviousStep = () => {
     setStep((prev) => Math.max(prev - 1, 1));
-  };
-
-  // Handle payment (mock)
-  const handlePayment = () => {
-    if (step === 3) {
-      setStep(4);
-      setTimeout(() => {
-        alert("Thanh toán thành công! Vé của bạn đã được xác nhận.");
-        router.push("/confirmation");
-      }, 1000);
-    }
   };
 
   const renderStepContent = () => {
@@ -179,6 +507,28 @@ export default function Payment() {
         return (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold">Thông tin giỏ vé</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="font-semibold">Email liên hệ</label>
+                <Input
+                  type="email"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  placeholder="Nhập email liên hệ"
+                  className="w-full mt-1"
+                />
+              </div>
+              <div>
+                <label className="font-semibold">Số điện thoại liên hệ</label>
+                <Input
+                  type="tel"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  placeholder="Nhập số điện thoại (tùy chọn)"
+                  className="w-full mt-1"
+                />
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
@@ -188,7 +538,6 @@ export default function Payment() {
                     <th className="p-2 border">Giá vé</th>
                     <th className="p-2 border">Giảm đối tượng</th>
                     <th className="p-2 border">Khuyến mại</th>
-                    <th className="p-2 border">Bảo hiểm</th>
                     <th className="p-2 border">Thành tiền (VNĐ)</th>
                     <th className="p-2 border"></th>
                   </tr>
@@ -223,7 +572,7 @@ export default function Payment() {
                               handlePassengerInfoChange(
                                 index,
                                 "passengerType",
-                                e.target.value as "adult" | "child" | "student"
+                                e.target.value as CustomerObjectEnum
                               )
                             }
                             className="w-full p-2 border rounded mt-1"
@@ -232,6 +581,9 @@ export default function Payment() {
                             <option value="adult">Người lớn</option>
                             <option value="child">Trẻ em</option>
                             <option value="student">Sinh viên</option>
+                            <option value="elderly">Người cao tuổi</option>
+                            <option value="veteran">Cựu chiến binh</option>
+                            <option value="disabled">Người khuyết tật</option>
                           </select>
                           <div className="font-bold mt-1">Số giấy tờ</div>
                           <div>
@@ -263,6 +615,10 @@ export default function Payment() {
                           )}
                           {item.trainName}
                           <br />
+                          Ga đi: {item.departureStation}
+                          <br />
+                          Ga đến: {item.arrivalStation}
+                          <br />
                           {item.departure}
                           <br />
                           {item.coachName} chỗ {item.seatNumber}
@@ -274,19 +630,19 @@ export default function Payment() {
                         </td>
                         <td className="p-2 border">0</td>
                         <td className="p-2 border">
-                          Không có khuyến mại cho vé này
+                          {selectedPromotion
+                            ? `${selectedPromotion.promotionName} (10%)`
+                            : "Không có khuyến mại"}
                         </td>
                         <td className="p-2 border">
-                          {formatPrice(insuranceFee)}
-                        </td>
-                        <td className="p-2 border">
-                          {formatPrice(item.price + insuranceFee)}
+                          {formatPrice(item.price)}
                         </td>
                         <td className="p-2 border">
                           <Button
                             variant="destructive"
                             size="sm"
                             onClick={() => removeTicket(index)}
+                            disabled={isExpired}
                           >
                             <Trash2 />
                           </Button>
@@ -298,20 +654,60 @@ export default function Payment() {
               </table>
             </div>
             <div className="flex justify-between items-center bg-[#d9edf7] p-2">
-              <div className="flex items-center space-x-2">
-                <Input
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  placeholder="Nhập mã giảm giá tại đây"
-                  className="w-64 border-2 border-blue-600 font-semibold focus:ring-2 focus:ring-blue-600 focus:border-blue-600 shadow-sm"
-                />
-                <Button className="bg-blue-600 hover:bg-blue-700">
+              <div className="flex items-center space-x-2 relative">
+                <div className="relative">
+                  <Input
+                    value={promoCode}
+                    onChange={(e) => handlePromoCodeChange(e.target.value)}
+                    placeholder="Nhập mã giảm giá tại đây"
+                    className="w-64 border-2 border-blue-600 font-semibold focus:ring-2 focus:ring-blue-600 focus:border-blue-600 shadow-sm"
+                    disabled={isPromotionsLoading}
+                  />
+                  {suggestedPromotion && (
+                    <div className="absolute top-full mt-2 w-64 bg-white border rounded-lg shadow-lg p-2 z-10">
+                      <p className="text-sm font-semibold">
+                        {suggestedPromotion.promotionName}
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        Mã: {suggestedPromotion.promotionCode}
+                      </p>
+                      <p className="text-xs text-gray-600">Giảm: 10%</p>
+                      <p className="text-xs text-gray-600">
+                        Hạn sử dụng:{" "}
+                        {new Date(
+                          suggestedPromotion.validity
+                        ).toLocaleDateString()}
+                      </p>
+                      <Button
+                        className="mt-2 w-full bg-blue-600 hover:bg-blue-700"
+                        onClick={selectSuggestedPromotion}
+                      >
+                        Chọn khuyến mại này
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={applyPromotion}
+                  disabled={isPromotionsLoading}
+                >
                   Áp dụng
                 </Button>
               </div>
-              <p className="text-lg font-semibold mr-5">
-                Tổng tiền: {formatPrice(calculateTotal())}
-              </p>
+              <div className="text-right mr-5">
+                {selectedPromotion && (
+                  <p className="text-sm">
+                    Giảm giá (10%):{" "}
+                    <span className="text-red-500">
+                      -{formatPrice(calculateDiscountAmount())}
+                    </span>
+                  </p>
+                )}
+                <p className="text-lg font-semibold">
+                  Tổng tiền: {formatPrice(calculateFinalTotal())}
+                </p>
+              </div>
             </div>
 
             {/* Payment Method Selection */}
@@ -396,7 +792,7 @@ export default function Payment() {
                   Tôi đã đọc kỹ và đồng ý tuân thủ tất cả các{" "}
                   <Link
                     href="/term-of-service"
-                    className=" text-md font-semibold text-blue-500 underline"
+                    className="text-md font-semibold text-blue-500 underline"
                     target="_blank"
                   >
                     quy định mua vé trực tuyến
@@ -404,7 +800,7 @@ export default function Payment() {
                   ,{" "}
                   <Link
                     href="/promotion"
-                    className=" text-md font-semibold text-blue-500 underline"
+                    className="text-md font-semibold text-blue-500 underline"
                     target="_blank"
                   >
                     chương trình khuyến mại
@@ -414,10 +810,11 @@ export default function Payment() {
                 </label>
               </div>
 
-              <div className="flex justify-end ">
+              <div className="flex justify-end">
                 <Button
                   className="bg-blue-600 hover:bg-blue-700"
                   onClick={handleNextStep}
+                  disabled={isLoading}
                 >
                   Tiếp tục
                 </Button>
@@ -431,6 +828,20 @@ export default function Payment() {
           <div className="space-y-6">
             <h2 className="text-xl font-semibold">Xác nhận thông tin</h2>
             <h3 className="text-lg font-semibold">Thông tin vé mua</h3>
+            <div className="space-y-4">
+              <p>
+                <strong>Email liên hệ:</strong> {contactEmail}
+              </p>
+              <p>
+                <strong>Số điện thoại:</strong> {contactPhone || "Không có"}
+              </p>
+              {selectedPromotion && (
+                <p>
+                  <strong>Khuyến mại:</strong> {selectedPromotion.promotionName}{" "}
+                  (10% giảm)
+                </p>
+              )}
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
@@ -465,8 +876,12 @@ export default function Payment() {
                           </div>
                           <div>Số giấy tờ: {passengerInfo[index].idNumber}</div>
                           <div>
-                            Hành trình: {item.trainName} {item.departure} Toa{" "}
-                            {item.coachName} chỗ {item.seatNumber}
+                            Hành trình: {item.trainName} từ{" "}
+                            {item.departureStation} đến {item.arrivalStation},{" "}
+                            {item.departure}
+                          </div>
+                          <div>
+                            Toa {item.coachName} chỗ {item.seatNumber}
                           </div>
                         </td>
                         <td className="p-2 border">
@@ -486,20 +901,20 @@ export default function Payment() {
                           {formatPrice(item.price)}₫
                         </td>
                         <td className="p-2 border">
-                          {formatPrice(item.price + insuranceFee)}₫
+                          {formatPrice(item.price)}₫
                         </td>
                       </tr>
                     );
                   })}
                   <tr>
                     <td className="p-2 border-l border-t border-b"></td>
-                    <td className="p-2 p-2 border-y border-gray-300"></td>
-                    <td className="p-2 p-2 border-y border-gray-300"></td>
-                    <td className="p-2  font-semibold text-md border-y border-gray-300">
+                    <td className="p-2 border-y border-gray-300"></td>
+                    <td className="p-2 border-y border-gray-300"></td>
+                    <td className="p-2 font-semibold text-md border-y border-gray-300">
                       Tổng Tiền
                     </td>
                     <td className="p-2 border text-lg font-semibold">
-                      {formatPrice(calculateTotal())}₫
+                      {formatPrice(calculateFinalTotal())}₫
                     </td>
                   </tr>
                 </tbody>
@@ -518,6 +933,7 @@ export default function Payment() {
               <Button
                 className="bg-blue-600 hover:bg-blue-700"
                 onClick={handleNextStep}
+                disabled={isLoading}
               >
                 Đồng ý xác nhận
               </Button>
@@ -539,22 +955,31 @@ export default function Payment() {
                   : "Thẻ ATM/Tài khoản nội địa"}
               </strong>
             </p>
+            {selectedPromotion && (
+              <p className="text-sm text-gray-600">
+                Khuyến mại áp dụng:{" "}
+                <strong>{selectedPromotion.promotionName}</strong> ( 10% giảm,
+                tiết kiệm {formatPrice(calculateDiscountAmount())})
+              </p>
+            )}
             <p className="text-lg font-semibold">
-              Tổng tiền: {formatPrice(calculateTotal())}
+              Tổng tiền: {formatPrice(calculateFinalTotal())}
             </p>
             <p className="text-sm text-gray-600">
               Nhấn "Xác nhận thanh toán" để hoàn tất giao dịch.
             </p>
-          </div>
-        );
-
-      case 4: // Hoàn tất
-        return (
-          <div className="text-center space-y-4">
-            <h2 className="text-xl font-semibold">Hoàn tất thanh toán</h2>
-            <p className="text-sm text-gray-600">
-              Đang xử lý thanh toán. Vui lòng chờ trong giây lát...
-            </p>
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={handlePreviousStep}>
+                Quay lại
+              </Button>
+              <Button
+                className="bg-green-600 hover:bg-green-700"
+                onClick={handlePayment}
+                disabled={isLoading}
+              >
+                {isLoading ? "Đang xử lý..." : "Xác nhận thanh toán"}
+              </Button>
+            </div>
           </div>
         );
 
@@ -571,56 +996,26 @@ export default function Payment() {
 
       {/* Step Navigation */}
       <div className="flex justify-between mb-6">
-        {[
-          "Xác nhận thông tin",
-          "Xác nhận thông tin",
-          "Thanh toán",
-          "Hoàn tất",
-        ].map((label, index) => (
-          <div
-            key={index}
-            className={`flex-1 text-center p-2 ${
-              step === index + 1
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700"
-            }`}
-          >
-            {index + 1}. {label}
-          </div>
-        ))}
+        {["Xác nhận thông tin", "Xác nhận thông tin", "Thanh toán"].map(
+          (label, index) => (
+            <div
+              key={index}
+              className={`flex-1 text-center p-2 ${
+                step === index + 1
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              {index + 1}. {label}
+            </div>
+          )
+        )}
       </div>
 
       {cartItems.length > 0 ? (
-        <div className="grid gap-6">
-          {renderStepContent()}
-          {step > 2 && (
-            <div className="flex justify-between mt-4">
-              {step > 1 && step < 4 && (
-                <Button variant="outline" onClick={handlePreviousStep}>
-                  Quay lại
-                </Button>
-              )}
-              {step < 3 && (
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700"
-                  onClick={handleNextStep}
-                >
-                  Tiếp tục
-                </Button>
-              )}
-              {step === 3 && (
-                <Button
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={handlePayment}
-                >
-                  Xác nhận thanh toán
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
+        <div className="grid gap-6">{renderStepContent()}</div>
       ) : (
-        <p className="text-center text-gray-500">
+        <p className="text-center text-gray-600">
           Không có vé nào để thanh toán. Vui lòng quay lại trang chọn vé.
         </p>
       )}

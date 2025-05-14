@@ -3,17 +3,16 @@ import {
   generateSlugUrl,
   htmlToTextForDescription,
 } from "@/lib/utils";
-import { DishListResType } from "@/schemaValidations/dish.schema";
 import Image from "next/image";
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Metadata } from "next";
 import envConfig from "@/config";
 import Train from "@/app/(public)/train";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import SearchTicket from "./search-ticket";
-import { SearchParams } from "next/dist/server/request/search-params";
+import ArticleTable from "../manage/articles/article-table";
+import ArticleList from "@/components/article-list";
+import PromotionDisplay from "@/components/promotionDisplay";
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("HomePage");
   return {
@@ -25,14 +24,12 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-interface SearchTicketProps {
-  onSearch: (params: SearchParams) => void;
-}
 export default async function Home() {
-  const resetDateFilter = () => {};
+  console.log("Rendering Home", { Train, SearchTicket, ArticleTable });
   const t = await getTranslations("HomePage");
   return (
-    <div className="w-full space-y-4 ">
+    <div className="w-full space-y-4">
+      {/* Banner Section */}
       <div className="relative z-10 min-h-[450px]">
         <span className="absolute top-0 left-0 w-full h-full bg-black opacity-10 z-10"></span>
         <Image
@@ -41,7 +38,7 @@ export default async function Home() {
           height={300}
           quality={100}
           alt="Banner"
-          className="absolute top-90 w-full h-full object-cover opacity-80"
+          className="absolute top-0 w-full h-full object-cover opacity-80"
         />
         <div className="z-20 relative py-10 md:py-20 px-4 sm:px-10 md:px-20">
           <h1 className="text-center text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold text-white">
@@ -51,15 +48,16 @@ export default async function Home() {
             {t("description")}
           </p>
         </div>
-
         <div className="absolute bottom-[0px] left-0 w-full z-30 bg-white/30 h-[70px]">
           <div className="w-full py-4">
             <Train />
           </div>
         </div>
       </div>
+
+      {/* Grid Section */}
       <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-4">
-        <div className="w-full border rounded-lg w-72 bg-white shadow-md p-4">
+        <div className="w-full border rounded-lg bg-white shadow-md p-4">
           <SearchTicket />
         </div>
         <div className="col-span-2 border rounded-lg bg-white shadow-md p-4">
@@ -70,70 +68,19 @@ export default async function Home() {
               height={1000}
               quality={100}
               alt="Train Head"
-              className="w-[1000px] h-auto"
-            />
-            <Image
-              src="/banner3.png"
-              width={1000}
-              height={1000}
-              quality={100}
-              alt="Train Head"
-              className="w-[1000px] h-auto"
-            />
-            <Image
-              src="/banner.webp"
-              width={1000}
-              height={1000}
-              quality={100}
-              alt="Train Head"
-              className="w-[1000px] h-auto"
+              className="w-full h-auto"
             />
           </div>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            className="h-4 w-4 text-muted-foreground"
-          >
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-          </svg>
         </div>
         <div className="w-full border rounded-lg bg-white shadow-md p-4">
-          <div className="text-sm font-medium">
-            <Image
-              src="/banner3.png"
-              width={1000}
-              height={1000}
-              quality={100}
-              alt="Train Head"
-              className="w-[1000px] h-auto"
-            />
-          </div>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            className="h-4 w-4 text-muted-foreground"
-          >
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-          </svg>
+          <PromotionDisplay />
         </div>
       </div>
+
       <section className="space-y-10 py-16">
-        <h2 className="text-center text-2xl font-bold">{t("diversity")}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-10"></div>
+        <div className="max-w-7xl mx-auto px-4">
+          <ArticleList />
+        </div>
       </section>
     </div>
   );

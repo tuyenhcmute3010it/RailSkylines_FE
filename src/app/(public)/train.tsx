@@ -1,5 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import React from "react";
+import Link from "next/link";
+import { generateSlugUrl } from "@/lib/utils";
+import { useGetArticleList } from "@/queries/useArticle";
 
 const MarqueeTrain = () => {
   return (
@@ -13,23 +18,36 @@ const MarqueeTrain = () => {
 };
 
 const MarqueeContent = () => {
+  const page = 1;
+  const pageSize = 8;
+
+  const articleListQuery = useGetArticleList(page, pageSize);
+  const articles = articleListQuery.data?.payload.data.result ?? [];
+
   return (
     <div className="flex gap-10">
-      <Notification
-        label="Thông báo:"
-        text="Đường sắt công bố đường dây nóng tiếp nhận thông tin sự cố, tai nạn"
-        link="#"
-      />
-      <Notification
-        label="Thông báo:"
-        text="Thông báo tuyển dụng lao động tháng 4/2024"
-        link="#"
-      />
-      <Notification
-        label="Thông báo:"
-        text="Tuyển dụng nhân sự cho Trung tâm VHTTDL"
-        link="#"
-      />
+      {articleListQuery.isLoading
+        ? Array.from({ length: 3 }).map((_, index) => (
+            <Notification
+              key={index}
+              label="Thông báo:"
+              text="Đang tải..."
+              link="#"
+            />
+          ))
+        : articles.length > 0
+        ? articles.map((article) => (
+            <Notification
+              key={article.articleId}
+              label="Thông báo:"
+              text={article.title}
+              link={`/article/${generateSlugUrl({
+                name: article.title,
+                id: article.articleId,
+              })}`}
+            />
+          ))
+        : null}
     </div>
   );
 };
@@ -43,7 +61,7 @@ interface NotificationProps {
 const Notification: React.FC<NotificationProps> = ({ label, text, link }) => {
   return (
     <div className="flex items-start">
-      <div className="flex items-center text-lg gap-3 relative top-[-5px] ">
+      <div className="flex items-center text-lg gap-3 relative top-[-5px]">
         <Image
           src="/train-head1.png"
           width={60}
@@ -58,12 +76,12 @@ const Notification: React.FC<NotificationProps> = ({ label, text, link }) => {
           <span className="font-bold text-yellow-400 mr-2 text-xl">
             {label}
           </span>
-          <a
+          <Link
             href={link}
             className="text-white hover:underline text-3xl font-extrabold drop-shadow-xl"
           >
             {text}
-          </a>
+          </Link>
         </div>
         <div className="w-auto h-5 overflow-hidden">
           <Image

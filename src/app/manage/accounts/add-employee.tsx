@@ -34,10 +34,9 @@ export default function AddEmployee() {
   const [open, setOpen] = useState(false);
   const addAccountMutation = useAddAccountMutation();
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
-  const submissionRef = useRef<number>(0); // Track submission attempts
-  const fileChangeRef = useRef<number>(0); // Track file input changes
+  const submissionRef = useRef<number>(0);
+  const fileChangeRef = useRef<number>(0);
 
-  // Define the form with proper typing
   const form = useForm<CreateEmployeeAccountBodyType>({
     resolver: zodResolver(CreateEmployeeAccountBody),
     defaultValues: {
@@ -53,10 +52,6 @@ export default function AddEmployee() {
         name: "",
         description: null,
         active: false,
-        createdAt: "",
-        updatedAt: "",
-        createdBy: null,
-        updatedBy: null,
         permissions: [],
       },
     },
@@ -74,6 +69,7 @@ export default function AddEmployee() {
   }, [file, avatar]);
 
   const reset = () => {
+    console.log("Resetting form and state");
     form.reset();
     setFile(undefined);
     submissionRef.current = 0;
@@ -82,33 +78,50 @@ export default function AddEmployee() {
 
   const onSubmit = async (values: CreateEmployeeAccountBodyType) => {
     submissionRef.current += 1;
-    console.log(`Submission attempt #${submissionRef.current}:`, values);
+    console.log(`Submission attempt #${submissionRef.current}:`, {
+      values,
+      avatarFile: file,
+    });
 
     if (addAccountMutation.isPending) {
-      console.log("Mutation is pending, skipping submission");
+      console.warn("Mutation is pending, skipping submission");
       return;
     }
 
     try {
+      // Validate role before submission
+      if (!values.role || values.role.id === 0) {
+        console.error("Invalid role selected:", values.role);
+        form.setError("role", { message: t("RoleRequired") });
+        throw new Error("Role is required");
+      }
+
       const result = await addAccountMutation.mutateAsync({
         body: values,
         avatarFile: file,
       });
-      console.log("Mutation result:", result);
+      console.log("Mutation successful:", result);
       toast({
         description: t("AccountAdded", { email: values.email }),
       });
       reset();
       setOpen(false);
-    } catch (error) {
-      console.error("Submission error:", error);
+    } catch (error: any) {
+      console.error("Submission error:", {
+        error,
+        message: error.message,
+        response: error.response?.data,
+      });
       handleErrorApi({
         error,
         setError: form.setError,
       });
       toast({
         title: t("Error"),
-        description: t("FailedToAddAccount"),
+        description:
+          error.message ||
+          error.response?.data?.message ||
+          t("FailedToAddAccount"),
         variant: "destructive",
       });
     }
@@ -121,20 +134,34 @@ export default function AddEmployee() {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       if (!selectedFile.type.startsWith("image/")) {
+        console.warn("Invalid file type:", selectedFile.type);
         form.setError("avatar", { message: t("InvalidFileType") });
         return;
       }
       if (selectedFile.size > 5 * 1024 * 1024) {
+        console.warn("File too large:", selectedFile.size);
         form.setError("avatar", { message: t("FileTooLarge") });
         return;
       }
+      console.log("Valid file selected:", selectedFile.name);
       setFile(selectedFile);
       form.setValue("avatar", URL.createObjectURL(selectedFile));
+    } else {
+      console.log("No file selected");
     }
   };
 
   return (
-    <Dialog onOpenChange={setOpen} open={open}>
+    <Dialog
+      onOpenChange={(value) => {
+        console.log("Dialog open change:", value);
+        setOpen(value);
+        if (!value) {
+          reset();
+        }
+      }}
+      open={open}
+    >
       <DialogTrigger asChild>
         <Button size="sm" className="h-7 gap-1">
           <PlusCircle className="h-3.5 w-3.5" />
@@ -153,8 +180,18 @@ export default function AddEmployee() {
             noValidate
             className="grid auto-rows-max items-start gap-4 md:gap-8"
             id="add-employee-form"
-            onReset={reset}
-            onSubmit={form.handleSubmit(onSubmit)}
+            onReset={() => {
+              console.log("Form reset triggered");
+              reset();
+            }}
+            onSubmit={form.handleSubmit(onSubmit, (errors) => {
+              console.error("Form validation errors:", errors);
+              toast({
+                title: t("ValidationError"),
+                description: t("PleaseFixFormErrors"),
+                variant: "destructive",
+              });
+            })}
           >
             <div className="grid gap-4 py-4">
               <FormField
@@ -179,7 +216,10 @@ export default function AddEmployee() {
                       <button
                         className="flex aspect-square w-[100px] items-center justify-center rounded-md border border-dashed"
                         type="button"
-                        onClick={() => avatarInputRef.current?.click()}
+                        onClick={() => {
+                          console.log("Avatar upload button clicked");
+                          avatarInputRef.current?.click();
+                        }}
                       >
                         <Upload className="h-4 w-4 text-muted-foreground" />
                         <span className="sr-only">Upload</span>
@@ -300,12 +340,15 @@ export default function AddEmployee() {
                       <Label htmlFor="role">{t("Role")}</Label>
                       <div className="col-span-3 w-full space-y-2">
                         <RoleDialog
-                          onChoose={(role) => form.setValue("role", role)}
+                          onChoose={(role) => {
+                            console.log("Role selected:", role);
+                            form.setValue("role", role);
+                          }}
                         />
                         <Input
                           id="role"
                           className="w-full"
-                          value={role.name || ""} // Display role.name instead of the entire object
+                          value={role.name || ""}
                           readOnly
                           placeholder={t("SelectRole")}
                         />

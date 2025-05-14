@@ -1,383 +1,6 @@
-// "use client";
-
-// import {
-//   CaretSortIcon,
-//   DotsHorizontalIcon,
-//   PlusCircledIcon,
-// } from "@radix-ui/react-icons";
-// import {
-//   ColumnDef,
-//   ColumnFiltersState,
-//   SortingState,
-//   VisibilityState,
-//   flexRender,
-//   getCoreRowModel,
-//   getFilteredRowModel,
-//   getPaginationRowModel,
-//   getSortedRowModel,
-//   useReactTable,
-// } from "@tanstack/react-table";
-// import { Button } from "@/components/ui/button";
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogDescription,
-//   DialogFooter,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogTrigger,
-// } from "@/components/ui/dialog";
-// import {
-//   DropdownMenu,
-//   DropdownMenuContent,
-//   DropdownMenuItem,
-//   DropdownMenuLabel,
-//   DropdownMenuSeparator,
-//   DropdownMenuTrigger,
-// } from "@/components/ui/dropdown-menu";
-// import { Input } from "@/components/ui/input";
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from "@/components/ui/table";
-// import { useForm } from "react-hook-form";
-// import {
-//   Form,
-//   FormControl,
-//   FormField,
-//   FormItem,
-//   FormLabel,
-//   FormMessage,
-// } from "@/components/ui/form";
-// import { useState, createContext, useContext, useEffect } from "react";
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from "@/components/ui/select";
-// import AutoPagination from "@/components/auto-pagination";
-// import {
-//   AlertDialog,
-//   AlertDialogAction,
-//   AlertDialogCancel,
-//   AlertDialogContent,
-//   AlertDialogDescription,
-//   AlertDialogFooter,
-//   AlertDialogHeader,
-//   AlertDialogTitle,
-// } from "@/components/ui/alert-dialog";
-// import { useSearchParams } from "next/navigation";
-// import EditStation from "./edit-station";
-// import AddStation from "./add-station";
-
-// // Định nghĩa type cho Station
-// type Station = {
-//   id: number;
-//   stationName: string;
-// };
-
-// const CarriageTableContext = createContext<{
-//   setCarriageIdEdit: (value: number) => void;
-//   carriageIdEdit: number | undefined;
-//   carriageDelete: Station | null;
-//   setCarriageDelete: (value: Station | null) => void;
-// }>({
-//   setCarriageIdEdit: (value: number | undefined) => {},
-//   carriageIdEdit: undefined,
-//   carriageDelete: null,
-//   setCarriageDelete: (value: Station | null) => {},
-// });
-
-// // Component xác nhận xóa
-// function DeleteCarriageDialog({
-//   carriageDelete,
-//   setCarriageDelete,
-// }: {
-//   carriageDelete: Station | null;
-//   setCarriageDelete: (value: Station | null) => void;
-// }) {
-//   return (
-//     <AlertDialog
-//       open={Boolean(carriageDelete)}
-//       onOpenChange={(value) => {
-//         if (!value) {
-//           setCarriageDelete(null);
-//         }
-//       }}
-//     >
-//       <AlertDialogContent>
-//         <AlertDialogHeader>
-//           <AlertDialogTitle>Delete Station</AlertDialogTitle>
-//           <AlertDialogDescription>
-//             Are you sure you want to delete carriage{" "}
-//             <span className="bg-foreground text-primary-foreground rounded px-1">
-//               {carriageDelete?.stationName}
-//             </span>
-//             ? This action cannot be undone.
-//           </AlertDialogDescription>
-//         </AlertDialogHeader>
-//         <AlertDialogFooter>
-//           <AlertDialogCancel>Cancel</AlertDialogCancel>
-//           <AlertDialogAction>Continue</AlertDialogAction>
-//         </AlertDialogFooter>
-//       </AlertDialogContent>
-//     </AlertDialog>
-//   );
-// }
-
-// const PAGE_SIZE = 10;
-
-// export default function StationTable() {
-//   const searchParam = useSearchParams();
-//   const page = searchParam.get("page") ? Number(searchParam.get("page")) : 1;
-//   const pageIndex = page - 1;
-
-//   const [carriageIdEdit, setCarriageIdEdit] = useState<number | undefined>();
-//   const [carriageDelete, setCarriageDelete] = useState<Station | null>(null);
-
-//   // Dữ liệu mẫu
-//   const data: Station[] = [
-//     {
-//       id: 1,
-//       stationName: "Ga Quảng Ngãi",
-//     },
-//     {
-//       id: 2,
-//       stationName: "Ga Dĩ An",
-//     },
-//     {
-//       id: 3,
-//       stationName: "Ga Hà Nội",
-//     },
-//     {
-//       id: 4,
-//       stationName: "Ga Sài Gòn",
-//     },
-//     {
-//       id: 5,
-//       stationName: "Ga Đà Nẵng",
-//     },
-//     {
-//       id: 6,
-//       stationName: "Ga Huế",
-//     },
-//     {
-//       id: 7,
-//       stationName: "Ga Nha Trang",
-//     },
-//     {
-//       id: 8,
-//       stationName: "Ga Vinh",
-//     },
-//     {
-//       id: 9,
-//       stationName: "Ga Đồng Hới",
-//     },
-//     {
-//       id: 10,
-//       stationName: "Ga Lào Cai",
-//     },
-//   ];
-
-//   const columns: ColumnDef<Station>[] = [
-//     {
-//       accessorKey: "id",
-//       header: "ID",
-//     },
-//     {
-//       accessorKey: "stationName",
-//       header: ({ column }) => (
-//         <Button
-//           variant="ghost"
-//           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-//         >
-//           Station Name
-//           <CaretSortIcon className="ml-2 h-4 w-4" />
-//         </Button>
-//       ),
-//     },
-//     {
-//       id: "actions",
-//       enableHiding: false,
-//       cell: function Actions({ row }) {
-//         const { setCarriageIdEdit, setCarriageDelete } =
-//           useContext(CarriageTableContext);
-//         return (
-//           <DropdownMenu modal={false}>
-//             <DropdownMenuTrigger asChild>
-//               <Button variant="ghost" className="h-8 w-8 p-0">
-//                 <DotsHorizontalIcon className="h-4 w-4" />
-//               </Button>
-//             </DropdownMenuTrigger>
-//             <DropdownMenuContent align="end">
-//               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-//               <DropdownMenuSeparator />
-//               <DropdownMenuItem
-//                 onClick={() => setCarriageIdEdit(row.original.id)}
-//               >
-//                 Edit
-//               </DropdownMenuItem>
-//               <DropdownMenuItem onClick={() => setCarriageDelete(row.original)}>
-//                 Delete
-//               </DropdownMenuItem>
-//             </DropdownMenuContent>
-//           </DropdownMenu>
-//         );
-//       },
-//     },
-//   ];
-
-//   const [sorting, setSorting] = useState<SortingState>([]);
-//   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-//   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-//   const [rowSelection, setRowSelection] = useState({});
-//   const [pagination, setPagination] = useState({
-//     pageIndex,
-//     pageSize: PAGE_SIZE,
-//   });
-
-//   const table = useReactTable({
-//     data,
-//     columns,
-//     onSortingChange: setSorting,
-//     onColumnFiltersChange: setColumnFilters,
-//     getCoreRowModel: getCoreRowModel(),
-//     getPaginationRowModel: getPaginationRowModel(),
-//     getSortedRowModel: getSortedRowModel(),
-//     getFilteredRowModel: getFilteredRowModel(),
-//     onColumnVisibilityChange: setColumnVisibility,
-//     onRowSelectionChange: setRowSelection,
-//     onPaginationChange: setPagination,
-//     autoResetPageIndex: false,
-//     state: {
-//       sorting,
-//       columnFilters,
-//       columnVisibility,
-//       rowSelection,
-//       pagination,
-//     },
-//   });
-
-//   useEffect(() => {
-//     table.setPagination({
-//       pageIndex,
-//       pageSize: PAGE_SIZE,
-//     });
-//   }, [table, pageIndex]);
-
-//   return (
-//     <CarriageTableContext.Provider
-//       value={{
-//         carriageIdEdit,
-//         setCarriageIdEdit,
-//         carriageDelete,
-//         setCarriageDelete,
-//       }}
-//     >
-//       <div className="w-full">
-//         {/* Render EditCarriage chỉ khi carriageIdEdit có giá trị */}
-//         {carriageIdEdit !== undefined && (
-//           <EditStation
-//             id={carriageIdEdit}
-//             setId={setCarriageIdEdit}
-//             onSubmitSuccess={() => setCarriageIdEdit(undefined)}
-//           />
-//         )}
-//         <DeleteCarriageDialog
-//           carriageDelete={carriageDelete}
-//           setCarriageDelete={setCarriageDelete}
-//         />
-//         <div className="flex items-center py-4 gap-5">
-//           <Input
-//             placeholder="Filter station name..."
-//             value={
-//               (table.getColumn("stationName")?.getFilterValue() as string) ?? ""
-//             }
-//             onChange={(event) =>
-//               table.getColumn("stationName")?.setFilterValue(event.target.value)
-//             }
-//             className="max-w-sm w-100"
-//           />
-
-//           <div className="ml-auto flex items-center gap-2">
-//             <AddStation />
-//           </div>
-//         </div>
-//         <div className="rounded-md border">
-//           <Table>
-//             <TableHeader>
-//               {table.getHeaderGroups().map((headerGroup) => (
-//                 <TableRow key={headerGroup.id}>
-//                   {headerGroup.headers.map((header) => (
-//                     <TableHead key={header.id}>
-//                       {header.isPlaceholder
-//                         ? null
-//                         : flexRender(
-//                             header.column.columnDef.header,
-//                             header.getContext()
-//                           )}
-//                     </TableHead>
-//                   ))}
-//                 </TableRow>
-//               ))}
-//             </TableHeader>
-//             <TableBody>
-//               {table.getRowModel().rows?.length ? (
-//                 table.getRowModel().rows.map((row) => (
-//                   <TableRow key={row.id}>
-//                     {row.getVisibleCells().map((cell) => (
-//                       <TableCell key={cell.id}>
-//                         {flexRender(
-//                           cell.column.columnDef.cell,
-//                           cell.getContext()
-//                         )}
-//                       </TableCell>
-//                     ))}
-//                   </TableRow>
-//                 ))
-//               ) : (
-//                 <TableRow>
-//                   <TableCell
-//                     colSpan={columns.length}
-//                     className="h-24 text-center"
-//                   >
-//                     No results.
-//                   </TableCell>
-//                 </TableRow>
-//               )}
-//             </TableBody>
-//           </Table>
-//         </div>
-//         <div className="flex items-center justify-between py-4 ">
-//           <div className="text-xs text-muted-foreground">
-//             Showing <strong>{table.getPaginationRowModel().rows.length}</strong>{" "}
-//             of <strong>{data.length}</strong> stations
-//           </div>
-//           <div>
-//             <AutoPagination
-//               page={table.getState().pagination.pageIndex + 1}
-//               pageSize={table.getPageCount()}
-//               pathname="/manage/stations"
-//             />
-//           </div>
-//         </div>
-//       </div>
-//     </CarriageTableContext.Provider>
-//   );
-// }
-
 "use client";
-import {
-  CaretSortIcon,
-  DotsHorizontalIcon,
-  PlusCircledIcon,
-} from "@radix-ui/react-icons";
+
+import { CaretSortIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -419,11 +42,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import EditStation from "./edit-station";
 import AddStation from "./add-station";
-import AutoPagination from "@/components/auto-pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import TableSkeleton from "@/components/Skeleton";
 import {
   useGetStationList,
@@ -431,6 +60,7 @@ import {
 } from "@/queries/useStation";
 import { StationSchemaType } from "@/schemaValidations/station.schema";
 import { useToast } from "@/components/ui/use-toast";
+import { useAccountProfile } from "@/queries/useAccount"; // Import useAccountProfile
 
 const StationTableContext = createContext<{
   setStationIdEdit: (value: number | undefined) => void;
@@ -501,6 +131,7 @@ export default function StationTable() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
   const page = searchParams.get("page") ? Number(searchParams.get("page")) : 1;
   const pageIndex = page - 1;
 
@@ -508,13 +139,40 @@ export default function StationTable() {
   const [stationDelete, setStationDelete] = useState<StationSchemaType | null>(
     null
   );
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
-  // Fetch station list
-  const stationListQuery = useGetStationList(page, PAGE_SIZE);
+  // Fetch user permissions
+  const {
+    data: accountData,
+    isLoading: isAccountLoading,
+    isError: isAccountError,
+  } = useAccountProfile();
+  const userPermissions = accountData?.data?.user?.role?.permissions as
+    | Array<{
+        id: number;
+        name: string;
+        apiPath: string;
+        method: string;
+        module: string;
+      }>
+    | undefined;
+
+  // Check permissions for STATIONS module
+  const hasAddPermission = userPermissions?.some(
+    (p) => p.module === "STATIONS" && p.method === "POST"
+  );
+  const hasEditPermission = userPermissions?.some(
+    (p) => p.module === "STATIONS" && p.method === "PUT"
+  );
+  const hasDeletePermission = userPermissions?.some(
+    (p) => p.module === "STATIONS" && p.method === "DELETE"
+  );
+
+  const stationListQuery = useGetStationList(page, pageSize);
   const deleteStationMutation = useDeleteStationMutation();
   const data = stationListQuery.data?.payload?.data.result ?? [];
   const totalItems = stationListQuery.data?.payload.data.meta.total ?? 0;
-  const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+  const totalPages = Math.ceil(totalItems / pageSize);
 
   const columns: ColumnDef<StationSchemaType>[] = [
     {
@@ -580,14 +238,20 @@ export default function StationTable() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t("Action")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setStationIdEdit(row.original.stationId)}
-              >
-                {t("Edit")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStationDelete(row.original)}>
-                {t("Delete")}
-              </DropdownMenuItem>
+              {hasEditPermission && (
+                <DropdownMenuItem
+                  onClick={() => setStationIdEdit(row.original.stationId)}
+                >
+                  {t("Edit")}
+                </DropdownMenuItem>
+              )}
+              {hasDeletePermission && (
+                <DropdownMenuItem
+                  onClick={() => setStationDelete(row.original)}
+                >
+                  {t("Delete")}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -616,7 +280,7 @@ export default function StationTable() {
       columnFilters,
       columnVisibility,
       rowSelection,
-      pagination: { pageIndex, pageSize: PAGE_SIZE },
+      pagination: { pageIndex, pageSize },
     },
     pageCount: totalPages,
     manualPagination: true,
@@ -630,7 +294,7 @@ export default function StationTable() {
     if (newPage >= 1 && newPage <= totalPages) {
       const params = new URLSearchParams(searchParams.toString());
       params.set("page", newPage.toString());
-      router.push(`/manage/stations?${params.toString()}`);
+      router.push(`${pathname}?${params.toString()}`);
     }
   };
 
@@ -641,12 +305,15 @@ export default function StationTable() {
         title: t("DeleteSuccess"),
         description: t("StationDeleted", { stationId: id }),
       });
-    } catch (error) {
+      stationListQuery.refetch();
+    } catch (error: any) {
+      const errorMessage = error?.message || t("Error_Generic");
       toast({
         title: t("DeleteFailed"),
-        description: t("Error_Generic"),
+        description: errorMessage,
         variant: "destructive",
       });
+      stationListQuery.refetch();
     }
   };
 
@@ -660,7 +327,7 @@ export default function StationTable() {
       }}
     >
       <div className="w-full">
-        {stationIdEdit !== undefined && (
+        {stationIdEdit !== undefined && hasEditPermission && (
           <EditStation
             id={stationIdEdit}
             setId={setStationIdEdit}
@@ -713,7 +380,7 @@ export default function StationTable() {
                 className="max-w-sm w-[150px]"
               />
               <div className="ml-auto flex items-center gap-2">
-                <AddStation />
+                {hasAddPermission && <AddStation />}
               </div>
             </div>
             <div className="rounded-md border">
@@ -768,12 +435,42 @@ export default function StationTable() {
                 {paginationT("Pagi2")} <strong>{totalItems}</strong>{" "}
                 {paginationT("Pagi3")}
               </div>
-              <div>
-                <AutoPagination
-                  page={table.getState().pagination.pageIndex + 1}
-                  pageSize={table.getPageCount()}
-                  pathname="/manage/stations"
-                />
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(page - 1)}
+                  disabled={page === 1}
+                >
+                  {paginationT("Previous")}
+                </Button>
+                <span>
+                  {paginationT("Page")} {page} {paginationT("Of")} {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(page + 1)}
+                  disabled={page === totalPages}
+                >
+                  {paginationT("Next")}
+                </Button>
+                <Select
+                  value={pageSize.toString()}
+                  onValueChange={(value) => {
+                    setPageSize(Number(value));
+                    goToPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue placeholder={paginationT("RowsPerPage")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </>

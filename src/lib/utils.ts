@@ -255,4 +255,32 @@ export const htmlToTextForDescription = (html: string) => {
     },
   });
 };
+<<<<<<< HEAD
 >>>>>>> AdminLogic
+=======
+import { useAppContext } from "@/components/app-provider";
+import { Permission } from "@/types/jwt.types";
+
+export function usePermissions() {
+  const { permissions } = useAppContext();
+
+  const hasPermission = (permissionName: string): boolean => {
+    if (!permissions) return false;
+    return permissions.some((perm: Permission) => perm.name === permissionName);
+  };
+
+  const hasAnyPermission = (permissionNames: string[]): boolean => {
+    if (!permissions) return false;
+    return permissionNames.some((name) =>
+      permissions.some((perm: Permission) => perm.name === name)
+    );
+  };
+
+  const hasModulePermission = (module: Permission["module"]): boolean => {
+    if (!permissions) return false;
+    return permissions.some((perm: Permission) => perm.module === module);
+  };
+
+  return { hasPermission, hasAnyPermission, hasModulePermission };
+}
+>>>>>>> 4c08d807683244c1d067782a24c2cc24070d555b

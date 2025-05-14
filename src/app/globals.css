@@ -168,6 +168,18 @@
     --chart-5: 27 87% 67%;
 
     --radius: 0.5rem;
+    --color-chrome: #ff0000; /* Red */
+    --color-safari: #00ff00; /* Green */
+    --color-firefox: #0000ff; /* Blue */
+    --color-edge: #ffff00; /* Yellow */
+    --color-other: #ff00ff; /* Magenta */
+    --color-blue: #1e90ff; /* Dodger Blue */
+    --color-green: #32cd32; /* Lime Green */
+    --color-purple: #800080; /* Purple */
+    --color-orange: #ffa500; /* Orange */
+    --color-pink: #ff69b4; /* Hot Pink */
+    --color-teal: #008080; /* Teal */
+    --color-yellow: #ffd700; /* Gold */
   }
   .dark {
     --navColor: 222.2 84% 4.9%;

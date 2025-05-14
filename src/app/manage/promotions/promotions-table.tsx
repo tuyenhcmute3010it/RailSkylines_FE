@@ -1,41 +1,6 @@
 "use client";
 
-import {
-  CaretSortIcon,
-  DotsHorizontalIcon,
-  PlusCircledIcon,
-} from "@radix-ui/react-icons";
-import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -44,24 +9,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useState, createContext, useContext, useEffect } from "react";
+  useGetPromotionList,
+  useDeletePromotionMutation,
+} from "@/queries/usePromotion";
+import { PromotionSchemaType } from "@/schemaValidations/promotion.schema";
+import { Edit, Trash2, Loader2, AlertTriangle } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { toast } from "@/components/ui/use-toast";
+import { handleErrorApi } from "@/lib/utils";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import AutoPagination from "@/components/auto-pagination";
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -72,350 +38,310 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useSearchParams } from "next/navigation";
-import EditPromotion from "./edit-promotion";
-import AddPromotion from "./add-promotion";
+import AddPromotionDialog from "./add-promotion";
+import EditPromotionDialog from "./edit-promotion";
+import { useAccountProfile } from "@/queries/useAccount"; // Import useAccountProfile
 
-// Định nghĩa type cho Promotion
-type Promotion = {
-  id: number;
-  promotionName: string;
-  discount: number;
+const PromotionsPageClient = () => {
+  const t = useTranslations("ManagePromotion");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [editingPromotionId, setEditingPromotionId] = useState<
+    number | undefined
+  >(undefined);
+  const [deletingPromotionId, setDeletingPromotionId] = useState<
+    number | undefined
+  >(undefined);
+
+  // Fetch user permissions
+  const {
+    data: accountData,
+    isLoading: isAccountLoading,
+    isError: isAccountError,
+  } = useAccountProfile();
+  const userPermissions = accountData?.data?.user?.role?.permissions as
+    | Array<{
+        id: number;
+        name: string;
+        apiPath: string;
+        method: string;
+        module: string;
+      }>
+    | undefined;
+
+  // Check permissions for PROMOTIONS module
+  const hasAddPermission = userPermissions?.some(
+    (p) => p.module === "PROMOTIONS" && p.method === "POST"
+  );
+  const hasEditPermission = userPermissions?.some(
+    (p) => p.module === "PROMOTIONS" && p.method === "PUT"
+  );
+  const hasDeletePermission = userPermissions?.some(
+    (p) => p.module === "PROMOTIONS" && p.method === "DELETE"
+  );
+
+  const {
+    data: promotionsResponse,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetPromotionList(currentPage, pageSize);
+
+  const deletePromotionMutation = useDeletePromotionMutation();
+
+  const handleDeletePromotion = async () => {
+    if (!deletingPromotionId) return;
+
+    try {
+      await deletePromotionMutation.mutateAsync(deletingPromotionId);
+      toast({
+        title: t("Success"),
+        description: t("PromotionDeletedSuccessfully"),
+      });
+      setDeletingPromotionId(undefined);
+    } catch (error) {
+      handleErrorApi({ error, duration: 5000 });
+      toast({
+        variant: "destructive",
+        title: t("Error"),
+        description: t("FailedToDeletePromotion"),
+      });
+    }
+  };
+
+  const promotions = promotionsResponse?.payload.data?.result || [];
+  const meta = promotionsResponse?.payload.meta;
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    return (
+      new Date(dateString).toLocaleDateString() +
+      " " +
+      new Date(dateString).toLocaleTimeString()
+    );
+  };
+
+  if (isAccountLoading || isLoading) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (isAccountError || isError) {
+    return (
+      <div className="text-red-600 flex flex-col items-center py-10">
+        <AlertTriangle className="h-10 w-10 mb-2" />
+        <p>{t("FailedToLoadPromotions")}</p>
+        <Button onClick={() => refetch()} className="mt-4">
+          {t("Retry")}
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-semibold">{t("ManagePromotions")}</h1>
+        {hasAddPermission && <AddPromotionDialog />}
+      </div>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("PromotionName")}</TableHead>
+              <TableHead>{t("Code")}</TableHead>
+              <TableHead className="text-right">{t("Discount")}</TableHead>
+              <TableHead>{t("StartDate")}</TableHead>
+              <TableHead>{t("ValidityDate")}</TableHead>
+              <TableHead>{t("Status")}</TableHead>
+              <TableHead className="text-right">{t("Actions")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {promotions.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center h-24">
+                  {t("NoPromotionsFound")}
+                </TableCell>
+              </TableRow>
+            )}
+            {promotions.map((promo: PromotionSchemaType) => (
+              <TableRow key={promo.promotionId}>
+                <TableCell className="font-medium">
+                  {promo.promotionName}
+                </TableCell>
+                <TableCell>{promo.promotionCode}</TableCell>
+                <TableCell className="text-right">{promo.discount}%</TableCell>
+                <TableCell>{formatDate(promo.startDate)}</TableCell>
+                <TableCell>{formatDate(promo.validity)}</TableCell>
+                <TableCell>
+                  <span
+                    className={`px-2 py-1 text-xs rounded-full ${
+                      promo.status === "active"
+                        ? "bg-green-100 text-green-700"
+                        : promo.status === "inactive"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {t(promo.status)}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right">
+                  {hasEditPermission && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="mr-2 h-8 w-8"
+                      onClick={() => setEditingPromotionId(promo.promotionId)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {hasDeletePermission && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-500 hover:text-red-700 h-8 w-8"
+                      onClick={() => setDeletingPromotionId(promo.promotionId)}
+                      disabled={
+                        deletePromotionMutation.isPending &&
+                        deletingPromotionId === promo.promotionId
+                      }
+                    >
+                      {deletePromotionMutation.isPending &&
+                      deletingPromotionId === promo.promotionId ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {meta && meta.pages > 1 && (
+        <div className="mt-6 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentPage > 1) setCurrentPage(currentPage - 1);
+                  }}
+                  className={
+                    currentPage <= 1
+                      ? "pointer-events-none opacity-50"
+                      : undefined
+                  }
+                />
+              </PaginationItem>
+              {[...Array(meta.pages)].map((_, i) => {
+                const pageNum = i + 1;
+                if (
+                  meta.pages <= 5 ||
+                  pageNum === currentPage ||
+                  pageNum === 1 ||
+                  pageNum === meta.pages ||
+                  (pageNum >= currentPage - 1 && pageNum <= currentPage + 1) ||
+                  (currentPage <= 2 && pageNum <= 3) ||
+                  (currentPage >= meta.pages - 1 && pageNum >= meta.pages - 2)
+                ) {
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        href="#"
+                        isActive={currentPage === pageNum}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(pageNum);
+                        }}
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                } else if (
+                  pageNum === currentPage - 2 ||
+                  pageNum === currentPage + 2
+                ) {
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  );
+                }
+                return null;
+              })}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentPage < meta.pages)
+                      setCurrentPage(currentPage + 1);
+                  }}
+                  className={
+                    currentPage >= meta.pages
+                      ? "pointer-events-none opacity-50"
+                      : undefined
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
+
+      {hasEditPermission && (
+        <EditPromotionDialog
+          promotionId={editingPromotionId}
+          setPromotionId={setEditingPromotionId}
+          onSuccess={() => refetch()}
+        />
+      )}
+
+      <AlertDialog
+        open={Boolean(deletingPromotionId)}
+        onOpenChange={(open) => !open && setDeletingPromotionId(undefined)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("ConfirmDeletionTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("ConfirmDeletionDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => setDeletingPromotionId(undefined)}
+            >
+              {t("Cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePromotion}
+              disabled={deletePromotionMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deletePromotionMutation.isPending
+                ? t("Deleting...")
+                : t("Delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
 };
 
-const CarriageTableContext = createContext<{
-  setPromotionIdEdit: (value: number) => void;
-  promotionIdEdit: number | undefined;
-  promotionDelete: Promotion | null;
-  setPromotionDelete: (value: Promotion | null) => void;
-}>({
-  setPromotionIdEdit: (value: number | undefined) => {},
-  promotionIdEdit: undefined,
-  promotionDelete: null,
-  setPromotionDelete: (value: Promotion | null) => {},
-});
-
-// Component xác nhận xóa
-function DeletePromotionDialog({
-  promotionDelete,
-  setPromotionDelete,
-}: {
-  promotionDelete: Promotion | null;
-  setPromotionDelete: (value: Promotion | null) => void;
-}) {
-  return (
-    <AlertDialog
-      open={Boolean(promotionDelete)}
-      onOpenChange={(value) => {
-        if (!value) {
-          setPromotionDelete(null);
-        }
-      }}
-    >
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete Promotion</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to delete promotion{" "}
-            <span className="bg-foreground text-primary-foreground rounded px-1">
-              {promotionDelete?.promotionName}
-            </span>
-            ? This action cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction>Continue</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}
-
-const PAGE_SIZE = 10;
-
-export default function PromotionTable() {
-  const searchParam = useSearchParams();
-  const page = searchParam.get("page") ? Number(searchParam.get("page")) : 1;
-  const pageIndex = page - 1;
-
-  const [promotionIdEdit, setPromotionIdEdit] = useState<number | undefined>();
-  const [promotionDelete, setPromotionDelete] = useState<Promotion | null>(
-    null
-  );
-
-  // Dữ liệu mẫu
-  const data: Promotion[] = [
-    {
-      id: 1,
-      promotionName: "Khuyến mãi mùa xuân",
-      discount: 20,
-    },
-    {
-      id: 2,
-      promotionName: "Giảm giá vé sớm",
-      discount: 15,
-    },
-    {
-      id: 3,
-      promotionName: "Ưu đãi Ga Quảng Ngãi",
-      discount: 10,
-    },
-    {
-      id: 4,
-      promotionName: "Vé khứ hồi giảm giá",
-      discount: 25,
-    },
-    {
-      id: 5,
-      promotionName: "Khuyến mãi sinh viên",
-      discount: 30,
-    },
-    {
-      id: 6,
-      promotionName: "Giảm giá ngày lễ",
-      discount: 20,
-    },
-    {
-      id: 7,
-      promotionName: "Ưu đãi Ga Dĩ An",
-      discount: 15,
-    },
-    {
-      id: 8,
-      promotionName: "Khuyến mãi gia đình",
-      discount: 25,
-    },
-    {
-      id: 9,
-      promotionName: "Vé cuối tuần",
-      discount: 10,
-    },
-    {
-      id: 10,
-      promotionName: "Giảm giá đoàn đông",
-      discount: 35,
-    },
-    {
-      id: 11,
-      promotionName: "Ưu đãi Ga Hà Nội",
-      discount: 20,
-    },
-    {
-      id: 12,
-      promotionName: "Khuyến mãi mùa hè",
-      discount: 30,
-    },
-  ];
-  const columns: ColumnDef<Promotion>[] = [
-    {
-      accessorKey: "id",
-      header: "ID",
-    },
-    {
-      accessorKey: "promotionName",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Promotion Name
-          <CaretSortIcon className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-    },
-    {
-      accessorKey: "discount",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Discount
-          <CaretSortIcon className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-    },
-    {
-      id: "actions",
-      enableHiding: false,
-      cell: function Actions({ row }) {
-        const { setPromotionIdEdit, setPromotionDelete } =
-          useContext(CarriageTableContext);
-        return (
-          <DropdownMenu modal={false}>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <DotsHorizontalIcon className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setPromotionIdEdit(row.original.id)}
-              >
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setPromotionDelete(row.original)}
-              >
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
-    },
-  ];
-
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = useState({});
-  const [pagination, setPagination] = useState({
-    pageIndex,
-    pageSize: PAGE_SIZE,
-  });
-
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    onPaginationChange: setPagination,
-    autoResetPageIndex: false,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-      pagination,
-    },
-  });
-
-  useEffect(() => {
-    table.setPagination({
-      pageIndex,
-      pageSize: PAGE_SIZE,
-    });
-  }, [table, pageIndex]);
-
-  return (
-    <CarriageTableContext.Provider
-      value={{
-        promotionIdEdit,
-        setPromotionIdEdit,
-        promotionDelete,
-        setPromotionDelete,
-      }}
-    >
-      <div className="w-full">
-        {/* Render EditCarriage chỉ khi promotionIdEdit có giá trị */}
-        {promotionIdEdit !== undefined && (
-          <EditPromotion
-            id={promotionIdEdit}
-            setId={setPromotionIdEdit}
-            onSubmitSuccess={() => setPromotionIdEdit(undefined)}
-          />
-        )}
-        <DeletePromotionDialog
-          promotionDelete={promotionDelete}
-          setPromotionDelete={setPromotionDelete}
-        />
-        <div className="flex items-center py-4 gap-5">
-          <Input
-            placeholder="Filter Promotion Name..."
-            value={
-              (table.getColumn("promotionName")?.getFilterValue() as string) ??
-              ""
-            }
-            onChange={(event) =>
-              table
-                .getColumn("promotionName")
-                ?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm w-100"
-          />
-          <Input
-            placeholder="Filter Discount..."
-            value={
-              (table.getColumn("discount")?.getFilterValue() as string) ?? ""
-            }
-            onChange={(event) =>
-              table.getColumn("discount")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm w-100"
-          />
-          <div className="ml-auto flex items-center gap-2">
-            <AddPromotion />
-          </div>
-        </div>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="flex items-center justify-between py-4 ">
-          <div className="text-xs text-muted-foreground">
-            Showing <strong>{table.getPaginationRowModel().rows.length}</strong>{" "}
-            of <strong>{data.length}</strong> promotions
-          </div>
-          <div>
-            <AutoPagination
-              page={table.getState().pagination.pageIndex + 1}
-              pageSize={table.getPageCount()}
-              pathname="/manage/promotions"
-            />
-          </div>
-        </div>
-      </div>
-    </CarriageTableContext.Provider>
-  );
-}
+export default PromotionsPageClient;

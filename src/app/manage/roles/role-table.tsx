@@ -1,4 +1,5 @@
 "use client";
+
 import { CaretSortIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
 import {
   ColumnDef,
@@ -42,10 +43,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTranslations } from "next-intl";
-import {
-  RoleListResType,
-  RoleSchemaType,
-} from "@/schemaValidations/role.schema";
+import { RoleSchemaType } from "@/schemaValidations/role.schema";
 import { useGetRoleList, useDeleteRoleMutation } from "@/queries/useRole";
 import TableSkeleton from "@/components/Skeleton";
 import RoleModal from "./role-modal";
@@ -58,6 +56,8 @@ import {
 } from "@/components/ui/select";
 import { useState, useEffect, createContext, useContext } from "react";
 import { PlusCircle } from "lucide-react";
+import { useAccountProfile } from "@/queries/useAccount"; // Import useAccountProfile
+import { useToast } from "@/components/ui/use-toast";
 
 type RoleItem = RoleSchemaType;
 
@@ -81,15 +81,25 @@ function DeleteRoleDialog({
   setRoleDelete: (value: RoleItem | null) => void;
 }) {
   const t = useTranslations("ManageRole");
+  const { toast } = useToast();
   const deleteRoleMutation = useDeleteRoleMutation();
 
   const handleDelete = async () => {
     if (roleDelete) {
       try {
         await deleteRoleMutation.mutateAsync(roleDelete.id);
+        toast({
+          title: t("DeleteSuccess"),
+          description: t("RoleDeleted", { roleId: roleDelete.id }),
+        });
         setRoleDelete(null);
-      } catch (error) {
-        console.error("Delete error:", error);
+      } catch (error: any) {
+        const errorMessage = error?.message || t("Error_Generic");
+        toast({
+          title: t("DeleteFailed"),
+          description: errorMessage,
+          variant: "destructive",
+        });
       }
     }
   };
@@ -140,6 +150,33 @@ function RoleTable() {
   const [roleDelete, setRoleDelete] = useState<RoleItem | null>(null);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [addModalOpen, setAddModalOpen] = useState(false);
+
+  // Fetch user permissions
+  const {
+    data: accountData,
+    isLoading: isAccountLoading,
+    isError: isAccountError,
+  } = useAccountProfile();
+  const userPermissions = accountData?.data?.user?.role?.permissions as
+    | Array<{
+        id: number;
+        name: string;
+        apiPath: string;
+        method: string;
+        module: string;
+      }>
+    | undefined;
+
+  // Check permissions for ROLES module
+  const hasAddPermission = userPermissions?.some(
+    (p) => p.module === "ROLES" && p.method === "POST"
+  );
+  const hasEditPermission = userPermissions?.some(
+    (p) => p.module === "ROLES" && p.method === "PUT"
+  );
+  const hasDeletePermission = userPermissions?.some(
+    (p) => p.module === "ROLES" && p.method === "DELETE"
+  );
 
   // Fetch role list
   const roleListQuery = useGetRoleList(page, pageSize);
@@ -207,12 +244,18 @@ function RoleTable() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t("Action")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setRoleIdEdit(row.original.id)}>
-                {t("Edit")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setRoleDelete(row.original)}>
-                {t("Delete")}
-              </DropdownMenuItem>
+              {hasEditPermission && (
+                <DropdownMenuItem
+                  onClick={() => setRoleIdEdit(row.original.id)}
+                >
+                  {t("Edit")}
+                </DropdownMenuItem>
+              )}
+              {hasDeletePermission && (
+                <DropdownMenuItem onClick={() => setRoleDelete(row.original)}>
+                  {t("Delete")}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -269,7 +312,7 @@ function RoleTable() {
       }}
     >
       <div className="w-full">
-        {roleIdEdit !== undefined && (
+        {roleIdEdit !== undefined && hasEditPermission && (
           <RoleModal
             open={true}
             setOpen={() => setRoleIdEdit(undefined)}
@@ -284,7 +327,11 @@ function RoleTable() {
           roleDelete={roleDelete}
           setRoleDelete={setRoleDelete}
         />
-        {roleListQuery.isLoading ? (
+        {isAccountLoading ? (
+          <TableSkeleton />
+        ) : isAccountError ? (
+          <div className="text-red-500">Error loading user permissions</div>
+        ) : roleListQuery.isLoading ? (
           <TableSkeleton />
         ) : roleListQuery.error ? (
           <div className="text-red-500">
@@ -324,22 +371,26 @@ function RoleTable() {
                 </SelectContent>
               </Select>
               <div className="ml-auto flex items-center gap-2">
-                <Button
-                  size="sm"
-                  className="h-7 gap-1"
-                  onClick={() => setAddModalOpen(true)}
-                >
-                  <PlusCircle className="h-3.5 w-3.5" />
-                  <span>{t("AddRole")}</span>
-                </Button>
-                <RoleModal
-                  open={addModalOpen}
-                  setOpen={setAddModalOpen}
-                  onSubmitSuccess={() => {
-                    setAddModalOpen(false);
-                    roleListQuery.refetch();
-                  }}
-                />
+                {hasAddPermission && (
+                  <>
+                    <Button
+                      size="sm"
+                      className="h-7 gap-1"
+                      onClick={() => setAddModalOpen(true)}
+                    >
+                      <PlusCircle className="h-3.5 w-3.5" />
+                      <span>{t("AddRole")}</span>
+                    </Button>
+                    <RoleModal
+                      open={addModalOpen}
+                      setOpen={setAddModalOpen}
+                      onSubmitSuccess={() => {
+                        setAddModalOpen(false);
+                        roleListQuery.refetch();
+                      }}
+                    />
+                  </>
+                )}
               </div>
             </div>
             <div className="rounded-md border">
@@ -361,7 +412,7 @@ function RoleTable() {
                   ))}
                 </TableHeader>
                 <TableBody>
-                  {table.getRowModel().rows?.length &&
+                  {table.getRowModel().rows?.length ? (
                     table.getRowModel().rows.map((row) => (
                       <TableRow key={row.id}>
                         {row.getVisibleCells().map((cell) => (
@@ -373,7 +424,17 @@ function RoleTable() {
                           </TableCell>
                         ))}
                       </TableRow>
-                    ))}
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center"
+                      >
+                        {t("NoResults")}
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -429,4 +490,4 @@ function RoleTable() {
   );
 }
 
-export default RoleTable; // Add the default export
+export default RoleTable;

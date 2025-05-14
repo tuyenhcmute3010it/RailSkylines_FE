@@ -1,49 +1,68 @@
-import z from "zod";
+// src/schemaValidations/article.schema.ts
+import { z } from "zod";
 
-export const ArticleSchema = z.object({
-  id: z.number(),
-  title: z.string().min(1).max(256),
-  content: z.string().min(1),
+// Schema for creating an article
+export const CreateArticleBody = z.object({
+  title: z.string().min(1, "Title is required"),
+  content: z.string().min(1, "Content is required"),
+  thumbnail: z.string().url("Must be a valid URL").optional(),
 });
 
-export type ArticleType = z.TypeOf<typeof ArticleSchema>;
+export type CreateArticleBodyType = z.TypeOf<typeof CreateArticleBody>;
 
-export const ArticleListRes = z.object({
-  data: z.array(ArticleSchema),
+// Schema for updating an article
+export const UpdateArticleBody = z.object({
+  title: z.string().min(1, "Title is required").optional(),
+  content: z.string().min(1, "Content is required").optional(),
+  thumbnail: z.string().url("Must be a valid URL").optional(),
+});
+
+export type UpdateArticleBodyType = z.TypeOf<typeof UpdateArticleBody>;
+
+// Schema for a single article
+export const ArticleSchema = z.object({
+  articleId: z.number(),
+  title: z.string(),
+  content: z.string(),
+  thumbnail: z.string().optional(),
+  userId: z.number(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+
+export type ArticleSchemaType = z.TypeOf<typeof ArticleSchema>;
+
+// Schema for single article response
+export const ArticleRes = z.object({
+  status: z.number(),
+  statusCode: z.number(),
+  error: z.string().nullable(),
   message: z.string(),
+  data: ArticleSchema,
+});
+
+export type ArticleResType = z.TypeOf<typeof ArticleRes>;
+
+// Schema for article list response
+export const ArticleListRes = z.object({
+  statusCode: z.number(),
+  error: z.string().nullable(),
+  message: z.string(),
+  data: z.object({
+    meta: z.object({
+      page: z.number(),
+      pageSize: z.number(),
+      total: z.number(),
+    }),
+    result: z.array(ArticleSchema),
+  }),
 });
 
 export type ArticleListResType = z.TypeOf<typeof ArticleListRes>;
 
-export const ArticleRes = z
-  .object({
-    data: ArticleSchema,
-    message: z.string(),
-  })
-  .strict();
-
-export type ArticleResType = z.TypeOf<typeof ArticleRes>;
-
-export const CreateArticleBody = z
-  .object({
-    title: z.string().trim().min(1).max(256),
-    content: z.string().trim().min(1),
-  })
-  .strict();
-
-export type CreateArticleBodyType = z.TypeOf<typeof CreateArticleBody>;
-
-export const UpdateArticleBody = z
-  .object({
-    title: z.string().trim().min(1).max(256).optional(),
-    content: z.string().trim().min(1).optional(),
-  })
-  .strict();
-
-export type UpdateArticleBodyType = z.TypeOf<typeof UpdateArticleBody>;
-
-export const ArticleIdParam = z.object({
-  id: z.coerce.number(),
+// Schema for article parameters (e.g., ID in URL)
+export const ArticleParams = z.object({
+  articleId: z.coerce.number(),
 });
 
-export type ArticleIdParamType = z.TypeOf<typeof ArticleIdParam>;
+export type ArticleParamsType = z.TypeOf<typeof ArticleParams>;

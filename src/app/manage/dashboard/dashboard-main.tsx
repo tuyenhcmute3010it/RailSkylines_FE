@@ -5,9 +5,43 @@ import { DishBarChart } from "@/app/manage/dashboard/dish-bar-chart";
 import { formatCurrency } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { endOfDay, format, startOfDay } from "date-fns";
+import { useState } from "react";
+import { useGetDashboardIndicator } from "@/queries/useIndicator";
+
+const initFromDate = startOfDay(new Date());
+const initToDate = endOfDay(new Date());
 
 export default function DashboardMain() {
-  const resetDateFilter = () => {};
+  const [fromDate, setFromDate] = useState(initFromDate);
+  const [toDate, setToDate] = useState(initToDate);
+
+  const { data, isLoading, error } = useGetDashboardIndicator({
+    queryParams: { fromDate, toDate },
+    enabled: true,
+  });
+
+  const resetDateFilter = () => {
+    setFromDate(initFromDate);
+    setToDate(initToDate);
+  };
+
+  if (error) {
+    return (
+      <div className="text-red-500 p-4">
+        Error fetching data: {error.message || "Unknown error"}
+      </div>
+    );
+  }
+
+  const dashboardData = data?.payload?.data?.data || {
+    totalRevenue: 0,
+    totalCustomers: 0,
+    paidTickets: 0,
+    pendingTickets: 0,
+    revenueByDate: [],
+    trainRankings: [],
+  };
 
   return (
     <div className="space-y-4">
@@ -18,13 +52,31 @@ export default function DashboardMain() {
             type="datetime-local"
             placeholder="Từ ngày"
             className="text-sm"
+            value={format(fromDate, "yyyy-MM-dd HH:mm").replace(" ", "T")}
+            onChange={(event) => {
+              const date = new Date(event.target.value);
+              if (!isNaN(date.getTime())) {
+                setFromDate(date);
+              }
+            }}
           />
         </div>
         <div className="flex items-center">
           <span className="mr-2">Đến</span>
-          <Input type="datetime-local" placeholder="Đến ngày" />
+          <Input
+            type="datetime-local"
+            placeholder="Đến ngày"
+            className="text-sm"
+            value={format(toDate, "yyyy-MM-dd HH:mm").replace(" ", "T")}
+            onChange={(event) => {
+              const date = new Date(event.target.value);
+              if (!isNaN(date.getTime())) {
+                setToDate(date);
+              }
+            }}
+          />
         </div>
-        <Button className="" variant={"outline"} onClick={resetDateFilter}>
+        <Button variant="outline" onClick={resetDateFilter}>
           Reset
         </Button>
       </div>
@@ -48,7 +100,11 @@ export default function DashboardMain() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">
+              {isLoading
+                ? "Loading..."
+                : formatCurrency(dashboardData.totalRevenue)}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -70,7 +126,9 @@ export default function DashboardMain() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">
+              {isLoading ? "Loading..." : dashboardData.totalCustomers}
+            </div>
             <p className="text-xs text-muted-foreground">Đặt Vé</p>
           </CardContent>
         </Card>
@@ -92,7 +150,9 @@ export default function DashboardMain() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">
+              {isLoading ? "Loading..." : dashboardData.paidTickets}
+            </div>
             <p className="text-xs text-muted-foreground">Đã thanh toán</p>
           </CardContent>
         </Card>
@@ -115,16 +175,18 @@ export default function DashboardMain() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">
+              {isLoading ? "Loading..." : dashboardData.pendingTickets}
+            </div>
           </CardContent>
         </Card>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <div className="lg:col-span-4">
-          <RevenueLineChart />
+          <RevenueLineChart revenueByDate={dashboardData.revenueByDate} />
         </div>
         <div className="lg:col-span-3">
-          <DishBarChart />
+          <DishBarChart chartData={dashboardData.trainRankings} />
         </div>
       </div>
     </div>

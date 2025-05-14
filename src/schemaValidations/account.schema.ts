@@ -104,3 +104,11 @@ export const AccountParams = z.object({
 });
 
 export type AccountParamsType = z.TypeOf<typeof AccountParams>;
+export enum CustomerObjectEnum {
+  children = "children",
+  student = "student",
+  elderly = "elderly",
+  veteran = "veteran",
+  disabled = "disabled",
+  adult = "adult",
+}

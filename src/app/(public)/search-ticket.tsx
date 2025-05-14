@@ -1,71 +1,18 @@
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-
-// export default function SearchTicket() {
-//   return (
-//     <div>
-//       <div className="text-base font-semibold border-b pb-2 mb-2">
-//         Thông tin hành trình
-//       </div>
-//       <div className="flex flex-col space-y-3">
-//         <div>
-//           <label className="block text-sm font-medium">Ga đi</label>
-//           <Input
-//             type="text"
-//             placeholder="Ga đi"
-//             className="w-full mt-1 text-sm"
-//           />
-//         </div>
-//         <div>
-//           <label className="block text-sm font-medium">Ga đến</label>
-//           <Input
-//             type="text"
-//             placeholder="Ga đến"
-//             className="w-full mt-1 text-sm"
-//           />
-//         </div>
-//         <div>
-//           <label className="block text-sm font-medium">Loại vé</label>
-//           <div className="flex items-center space-x-3 mt-1">
-//             <label className="flex items-center space-x-1">
-//               <input type="radio" name="tripType" defaultChecked />
-//               <span className="text-sm">Một chiều</span>
-//             </label>
-//             <label className="flex items-center space-x-1">
-//               <input type="radio" name="tripType" />
-//               <span className="text-sm">Khứ hồi</span>
-//             </label>
-//           </div>
-//         </div>
-//         <div>
-//           <label className="block text-sm font-medium">Ngày đi</label>
-//           <Input
-//             type="date"
-//             className="w-full mt-1 text-sm"
-//             placeholder="Đi ngày"
-//           />
-//         </div>
-//         <div>
-//           <label className="block text-sm font-medium">Ngày về</label>
-//           <Input
-//             placeholder="Đến ngày"
-//             type="date"
-//             className="w-full mt-1 text-sm"
-//           />
-//         </div>
-//         <Button className="w-full mt-2 bg-blue-600 text-white hover:bg-blue-700">
-//           Tìm kiếm
-//         </Button>
-//       </div>
-//     </div>
-//   );
-// }
-
+//////----------------------
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useGetStationList } from "@/queries/useStation";
 
 interface SearchData {
   departureStation: string | null;
@@ -80,25 +27,75 @@ interface SearchTicketProps {
 }
 
 export default function SearchTicket({ onSearch }: SearchTicketProps) {
+  const t = useTranslations("SearchTicket");
   const router = useRouter();
+  const [tripType, setTripType] = useState<string>("one-way");
+  const [departureStation, setDepartureStation] = useState<string | null>(null);
+  const [arrivalStation, setArrivalStation] = useState<string | null>(null);
+  const [departureDate, setDepartureDate] = useState<string | null>(null);
+  const [returnDate, setReturnDate] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch station list
+  const { data: stationData, isLoading: isStationLoading } = useGetStationList(
+    1,
+    100
+  );
+  const stations = stationData?.payload?.data?.result || [];
 
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+
+    // Log form state for debugging
+    console.log("Form submission state:", {
+      departureStation,
+      arrivalStation,
+      departureDate,
+      tripType,
+      returnDate,
+    });
+
+    // Validate required fields
+    if (!departureStation) {
+      setError(t("DepartureStationRequired"));
+      return;
+    }
+    if (!arrivalStation) {
+      setError(t("ArrivalStationRequired"));
+      return;
+    }
+    if (!departureDate) {
+      setError(t("DepartureDateRequired"));
+      return;
+    }
+    if (departureStation === arrivalStation) {
+      setError(t("SameStationError"));
+      return;
+    }
+    if (tripType === "round-trip" && !returnDate) {
+      setError(t("ReturnDateRequired"));
+      return;
+    }
+
+    // Validate departure date is not in the past
+    const today = new Date().toISOString().split("T")[0];
+    if (departureDate < today) {
+      setError(t("DepartureDatePastError"));
+      return;
+    }
+
     const searchData: SearchData = {
-      departureStation: formData.get("departureStation") as string | null,
-      arrivalStation: formData.get("arrivalStation") as string | null,
-      tripType: formData.get("tripType") as string | null,
-      departureDate: formData.get("departureDate") as string | null,
-      returnDate: formData.get("returnDate") as string | null,
+      departureStation,
+      arrivalStation,
+      tripType,
+      departureDate,
+      returnDate: tripType === "one-way" ? null : returnDate,
     };
 
-    // Gọi onSearch nếu được truyền
     if (onSearch) {
       onSearch(searchData);
     }
 
-    // Tạo query string từ searchData
     const query = new URLSearchParams({
       ...(searchData.departureStation && {
         departureStation: searchData.departureStation,
@@ -113,76 +110,137 @@ export default function SearchTicket({ onSearch }: SearchTicketProps) {
       ...(searchData.returnDate && { returnDate: searchData.returnDate }),
     }).toString();
 
-    // Chuyển hướng sang trang /search với query string
+    setError(null);
     router.push(`/search?${query}`);
   };
+
+  const isFormValid =
+    departureStation &&
+    arrivalStation &&
+    departureDate &&
+    departureStation !== arrivalStation &&
+    departureDate >= new Date().toISOString().split("T")[0] &&
+    (tripType === "one-way" || (tripType === "round-trip" && returnDate));
 
   return (
     <form onSubmit={handleSearch}>
       <div>
         <div className="text-base font-semibold border-b pb-2 mb-2">
-          Thông tin hành trình
+          {t("JourneyInfo")}
         </div>
+        {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
         <div className="flex flex-col space-y-3">
           <div>
-            <label className="block text-sm font-medium">Ga đi</label>
-            <Input
-              name="departureStation"
-              type="text"
-              placeholder="Ga đi"
-              className="w-full mt-1 text-sm"
-            />
+            <label className="block text-sm font-medium">
+              {t("DepartureStation")}
+            </label>
+            <Select
+              onValueChange={setDepartureStation}
+              value={departureStation || ""}
+              disabled={isStationLoading}
+            >
+              <SelectTrigger className="w-full mt-1 text-sm">
+                <SelectValue placeholder={t("DepartureStationPlaceholder")} />
+              </SelectTrigger>
+              <SelectContent>
+                {stations.map((station) => (
+                  <SelectItem
+                    key={station.stationId}
+                    value={station.stationName}
+                  >
+                    {station.stationName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
-            <label className="block text-sm font-medium">Ga đến</label>
-            <Input
-              name="arrivalStation"
-              type="text"
-              placeholder="Ga đến"
-              className="w-full mt-1 text-sm"
-            />
+            <label className="block text-sm font-medium">
+              {t("ArrivalStation")}
+            </label>
+            <Select
+              onValueChange={setArrivalStation}
+              value={arrivalStation || ""}
+              disabled={isStationLoading}
+            >
+              <SelectTrigger className="w-full mt-1 text-sm">
+                <SelectValue placeholder={t("ArrivalStationPlaceholder")} />
+              </SelectTrigger>
+              <SelectContent>
+                {stations.map((station) => (
+                  <SelectItem
+                    key={station.stationId}
+                    value={station.stationName}
+                  >
+                    {station.stationName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
-            <label className="block text-sm font-medium">Loại vé</label>
+            <label className="block text-sm font-medium">{t("TripType")}</label>
             <div className="flex items-center space-x-3 mt-1">
               <label className="flex items-center space-x-1">
                 <input
                   type="radio"
                   name="tripType"
                   value="one-way"
-                  defaultChecked
+                  checked={tripType === "one-way"}
+                  onChange={() => setTripType("one-way")}
                 />
-                <span className="text-sm">Một chiều</span>
+                <span className="text-sm">{t("OneWay")}</span>
               </label>
               <label className="flex items-center space-x-1">
-                <input type="radio" name="tripType" value="round-trip" />
-                <span className="text-sm">Khứ hồi</span>
+                <input
+                  type="radio"
+                  name="tripType"
+                  value="round-trip"
+                  checked={tripType === "round-trip"}
+                  onChange={() => setTripType("round-trip")}
+                />
+                <span className="text-sm">{t("RoundTrip")}</span>
               </label>
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium">Ngày đi</label>
+            <label className="block text-sm font-medium">
+              {t("DepartureDate")}
+            </label>
             <Input
               name="departureDate"
               type="date"
               className="w-full mt-1 text-sm"
-              placeholder="Đi ngày"
+              placeholder={t("DepartureDatePlaceholder")}
+              onChange={(e) => {
+                console.log("Selected departure date:", e.target.value);
+                setDepartureDate(e.target.value);
+              }}
+              min={new Date().toISOString().split("T")[0]} // Prevent past dates
+              required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium">Ngày về</label>
+            <label className="block text-sm font-medium">
+              {t("ReturnDate")}
+            </label>
             <Input
               name="returnDate"
               type="date"
               className="w-full mt-1 text-sm"
-              placeholder="Đến ngày"
+              placeholder={t("ReturnDatePlaceholder")}
+              onChange={(e) => setReturnDate(e.target.value)}
+              disabled={tripType === "one-way"}
+              min={departureDate || new Date().toISOString().split("T")[0]}
+              required={tripType === "round-trip"}
             />
           </div>
           <Button
             type="submit"
             className="w-full mt-2 bg-blue-600 text-white hover:bg-blue-700"
+            disabled={isStationLoading || !isFormValid}
           >
-            Tìm kiếm
+            {t("Search")}
           </Button>
         </div>
       </div>

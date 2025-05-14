@@ -8,7 +8,65 @@ import {
 
 const prefix = "/api/v1/users";
 const filePrefix = "/api/v1/files";
+export interface AccountProfileResponse {
+  statusCode: number;
+  error: string | null;
+  message: string;
+  data: {
+    user: {
+      id: number;
+      email: string;
+      name: string;
+      role: Role;
+    };
+  };
+}
+export interface Role {
+  id: number;
+  name: string;
+  description: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+  createdBy: string;
+  updatedBy: string | null;
+  permissions: Array<{
+    id: number;
+    name: string;
+    apiPath: string;
+    method: string;
+    module: string;
+    createdAt: string;
+    updatedAt: string | null;
+    createdBy: string;
+    updatedBy: string | null;
+  }>;
+}
 
+// Define the account profile response type
+export interface AccountProfileResponse {
+  statusCode: number;
+  error: string | null;
+  message: string;
+  data: {
+    user: {
+      id: number;
+      email: string;
+      name: string;
+      role: Role;
+    };
+  };
+}
+
+// Define file upload response type
+export interface FileUploadResponse {
+  payload: {
+    data: {
+      fileName: string;
+      uploadedAt: string;
+    };
+  };
+}
 const accountApiRequest = {
   list: (page: number = 1, size: number = 10) =>
     http.get<AccountListResType>(`${prefix}?page=${page - 1}&size=${size}`),
@@ -106,6 +164,12 @@ const accountApiRequest = {
   getEmployee: (id: number) => http.get<AccountResType>(`${prefix}/${id}`),
   deleteEmployee: (id: number) =>
     http.delete<AccountResType>(`${prefix}/${id}`),
+  me: async (): Promise<AccountProfileResponse> => {
+    const response = await http.get<AccountProfileResponse>(
+      "/api/v1/auth/account"
+    );
+    return response.payload;
+  },
 };
 
 export default accountApiRequest;

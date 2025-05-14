@@ -1,32 +1,87 @@
-import { DishSchema } from '@/schemaValidations/dish.schema'
-import z from 'zod'
+// import z from "zod";
+
+// export const DashboardIndicatorQueryParams = z.object({
+//   fromDate: z.coerce.date().optional(),
+//   toDate: z.coerce.date().optional(),
+// });
+
+// export type DashboardIndicatorQueryParamsType = z.infer<
+//   typeof DashboardIndicatorQueryParams
+// >;
+
+// export const DashboardIndicatorRes = z.object({
+//   statusCode: z.number(),
+//   error: z.string().nullable(),
+//   message: z.string(),
+//   data: z.object({
+//     statusCode: z.number(),
+//     error: z.string().nullable(),
+//     message: z.string(),
+//     data: z.object({
+//       totalRevenue: z.number(),
+//       totalCustomers: z.number(),
+//       paidTickets: z.number(),
+//       pendingTickets: z.number(),
+//       revenueByDate: z.array(
+//         z.object({
+//           date: z.string(),
+//           revenue: z.number(),
+//         })
+//       ),
+//       trainRankings: z.array(
+//         z.object({
+//           name: z.string(),
+//           successOrders: z.number(),
+//           fill: z.string(),
+//         })
+//       ),
+//     }),
+//   }),
+// });
+
+// export type DashboardIndicatorResType = z.infer<typeof DashboardIndicatorRes>;
+
+import z from "zod";
 
 export const DashboardIndicatorQueryParams = z.object({
-  fromDate: z.coerce.date(),
-  toDate: z.coerce.date()
-})
+  fromDate: z.coerce.date().optional(),
+  toDate: z.coerce.date().optional(),
+});
 
-export type DashboardIndicatorQueryParamsType = z.TypeOf<typeof DashboardIndicatorQueryParams>
+export type DashboardIndicatorQueryParamsType = z.infer<
+  typeof DashboardIndicatorQueryParams
+>;
 
 export const DashboardIndicatorRes = z.object({
-  data: z.object({
-    revenue: z.number(),
-    guestCount: z.number(),
-    orderCount: z.number(),
-    servingTableCount: z.number(),
-    dishIndicator: z.array(
-      DishSchema.extend({
-        successOrders: z.number()
-      })
-    ),
-    revenueByDate: z.array(
-      z.object({
-        date: z.string(),
-        revenue: z.number()
-      })
-    )
+  payload: z.object({
+    statusCode: z.number(),
+    error: z.string().nullable(),
+    message: z.string(),
+    data: z.object({
+      statusCode: z.number(),
+      error: z.string().nullable(),
+      message: z.string(),
+      data: z.object({
+        totalRevenue: z.number(),
+        totalCustomers: z.number(),
+        paidTickets: z.number(),
+        pendingTickets: z.number(),
+        revenueByDate: z.array(
+          z.object({
+            date: z.string(),
+            revenue: z.number(),
+          })
+        ),
+        trainRankings: z.array(
+          z.object({
+            name: z.string(),
+            successOrders: z.number(),
+            fill: z.string(),
+          })
+        ),
+      }),
+    }),
   }),
-  message: z.string()
-})
+});
 
-export type DashboardIndicatorResType = z.TypeOf<typeof DashboardIndicatorRes>
+export type DashboardIndicatorResType = z.infer<typeof DashboardIndicatorRes>;

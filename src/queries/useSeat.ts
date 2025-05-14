@@ -1,4 +1,4 @@
-import seatsApiRequest from "@/apiRequests/seat";
+import seatsApiRequest, { SeatQueryParams } from "@/apiRequests/seat";
 import {
   CreateSeatBodyType,
   UpdateSeatBodyType,
@@ -41,5 +41,23 @@ export const useDeleteSeatMutation = () => {
         queryKey: ["seats"],
       });
     },
+  });
+};
+export const useGetAvailableSeats = ({
+  trainTripId,
+  boardingStationId,
+  alightingStationId,
+  enabled,
+}: SeatQueryParams & { enabled: boolean }) => {
+  return useQuery({
+    queryKey: ["seats", trainTripId, boardingStationId, alightingStationId],
+    queryFn: () =>
+      seatsApiRequest.listAvailableSeats({
+        trainTripId,
+        boardingStationId,
+        alightingStationId,
+      }),
+    enabled,
+    select: (response) => response.data, // Extract the data array
   });
 };
