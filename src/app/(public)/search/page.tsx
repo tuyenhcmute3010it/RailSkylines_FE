@@ -103,7 +103,6 @@ interface FrontendTrain {
   departurePosition: number;
   arrivalPosition: number;
   availableSeats: number;
-  totalSeats: number; // Already added
   carriages: FrontendCarriage[];
   trainTripId: number;
 }
@@ -185,40 +184,7 @@ const mapTrainTripsToFrontend = (
               : carriage.carriageType === "fourBeds"
               ? 28
               : 56;
-
-          let fullSeats: Seat[] = carriage.seats;
-          if (carriage.carriageType === "sixBeds") {
-            const existingSeatIds = carriage.seats.map((seat) => seat.seatId);
-            fullSeats = Array.from({ length: maxSeats }, (_, i) => {
-              const seatId = 463 + i;
-              const existingSeat = carriage.seats.find(
-                (s) => s.seatId === seatId
-              );
-              return (
-                existingSeat || {
-                  seatId,
-                  seatNumber: seatId,
-                  seatType: "LEVEL_3",
-                  seatStatus: "available",
-                  price: 490000,
-                  tickets: [],
-                  carriage: {
-                    carriageId: carriage.carriageId,
-                    carriageType: carriage.carriageType,
-                    price: carriage.price,
-                    discount: carriage.discount,
-                    train: carriage.seats[0]?.carriage.train || {
-                      trainId: trip.train.trainId,
-                      trainName: trip.train.trainName,
-                      trainStatus: trip.train.trainStatus,
-                    },
-                  },
-                }
-              );
-            });
-          } else {
-            fullSeats = carriage.seats.slice(0, maxSeats);
-          }
+          const limitedSeats = carriage.seats.slice(0, maxSeats);
 
           return {
             id: carriage.carriageId,
@@ -230,13 +196,13 @@ const mapTrainTripsToFrontend = (
                 ? "6-bed"
                 : "seat",
             basePrice: carriage.price,
-            seats: fullSeats.map((seat) => seat.seatId),
+            seats: limitedSeats.map((seat) => seat.seatId),
             discount: carriage.discount,
-            seatData: fullSeats,
-            bookedSeats: fullSeats
+            seatData: limitedSeats,
+            bookedSeats: limitedSeats
               .filter((seat) => seat.seatStatus === "unavailable")
               .map((seat) => seat.seatId),
-            pendingSeats: fullSeats
+            pendingSeats: limitedSeats
               .filter((seat) => seat.seatStatus === "pending")
               .map((seat) => seat.seatId),
           };
@@ -247,11 +213,6 @@ const mapTrainTripsToFrontend = (
           sum +
           carriage.seatData.filter((seat) => seat.seatStatus === "available")
             .length,
-        0
-      );
-
-      const totalSeats = carriages.reduce(
-        (sum, carriage) => sum + carriage.seats.length,
         0
       );
 
@@ -284,12 +245,12 @@ const mapTrainTripsToFrontend = (
         departurePosition: departureStationData?.position || 0,
         arrivalPosition: arrivalStationData?.position || 0,
         availableSeats: totalAvailableSeats,
-        totalSeats, // Calculate total seats
         carriages,
         trainTripId: trip.trainTripId,
       };
     });
 };
+
 // Filter train trips
 const filterTrainTrips = (
   trainTrips: TrainTrip[],
@@ -335,6 +296,7 @@ export default function Search() {
   const [timer, setTimer] = useState(600);
   const [pendingSeats, setPendingSeats] = useState<Record<number, number>>({});
   const [availableSeats, setAvailableSeats] = useState<number[]>([]);
+  const [seatError, setSeatError] = useState<string | null>(null);
 
   const departureStation = searchParams.get("departureStation");
   const arrivalStation = searchParams.get("arrivalStation");
@@ -428,7 +390,7 @@ export default function Search() {
 
   // Compute derived seat data
   const derivedSeatData = useMemo(() => {
-    if (!selectedCoach || !selectedTrain) {
+    if (!availableSeatsData || !selectedCoach) {
       return {
         filteredSeats: [],
         seatIds: [],
@@ -437,70 +399,18 @@ export default function Search() {
       };
     }
 
-    // Get all expected seat IDs from selectedCoach.seats (e.g., 463–504 for 6-bed)
-    const expectedSeatIds = selectedCoach.seats;
-
-    // Get available seat IDs from API response
-    const availableSeatIds = (availableSeatsData || []).map(
-      (seat: Seat) => seat.seatId
-    );
-
-    // Identify booked seats (in expectedSeatIds but not in availableSeatIds)
-    const bookedSeatIds = expectedSeatIds.filter(
-      (seatId) => !availableSeatIds.includes(seatId)
-    );
-
-    // Generate full seat list (42 seats for 6-bed)
-    const fullSeats = expectedSeatIds.map((seatId) => {
-      const apiSeat = (availableSeatsData || []).find(
-        (s: Seat) => s.seatId === seatId
-      );
-      const isBooked = bookedSeatIds.includes(seatId);
-
-      return (
-        apiSeat || {
-          seatId,
-          seatNumber: seatId, // Use seatId as seatNumber
-          seatType: isBooked ? "LEVEL_3" : apiSeat?.seatType || "LEVEL_3", // Default to LEVEL_3
-          seatStatus: isBooked
-            ? "unavailable"
-            : apiSeat?.seatStatus || "available",
-          price: isBooked
-            ? selectedCoach.basePrice
-            : apiSeat?.price || selectedCoach.basePrice, // Use basePrice if booked
-          tickets: apiSeat?.tickets || [],
-          carriage: {
-            carriageId: selectedCoach.id,
-            carriageType:
-              selectedCoach.type === "6-bed"
-                ? "sixBeds"
-                : selectedCoach.type === "4-bed"
-                ? "fourBeds"
-                : "seat",
-            price: selectedCoach.basePrice,
-            discount: selectedCoach.discount,
-            train: {
-              trainId: selectedTrain.trainTripId,
-              trainName: selectedTrain.name,
-              trainStatus: "active",
-            },
-          },
-        }
-      );
-    });
-
-    const filteredSeats = fullSeats.filter(
-      (seat) => seat.carriage.carriageId === selectedCoach.id
+    const filteredSeats = availableSeatsData.filter(
+      (seat: Seat) => seat?.carriage?.carriageId === selectedCoach.id
     );
     const seatIds = filteredSeats
-      .filter((seat) => seat.seatStatus === "available")
-      .map((seat) => seat.seatId);
+      .filter((seat: Seat) => seat.seatStatus === "available")
+      .map((seat: Seat) => seat.seatId);
     const bookedSeats = filteredSeats
-      .filter((seat) => seat.seatStatus === "unavailable")
-      .map((seat) => seat.seatId);
+      .filter((seat: Seat) => seat.seatStatus === "unavailable")
+      .map((seat: Seat) => seat.seatId);
     const pendingSeats = filteredSeats
-      .filter((seat) => seat.seatStatus === "pending")
-      .map((seat) => seat.seatId);
+      .filter((seat: Seat) => seat.seatStatus === "pending")
+      .map((seat: Seat) => seat.seatId);
 
     return {
       filteredSeats,
@@ -508,7 +418,7 @@ export default function Search() {
       bookedSeats,
       pendingSeats,
     };
-  }, [availableSeatsData, selectedCoach, selectedTrain]);
+  }, [availableSeatsData, selectedCoach]);
 
   // Update seats and coach state
   useEffect(() => {
@@ -519,16 +429,16 @@ export default function Search() {
 
     setAvailableSeats(seatIds);
 
-    // Update selectedCoach with new seat data
+    // Only update selectedCoach if seatData, seats, bookedSeats, or pendingSeats have changed
     setSelectedCoach((prev) => {
       if (!prev) return prev;
 
       const updatedSeatData = filteredSeats.map((seat: Seat) => ({
         ...seat,
-        seatNumber: seat.seatId, // Ensure seatNumber matches seatId
+        seatNumber: seat.seatId,
       }));
 
-      // Avoid unnecessary updates
+      // Check if update is necessary
       const isSeatDataSame =
         JSON.stringify(prev.seatData) === JSON.stringify(updatedSeatData);
       const isSeatsSame =
@@ -545,7 +455,7 @@ export default function Search() {
         isBookedSeatsSame &&
         isPendingSeatsSame
       ) {
-        return prev;
+        return prev; // No update needed
       }
 
       return {
@@ -556,7 +466,13 @@ export default function Search() {
         pendingSeats,
       };
     });
-  }, [derivedSeatData, selectedCoach]);
+
+    setSeatError(
+      availableSeatsError
+        ? "Không thể tải danh sách ghế. Vui lòng thử lại."
+        : null
+    );
+  }, [derivedSeatData, availableSeatsError, selectedCoach]);
 
   const trains = useMemo(
     () =>
@@ -596,6 +512,7 @@ export default function Search() {
       setCartItems([]);
       setPendingSeats({});
       setTimer(0);
+      setSeatError(null);
     },
     [trains]
   );
@@ -607,6 +524,7 @@ export default function Search() {
         selectedTrain.carriages.find((c) => c.id === coachId) || null;
       console.log("Selected coach:", coach);
       setSelectedCoach(coach);
+      setSeatError(null);
     },
     [selectedTrain]
   );
@@ -641,7 +559,7 @@ export default function Search() {
         try {
           await updateSeatMutation.mutateAsync({
             id: seatData.seatId,
-            seatStatus: "pending",
+            seatStatus: "unavailable",
             seatNumber: seatData.seatNumber,
             seatType: seatData.seatType,
             price: seatData.price,
@@ -666,7 +584,7 @@ export default function Search() {
         const newCartItem: CartItem = {
           trainId: selectedTrain.id,
           trainName: selectedTrain.name,
-          trainTripId: selectedTrain.trainTripId,
+          trainTripId: setSelectedTrain.trainTripId,
           coachName: selectedCoach.name,
           coachId: selectedCoach.id,
           seatNumber: seat,
@@ -914,12 +832,15 @@ export default function Search() {
                   <p className="whitespace-nowrap">{train.arrival}</p>
                 </div>
                 <div className="flex justify-between items-center">
-                  <p className="text-xs whitespace-nowrap">Chỗ Đã Đặt</p>
+                  <p className="text-xs whitespace-nowrap">Chỗ Đặt</p>
                   <p className="text-xs whitespace-nowrap">Chỗ Trống</p>
                 </div>
                 <div className="flex justify-between items-center">
                   <p className="text-lg font-bold whitespace-nowrap">
-                    {train.totalSeats - train.availableSeats}
+                    {train.carriages.reduce(
+                      (sum, c) => sum + c.seats.length,
+                      0
+                    )}
                   </p>
                   <p className="text-lg font-bold whitespace-nowrap">
                     {train.availableSeats}
@@ -965,10 +886,8 @@ export default function Search() {
 
             {isSeatsLoading ? (
               <div className="text-center">Đang tải danh sách ghế...</div>
-            ) : availableSeatsError ? (
-              <div className="text-center text-red-500">
-                Không thể tải danh sách ghế. Vui lòng thử lại.
-              </div>
+            ) : seatError ? (
+              <div className="text-center text-red-500">{seatError}</div>
             ) : (
               <>
                 {/* Seat type rendering */}
@@ -1031,7 +950,6 @@ export default function Search() {
                                             !isPending &&
                                             toggleSeatSelection(seat)
                                           }
-                                          aria-disabled={isBooked || isPending}
                                         >
                                           <h3 className="text-sm font-bold">
                                             {seat}
@@ -1122,7 +1040,6 @@ export default function Search() {
                                             !isPending &&
                                             toggleSeatSelection(seat)
                                           }
-                                          aria-disabled={isBooked || isPending}
                                         >
                                           <h3 className="text-sm font-bold">
                                             {seat}
@@ -1213,7 +1130,6 @@ export default function Search() {
                                             !isPending &&
                                             toggleSeatSelection(seat)
                                           }
-                                          aria-disabled={isBooked || isPending}
                                         >
                                           <h3 className="text-sm font-bold">
                                             {seat}

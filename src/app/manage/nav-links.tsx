@@ -26,7 +26,7 @@ interface Permission {
 // Mapping of href to module for permission checking
 const hrefToModuleMap: Record<string, string> = {
   "/manage/dashboard": "REVENUE",
-  "/manage/orders": "BOOKINGS",
+  "/manage/bookings": "BOOKINGS",
   "/manage/trains": "TRAINS",
   "/manage/carriages": "CARRIAGES",
   "/manage/stations": "STATIONS",
