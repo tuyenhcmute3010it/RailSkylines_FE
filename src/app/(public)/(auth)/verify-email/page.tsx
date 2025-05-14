@@ -58,7 +58,7 @@ export default function VerifyEmailForm() {
 
   // Log router navigation attempts
   useEffect(() => {
-    console.log("Current route:", router.pathname, searchParams.toString());
+    console.log("Current route:", searchParams.toString());
   }, [router, searchParams]);
 
   const onSubmit = async (data: VerifyCodeBodyType) => {

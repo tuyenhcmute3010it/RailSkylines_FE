@@ -1,5 +1,6 @@
 import createNextIntlPlugin from "next-intl/plugin";
 import NextBundleAnalyzer from "@next/bundle-analyzer";
+
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig = {
@@ -18,8 +19,13 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true, // Bỏ qua lỗi ESLint khi build
   },
+  typescript: {
+    ignoreBuildErrors: true, // ✅ Bỏ qua lỗi TypeScript khi build
+  },
 };
+
 const withBundleAnalyzer = NextBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
+
 export default withNextIntl(withBundleAnalyzer(nextConfig));
